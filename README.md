@@ -176,14 +176,14 @@ Below are some resources that have been instrumental in making this project a re
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[forks-shield]: https://img.shields.io/github/forks/ReverendTrivium/Eya2.0?style=for-the-badge
-[forks-url]: https://github.com/ReverendTrivium/Eya2.0/forks
-[watchers-shield]: https://img.shields.io/github/watchers/ReverendTrivium/Eya2.0?style=for-the-badge
-[watchers-url]: https://github.com/ReverendTrivium/Eya2.0/watchers
-[issues-shield]: https://img.shields.io/github/issues/ReverendTrivium/Eya2.0?style=for-the-badge
-[issues-url]: https://github.com/TechnoVisionDev/TechnoBot/issues
+[forks-shield]: https://img.shields.io/github/forks/ReverendTrivium/RedactedBot?style=for-the-badge
+[forks-url]: https://github.com/ReverendTrivium/RedactedBot/forks
+[watchers-shield]: https://img.shields.io/github/watchers/ReverendTrivium/RedactedBot?style=for-the-badge
+[watchers-url]: https://github.com/ReverendTrivium/RedactedBot/watchers
+[issues-shield]: https://img.shields.io/github/issues/ReverendTrivium/RedactedBot?style=for-the-badge
+[issues-url]: https://github.com/ReverendTrivium/RedactedBot/issues
 [license-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=for-the-badge
-[license-url]: https://github.com/ReverendTrivium/Eya2.0/blob/master/LICENSE
+[license-url]: https://github.com/ReverendTrivium/RedactedBot/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/derrickeberlein/
 [cc-by]: http://creativecommons.org/licenses/by/4.0/

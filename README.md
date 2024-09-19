@@ -72,7 +72,7 @@ Google Search, sticky messages, and blacklist management.
 
 ### Built With
 
-Below is a comprehensive list of the frameworks and libraries used to build the TechnoBot website.
+Below is a comprehensive list of the frameworks and libraries used to build the Redacted Discord Bot.
 
 * [Java Discord API](https://github.com/DV8FromTheWorld/JDA)
 * [MongoDB Java Driver](https://mongodb.github.io/mongo-java-driver)

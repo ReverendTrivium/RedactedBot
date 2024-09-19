@@ -16,7 +16,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/ReverendTrivium/Eya2.0">
+  <a href="https://github.com/ReverendTrivium/RedactedBot">
     <img src="https://i.imgur.com/YhesyWh.jpeg" alt="Logo" width="150" height="150">
   </a>
 

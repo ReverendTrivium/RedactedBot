@@ -16,7 +16,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/ReverendTrivium/Eya2.0">
+  <a href="https://github.com/ReverendTrivium/RedactedBot">
     <img src="https://i.imgur.com/YhesyWh.jpeg" alt="Logo" width="150" height="150">
   </a>
 
@@ -72,7 +72,7 @@ Google Search, sticky messages, and blacklist management.
 
 ### Built With
 
-Below is a comprehensive list of the frameworks and libraries used to build the TechnoBot website.
+Below is a comprehensive list of the frameworks and libraries used to build the Redacted Discord Bot.
 
 * [Java Discord API](https://github.com/DV8FromTheWorld/JDA)
 * [MongoDB Java Driver](https://mongodb.github.io/mongo-java-driver)

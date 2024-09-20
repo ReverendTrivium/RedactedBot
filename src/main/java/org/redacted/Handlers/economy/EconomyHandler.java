@@ -71,11 +71,13 @@ public class EconomyHandler {
     }
 
     /**
-     * Adds a random amount between 20-250 to the user's balance and get a reply back.
+     * Adds a random amount between 200-1200 to the user's balance and get a reply back.
      */
     public EconomyReply work(long userID) {
-        int amount = ThreadLocalRandom.current().nextInt(230) + 20;
+        int amount = ThreadLocalRandom.current().nextInt(1000) + 200;
         addMoney(userID, amount);
+        setTimeout(userID, TIMEOUT_TYPE.WORK);
+
         return new EconomyReply("You earned " + amount + " " + currency, 1, true);
     }
 

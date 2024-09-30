@@ -3,12 +3,14 @@ package org.redacted.util.SocialMedia.Reddit;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 
 public class RedditClient {
@@ -44,25 +46,33 @@ public class RedditClient {
 
             String responseData = Objects.requireNonNull(response.body()).string();
 
+            // Log the raw response for debugging
+            System.out.println("Response Data: " + responseData);
+
+            // Use a lenient JsonReader to handle slightly malformed JSON
+            JsonReader reader = new JsonReader(new StringReader(responseData));
+            reader.setLenient(true);  // Allow lenient parsing
+
             JsonArray children;
 
             if (url.contains("random")) {
                 try {
-                    JsonArray arr = JsonParser.parseString(responseData).getAsJsonArray();
+                    JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
                     if (!arr.isEmpty()) {
                         children = arr.get(0).getAsJsonObject().getAsJsonObject("data").getAsJsonArray("children");
                     } else {
                         throw new IOException("No data found in random.json response.");
                     }
                 } catch (IllegalStateException e) {
-                    JsonObject obj = JsonParser.parseString(responseData).getAsJsonObject();
+                    JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
                     children = obj.getAsJsonObject("data").getAsJsonArray("children");
                 }
             } else {
-                JsonObject jsonObject = JsonParser.parseString(responseData).getAsJsonObject();
+                JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
                 children = jsonObject.getAsJsonObject("data").getAsJsonArray("children");
             }
 
+            // Extract valid media URLs
             List<String> mediaUrls = new ArrayList<>();
             for (int i = 0; i < children.size(); i++) {
                 JsonObject postData = children.get(i).getAsJsonObject().getAsJsonObject("data");

@@ -27,6 +27,7 @@ public class IntroductionListener extends ListenerAdapter {
         if (event.getChannel().getId().equals(introductionChannelId) && !event.getAuthor().isBot()) {
             introductionHandler.handleIntroduction(event);
             stickyMessageHandler.handleStickyMessage(event.getChannel().asTextChannel());
+            System.out.println("Message Received");
 
             // Check if the user has the member role or other specific roles
             Member member = event.getMember();

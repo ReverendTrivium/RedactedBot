@@ -155,6 +155,7 @@ public class NSFWCommand extends Command {
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
         if (attempt >= MAX_ATTEMPTS) {
             event.getHook().sendMessage("Failed finding Images after multiple attempts, please try again later.").queue();
+            LoopNSFWCommand.stopLoop();
             return;
         }
 
@@ -227,6 +228,7 @@ public class NSFWCommand extends Command {
     private void fetchAndSendMedia(String channelId, String category, int attempt) {
         if (attempt >= MAX_ATTEMPTS) {
             Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessage("Failed finding Images after multiple attempts, please try again later.").queue();
+            LoopNSFWCommand.stopLoop();
             return;
         }
 

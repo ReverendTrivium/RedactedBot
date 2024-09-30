@@ -26,7 +26,7 @@ public class StickyMessageHandler {
                         ":arrow_forward:  **Template to Follow to gain access to Server:** :arrow_backward: \n" +
                                 "*Copy and Paste template below to gain access to the server!!*\n\n" +
                                 "**Name:** [real name or nickname] *(Required, will not get access to server without this)*\n" +
-                                "**Instagram Tag:** [Don't include the @ character] *(Required, unless you would rather use Facebook)*\n" +
+                                "**Instagram:** [Don't include the @ character] *(Required, unless you would rather use Facebook)*\n" +
                                 "**Facebook:** (Required, if you don't want to use Instagram)\n" +
                                 "**Pronouns:** *(Optional)*\n" +
                                 "**Location (DC/MD/VA):** *(Optional)*\n" +

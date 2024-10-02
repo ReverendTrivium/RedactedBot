@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -26,6 +25,7 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Handlers.economy.EconomyHandler;
 import org.redacted.Redacted;
 import org.redacted.util.embeds.EmbedUtils;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -59,11 +59,20 @@ public class ButtonListener extends ListenerAdapter {
      */
     public static void sendPaginatedMenu(String userID, ReplyCallbackAction action, List<MessageEmbed> embeds) {
         String uuid = userID + ":" + UUID.randomUUID();
-        List<Button> components = getPaginationButtons(uuid, embeds.size());
+
+        // If there's only one page, disable both buttons
+        List<Button> components = getPaginationButtons(uuid, 0, embeds.size());
         buttons.put(uuid, components);
         menus.put(uuid, embeds);
-        action.addActionRow(components).queue(interactionHook -> ButtonListener.disableButtons(uuid, interactionHook));
+
+        action.addActionRow(components).queue(interactionHook -> {
+            if (embeds.size() > 1) {
+                // Schedule button disabling only if there is more than one page
+                ButtonListener.disableButtons(uuid, interactionHook);
+            }
+        });
     }
+
 
     /**
      * Get a list of buttons for paginated embeds.
@@ -72,13 +81,23 @@ public class ButtonListener extends ListenerAdapter {
      * @param maxPages the total number of embed pages.
      * @return A list of components to use on a paginated embed.
      */
-    private static List<Button> getPaginationButtons(String uuid, int maxPages) {
-        return Arrays.asList(
-                Button.primary("pagination:prev:" + uuid, "Previous").asDisabled(),
-                Button.of(ButtonStyle.SECONDARY, "pagination:page:0", "1/" + maxPages).asDisabled(),
-                Button.primary("pagination:next:" + uuid, "Next")
-        );
+    private static List<Button> getPaginationButtons(String uuid, int currentPage, int maxPages) {
+        // Disable "Previous" button if on the first page, otherwise enable it
+        Button previousButton = (currentPage == 0) ?
+                Button.primary("pagination:prev:" + uuid, "Previous").asDisabled() :
+                Button.primary("pagination:prev:" + uuid, "Previous").asEnabled();
+
+        // Disable "Next" button if on the last page, otherwise enable it
+        Button nextButton = (currentPage == maxPages - 1) ?
+                Button.primary("pagination:next:" + uuid, "Next").asDisabled() :
+                Button.primary("pagination:next:" + uuid, "Next").asEnabled();
+
+        // The page label button is always disabled
+        Button pageLabelButton = Button.of(ButtonStyle.SECONDARY, "pagination:page:" + currentPage, (currentPage + 1) + "/" + maxPages).asDisabled();
+
+        return Arrays.asList(previousButton, pageLabelButton, nextButton);
     }
+
 
     /**
      * Schedules a timer task to disable buttons and clear cache after a set time.
@@ -140,34 +159,36 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
-    // Handle pagination
+    /**
+     * Handles the Pagination of Embedded Messages.
+     *
+     * @param uuid the uuid of the components to disable.
+     * @param event a interaction event pointing to the original event.
+     */
     private void handlePagination(ButtonInteractionEvent event, String[] pressedArgs, String uuid) {
         List<Button> components = buttons.get(uuid);
         if (components == null) return;
 
+        List<MessageEmbed> embeds = menus.get(uuid);
+        if (embeds == null) return;
+
+        int currentPage = Integer.parseInt(Objects.requireNonNull(components.get(1).getId()).split(":")[2]);
+
         if (pressedArgs[1].equals("next")) {
-            int page = Integer.parseInt(Objects.requireNonNull(components.get(1).getId()).split(":")[2]) + 1;
-            List<MessageEmbed> embeds = menus.get(uuid);
-            if (page < embeds.size()) {
-                components.set(1, components.get(1).withId("pagination:page:" + page).withLabel((page + 1) + "/" + embeds.size()));
-                components.set(0, components.get(0).asEnabled());
-                if (page == embeds.size() - 1) {
-                    components.set(2, components.get(2).asDisabled());
-                }
+            int nextPage = currentPage + 1;
+            if (nextPage < embeds.size()) {
+                // Generate new buttons with updated page number
+                components = getPaginationButtons(uuid, nextPage, embeds.size());
                 buttons.put(uuid, components);
-                event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(page)).queue();
+                event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(nextPage)).queue();
             }
         } else if (pressedArgs[1].equals("prev")) {
-            int page = Integer.parseInt(Objects.requireNonNull(components.get(1).getId()).split(":")[2]) - 1;
-            List<MessageEmbed> embeds = menus.get(uuid);
-            if (page >= 0) {
-                components.set(1, components.get(1).withId("pagination:page:" + page).withLabel((page + 1) + "/" + embeds.size()));
-                components.set(2, components.get(2).asEnabled());
-                if (page == 0) {
-                    components.set(0, components.get(0).asDisabled());
-                }
+            int prevPage = currentPage - 1;
+            if (prevPage >= 0) {
+                // Generate new buttons with updated page number
+                components = getPaginationButtons(uuid, prevPage, embeds.size());
                 buttons.put(uuid, components);
-                event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(page)).queue();
+                event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(prevPage)).queue();
             }
         }
     }
@@ -248,7 +269,7 @@ public class ButtonListener extends ListenerAdapter {
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         if (event.getModalId().equals("bet_modal") || event.getModalId().equals("raise_modal")) {
-            String betAmountStr = event.getValue("bet_input").getAsString();
+            String betAmountStr = Objects.requireNonNull(event.getValue("bet_input")).getAsString();
             try {
                 long userBetAmount = Long.parseLong(betAmountStr);
                 PokerCommand pokerCommand = (PokerCommand) bot.getBotCommands().getCommandByName("poker");
@@ -259,7 +280,7 @@ public class ButtonListener extends ListenerAdapter {
                     return;
                 }
 
-                GuildData guildData = GuildData.get(event.getGuild(), bot);
+                GuildData guildData = GuildData.get(Objects.requireNonNull(event.getGuild()), bot);
                 EconomyHandler economyHandler = guildData.getEconomyHandler();
 
                 long userBalance = economyHandler.getBalance(event.getUser().getIdLong());
@@ -326,7 +347,7 @@ public class ButtonListener extends ListenerAdapter {
             }
 
             // Update game status after dealing the next card
-            event.getMessage().editMessageEmbeds(game.getGameStatus(event.getUser(), false).build()).queue();
+            Objects.requireNonNull(event.getMessage()).editMessageEmbeds(game.getGameStatus(event.getUser(), false).build()).queue();
         } else {
             // End the game if all community cards have been dealt
             User winner = game.determineWinner(event.getUser());
@@ -334,7 +355,7 @@ public class ButtonListener extends ListenerAdapter {
             embed.addField("Result", resultText, false);
 
             // Disable the buttons once the game is over
-            event.getMessage().editMessageEmbeds(embed.build())
+            Objects.requireNonNull(event.getMessage()).editMessageEmbeds(embed.build())
                     .setComponents(ActionRow.of(
                             Button.primary("poker:bet:" + event.getUser().getId(), "Bet Again").asDisabled(),
                             Button.danger("poker:fold:" + event.getUser().getId(), "Fold").asDisabled()

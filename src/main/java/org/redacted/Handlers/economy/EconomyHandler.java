@@ -252,7 +252,7 @@ public class EconomyHandler {
     }
 
     /**
-     * Get a user's timeout for a specific econony command.
+     * Get a user's timeout for a specific economy command.
      *
      * @param userID the user to get the timeout from.
      * @param type the economy command that is timed out.
@@ -300,7 +300,7 @@ public class EconomyHandler {
             failChance = 0.80;
         }
 
-        // Calculate mount stolen (success probability * their cash)
+        // Calculate amount stolen (success probability * their cash)
         long amountStolen = (long) ((1 - failChance) * targetCash);
         if (amountStolen < 0) amountStolen = 0;
 

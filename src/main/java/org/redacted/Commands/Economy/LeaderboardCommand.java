@@ -1,104 +1,103 @@
 package org.redacted.Commands.Economy;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Database.cache.Economy;
 import org.redacted.Handlers.economy.EconomyHandler;
 import org.redacted.Redacted;
+import org.redacted.listeners.ButtonListener;
 import org.redacted.util.embeds.EmbedColor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Command that shows the richest users in the server.
+ * Command that displays the leaderboard of users with the highest net worth.
  *
  * @author Derrick Eberlein
  */
 public class LeaderboardCommand extends Command {
 
+    private static final int USERS_PER_PAGE = 10;
+
     public LeaderboardCommand(Redacted bot) {
         super(bot);
         this.name = "leaderboard";
-        this.description = "Shows the richest users in the server.";
+        this.description = "Show the leaderboard of users with the most money.";
         this.category = Category.ECONOMY;
+        this.subCommands.add(new SubcommandData("rank", "Shows the server's economy leaderboard"));
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
-
-        // Start from page 1 when first called
-        showLeaderboard(event, economyHandler, 0);
+        if (Objects.equals(event.getSubcommandName(), "rank")) {
+            displayLeaderboard(event);
+        }
     }
 
-    /**
-     * Show leaderboard paginated.
-     *
-     * @param event          The command interaction event.
-     * @param economyHandler The handler to fetch leaderboard data.
-     * @param page           The page number to display (0-indexed).
-     */
-    private void showLeaderboard(SlashCommandInteractionEvent event, EconomyHandler economyHandler, int page) {
-        int pageSize = 10;
-        int offset = page * pageSize;
-
-        // Get the leaderboard data from the handler
+    private void displayLeaderboard(SlashCommandInteractionEvent event) {
+        EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
         List<Economy> leaderboard = economyHandler.getLeaderboardAsList();
 
-        // Calculate total pages
-        int totalPages = (int) Math.ceil((double) leaderboard.size() / pageSize);
-
-        // Ensure the page is valid
-        if (page < 0 || page >= totalPages) {
-            event.reply("Invalid page!").setEphemeral(true).queue();
+        List<MessageEmbed> embeds = buildLeaderboardMenu(leaderboard, event, economyHandler);
+        if (embeds.isEmpty()) {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setTitle("Economy Leaderboard")
+                    .setDescription("No data to display.")
+                    .setColor(EmbedColor.DEFAULT.color);
+            event.replyEmbeds(embed.build()).queue();
             return;
         }
 
-        // Get the current page data
-        List<Economy> pageData = leaderboard.subList(offset, Math.min(offset + pageSize, leaderboard.size()));
+        // Send paginated leaderboard
+        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.replyEmbeds(embeds.get(0)), embeds);
+    }
 
-        // Create an embed
+    /**
+     * Builds a menu with the top users on the leaderboard.
+     *
+     * @param leaderboard the sorted list of users by net worth.
+     * @param event the command interaction event.
+     * @return a list of MessageEmbed objects for pagination.
+     */
+    private List<MessageEmbed> buildLeaderboardMenu(List<Economy> leaderboard, SlashCommandInteractionEvent event, EconomyHandler economyHandler) {
+        List<MessageEmbed> embeds = new ArrayList<>();
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("Leaderboard - Richest Users");
+        embed.setTitle("🏆  Economy Leaderboard");
         embed.setColor(EmbedColor.DEFAULT.color);
 
-        // Add users to the embed
-        for (int i = 0; i < pageData.size(); i++) {
-            Economy profile = pageData.get(i);
+        int counter = 0;
+        int rank = 1;
+        for (Economy profile : leaderboard) {
+            String userName = Objects.requireNonNull(Objects.requireNonNull(event.getGuild()).getMemberById(profile.getUser()))
+                    .getEffectiveName(); // Show nickname if available, otherwise username
 
-            // Fetch Member instead of User to get their guild nickname
-            Member member = event.getGuild().retrieveMemberById(profile.getUser()).complete();
-            String displayName = (member != null && member.getNickname() != null) ? member.getNickname() : member.getUser().getName();
+            long balance = profile.getBalance() != null ? profile.getBalance() : 0;
+            long bank = profile.getBank() != null ? profile.getBank() : 0;
+            long total = balance + bank;
 
-            long total = profile.getBalance() + (profile.getBank() != null ? profile.getBank() : 0);
+            embed.appendDescription("**" + rank + ". " + userName + "**\n" +
+                    "Balance: " + economyHandler.getCurrency() + " " + EconomyHandler.FORMATTER.format(total) + "\n\n");
+            counter++;
+            rank++;
 
-            embed.addField((offset + i + 1) + ". " + displayName,
-                    "Balance: " + economyHandler.getCurrency() + " " + EconomyHandler.FORMATTER.format(total), false);
+            if (counter % USERS_PER_PAGE == 0) {
+                embeds.add(embed.build());
+                embed.setDescription(""); // Reset description for the next page
+                counter = 0;
+            }
         }
 
-        // Add footer with current page and total pages
-        embed.setFooter("Page " + (page + 1) + " of " + totalPages);
-
-        // Prepare buttons for pagination
-        Button prevButton = Button.primary("leaderboard:prev:" + page, "Previous").asDisabled();
-        Button nextButton = Button.primary("leaderboard:next:" + page, "Next").asDisabled();
-
-        if (page > 0) {
-            prevButton = prevButton.asEnabled();
-        }
-        if (page < totalPages - 1) {
-            nextButton = nextButton.asEnabled();
+        if (counter != 0) {
+            embeds.add(embed.build()); // Add the last embed if not full
         }
 
-        // Reply with the embed and pagination buttons
-        event.replyEmbeds(embed.build())
-                .addActionRow(prevButton, nextButton)
-                .queue();
+        return embeds;
     }
 }

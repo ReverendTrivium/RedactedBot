@@ -53,7 +53,7 @@ public class LoopNSFWCommand extends Command {
         NSFWCommand nsfwCommand = (NSFWCommand) BotCommands.commandsMap.get("nsfw");
 
         // Print the first image immediately
-        nsfwCommand.executeCategory(event.getChannel().getId(), category);
+        nsfwCommand.executeCategory(event.getChannel().getId(), category, event);
 
         // Start the timer for subsequent images
         if (timer != null) {
@@ -63,7 +63,7 @@ public class LoopNSFWCommand extends Command {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                nsfwCommand.executeCategory(event.getChannel().getId(), category);
+                nsfwCommand.executeCategory(event.getChannel().getId(), category, event);
             }
         }, 6000, 6000); // 600000ms = 10 minutes
 

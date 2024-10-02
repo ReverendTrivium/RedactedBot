@@ -39,7 +39,7 @@ public class GalleryManager {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(EmbedColor.DEFAULT.color)
-                .setTitle("Here's a random NSFW gallery image")
+                .setTitle("Here's a random gallery image")
                 .setImage(url)
                 .setFooter("Page " + (page + 1) + "/" + urls.size());
 

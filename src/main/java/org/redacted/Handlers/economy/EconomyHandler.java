@@ -1,6 +1,7 @@
 package org.redacted.Handlers.economy;
 
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.*;
 import com.mongodb.lang.Nullable;
 import lombok.Getter;
@@ -9,20 +10,18 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.redacted.Database.Data.GuildData;
-import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Economy;
 import org.redacted.util.embeds.EmbedUtils;
+import org.redacted.Database.cache.Config;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Handles the server economy backend.
  *
- * @author TechnoVision, Derrick Eberlein
+ * @author Derrick Eberlein
  */
 @Getter
 public class EconomyHandler {
@@ -76,14 +75,14 @@ public class EconomyHandler {
     public EconomyReply work(long userID) {
         int amount = ThreadLocalRandom.current().nextInt(1000) + 200;
         addMoney(userID, amount);
-        setTimeout(userID, TIMEOUT_TYPE.WORK);
+        setTimeout(userID, TIMEOUT_TYPE.WORK); // Set work timeout
 
         return new EconomyReply("You earned " + amount + " " + currency, 1, true);
     }
 
     /**
-     * 40% chance to add 250-700 to user's balance.
-     * 60% chance to lose 20%-40% of user's balance.
+     * 40% chance to add 750-2750 to user's balance.
+     * 60% chance to lose 20%-40% of user's cash balance.
      *
      * @param userID the ID of user whose balance to add to.
      * @return an EconomyReply object with response, ID number, and success boolean.
@@ -91,17 +90,31 @@ public class EconomyHandler {
     public EconomyReply crime(long userID) {
         long amount;
         EconomyReply reply;
+
+        // Check if crime is successful
         if (ThreadLocalRandom.current().nextInt(100) <= 40) {
             // Crime successful
-            amount = ThreadLocalRandom.current().nextInt(450) + 250;
+            amount = ThreadLocalRandom.current().nextInt(2000) + 750;
             addMoney(userID, amount);
             reply = responses.getCrimeSuccessResponse(amount, getCurrency());
         } else {
             // Crime failed
-            amount = calculateFine(userID);
-            if (amount > 0) removeMoney(userID, amount);
-            reply = responses.getCrimeFailResponse(amount, getCurrency());
+            amount = calculateFine(userID); // Calculate the fine (e.g., 20%-40% of the balance)
+
+            // Get the current cash balance (non-banked money) of the user
+            long currentBalance = getBalance(userID);
+
+            if (currentBalance > 0) {
+                // Deduct money only up to the available balance
+                long amountToDeduct = Math.min(amount, currentBalance);
+                removeMoney(userID, amountToDeduct); // Deduct the calculated fine
+                reply = responses.getCrimeFailResponse(amountToDeduct, getCurrency());
+            } else {
+                // User has no cash on hand, return special response
+                reply = responses.getSmartBankResponse(); // Use the new response for avoiding fine
+            }
         }
+
         setTimeout(userID, TIMEOUT_TYPE.CRIME);
         return reply;
     }
@@ -350,6 +363,25 @@ public class EconomyHandler {
             rank++;
         }
         return guild.getMemberCount();
+    }
+
+    /**
+     * Get a sorted list of user economy data sorted by net worth.
+     * This method transforms the AggregateIterable from MongoDB into a List<Economy>.
+     *
+     * @return list of Economy objects sorted by net worth in descending order.
+     */
+    public List<Economy> getLeaderboardAsList() {
+        List<Economy> leaderboard = new ArrayList<>();
+        AggregateIterable<Economy> leaderboardAggregate = getLeaderboard();
+
+        try (MongoCursor<Economy> cursor = leaderboardAggregate.iterator()) {
+            while (cursor.hasNext()) {
+                leaderboard.add(cursor.next());
+            }
+        }
+
+        return leaderboard;
     }
 
     /**

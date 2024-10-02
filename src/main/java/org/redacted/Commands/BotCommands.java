@@ -102,6 +102,7 @@ public class BotCommands extends ListenerAdapter {
                     new RobCommand(bot),
                     new WithdrawCommand(bot),
                     new WorkCommand(bot),
+                    new LeaderboardCommand(bot),
 
                     // Utility commands
                     new Server(bot),

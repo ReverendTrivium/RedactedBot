@@ -73,4 +73,14 @@ public class EconomyLocalization {
         String reply = crimeFail[index].replaceAll("\\{amount}", value);
         return new EconomyReply(reply, index+1, false);
     }
+
+    /**
+     * Get a reply indicating the user avoided the fine by having no cash on hand.
+     *
+     * @return an EconomyReply object with a custom response and ID number.
+     */
+    public EconomyReply getSmartBankResponse() {
+        String reply = "You were smart and put your money in the bank, so you avoided the fine!";
+        return new EconomyReply(reply, 1, false); // ID can be 0 or some special value for this scenario
+    }
 }

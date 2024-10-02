@@ -4,19 +4,16 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bson.Document;
-import org.redacted.Commands.Category;
-import org.redacted.Commands.Command;
 import org.redacted.Redacted;
+import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
+import org.redacted.util.embeds.EmbedColor;
 import org.redacted.util.SocialMedia.Reddit.RedditClient;
 import org.redacted.util.SocialMedia.Reddit.RedditOAuth;
-import org.redacted.util.embeds.EmbedColor;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class AnimeCommand extends Command {
     private RedditClient redditClient;
@@ -59,6 +56,33 @@ public class AnimeCommand extends Command {
         } else {
             System.out.println("Token was null, RedditClient not initialized");
         }
+    }
+
+    private String refreshRedditToken(String clientId, String clientSecret, String username, String password) {
+        System.out.println("Checking Reddit Token Status...");
+        Document tokenDocument = bot.database.getRedditToken();
+        if (tokenDocument != null) {
+            System.out.println("Checking to see if Token is Expired...");
+            Instant expiration = tokenDocument.getDate("expiration").toInstant();
+            if (Instant.now().isBefore(expiration)) {
+                System.out.println("Token Not Expired!!");
+                return tokenDocument.getString("token");
+            }
+        }
+
+        try {
+            System.out.println("Setting new Reddit Token...");
+            String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
+            Instant expiration = Instant.now().plusSeconds(24 * 60 * 60); // 24 hours
+            bot.database.clearRedditToken();
+            bot.database.storeRedditToken(token, expiration);
+            return token;
+        } catch (IOException e) {
+            System.out.println("Failed to authenticate with Reddit API");
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     private String getRedditToken(String clientId, String clientSecret, String username, String password) {
@@ -105,8 +129,23 @@ public class AnimeCommand extends Command {
     }
 
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
+        // Get Reddit Token Variables and Initialize Config
+        Dotenv config = bot.getConfig();
+        String clientID = config.get("REDDIT_CLIENT_ID");
+        String secretID = config.get("REDDIT_SECRET_ID");
+        String username = config.get("REDDIT_USERNAME");
+        String password = config.get("REDDIT_PASSWORD");
+
+        // Check to make sure Reddit Token isn't expired before running command.
+        String token = refreshRedditToken(clientID, secretID, username, password);
+
+        if (token == null) {
+            event.getHook().sendMessage("RedditToken Refresh failed, contact Bot Administrator for support.").setEphemeral(true).queue();
+            return;
+        }
+
         if (attempt >= MAX_ATTEMPTS) {
-            event.getHook().sendMessage("Failed finding Images after multiple attempts, please try again later.").queue();
+            event.getHook().sendMessage("Failed finding Images after multiple attempts, please try again later.").setEphemeral(true).queue();
             return;
         }
 

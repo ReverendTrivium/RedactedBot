@@ -167,6 +167,12 @@ public class AnimeCommand extends Command {
                 }
             }
 
+            if (mediaUrl.contains("docs.google")) {
+                // Get new URL for Image
+                fetchAndSendMedia(event, category, includeVideos, attempt);
+
+            }
+
             if (mediaUrl.contains("redgifs.com/ifr")) {
                 mediaUrl = mediaUrl.replace("ifr", "watch");
             }

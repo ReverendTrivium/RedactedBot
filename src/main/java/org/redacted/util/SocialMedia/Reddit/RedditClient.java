@@ -47,7 +47,7 @@ public class RedditClient {
             String responseData = Objects.requireNonNull(response.body()).string();
 
             // Log the raw response for debugging
-            System.out.println("Response Data: " + responseData);
+            //System.out.println("Response Data: " + responseData);
 
             // Use a lenient JsonReader to handle slightly malformed JSON
             JsonReader reader = new JsonReader(new StringReader(responseData));

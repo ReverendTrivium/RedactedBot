@@ -188,7 +188,7 @@ public class AnimeCommand extends Command {
         // Handling different media types
         if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com")) {
             if (includeVideos) {
-                String message = String.format("**Here's a random video from r/%s:**\n||%s||", subreddit, mediaUrl);
+                String message = String.format("**Here's a random video from r/%s:**\n%s", subreddit, mediaUrl);
                 event.getHook().sendMessage(message).queue();
             } else {
                 System.out.println("Video found, but videos are not allowed.");

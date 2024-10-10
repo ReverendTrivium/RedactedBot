@@ -151,95 +151,90 @@ public class AnimeCommand extends Command {
 
         String subreddit = getRandomSubreddit(category);
 
-        try {
-            String mediaUrl = null;
-            boolean validMedia = false;
+        String mediaUrl = null;
+        boolean validMedia = false;
 
-            // Try fetching a valid media URL with a maximum of 10 attempts
-            while (!validMedia) {
+        // Try fetching a valid media URL with a maximum of 10 attempts
+        while (!validMedia) {
+            try {
                 mediaUrl = redditClient.getRandomImage(subreddit);
-                System.out.println("Media URL: " + mediaUrl);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Media URL: " + mediaUrl);
+            try {
                 validMedia = redditClient.isValidUrl(mediaUrl);
-                if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
-                    validMedia = false; // Skip videos if not desired
-                } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
-                    validMedia = false;
-                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            if (mediaUrl.contains("docs.google")) {
-                // Get new URL for Image
-                fetchAndSendMedia(event, category, includeVideos, attempt);
-
+            if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
+                validMedia = false; // Skip videos if not desired
+            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+                validMedia = false;
             }
+        }
 
-            if (mediaUrl.contains("redgifs.com/ifr")) {
-                mediaUrl = mediaUrl.replace("ifr", "watch");
-            }
+        if (mediaUrl.contains("redgifs.com/ifr")) {
+            mediaUrl = mediaUrl.replace("ifr", "watch");
+        }
 
-            // Handling different media types
-            if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com")) {
-                if (includeVideos) {
-                    String message = String.format("**Here's a random video from r/%s:**\n||%s||", subreddit, mediaUrl);
-                    event.getHook().sendMessage(message).queue();
-                } else {
-                    throw new IOException("Video found, but videos are not allowed.");
-                }
-            } else if (mediaUrl.endsWith(".gif") || mediaUrl.contains("v.redd.it")) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random gif from r/" + subreddit)
-                        .setImage(mediaUrl);
-
-                // Send the embed and add an error handler for failed image loading
-                event.getHook().sendMessageEmbeds(embed.build()).queue(
-                        message -> {
-                            // Success callback
-                        },
-                        throwable -> {
-                            // If image failed to load, retry fetching another image
-                            System.out.println("Image failed to load, retrying...");
-                            fetchAndSendMedia(event, category, includeVideos, attempt + 1);
-                        }
-                );
-            } else if (mediaUrl.contains("reddit.com/gallery")) {
-                List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
-                if (galleryUrls.isEmpty()) {
-                    fetchAndSendMedia(event, category, includeVideos, attempt + 1); // Retry with a new media URL
-                    return;
-                }
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random gallery from r/" + subreddit)
-                        .setImage(galleryUrls.get(0))
-                        .setFooter("Page 1/" + galleryUrls.size());
-
-                event.getHook().sendMessageEmbeds(embed.build()).queue(message -> {
-                    bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
-                    bot.getGalleryManager().addButtons(message, galleryUrls.size());
-                });
+        // Handling different media types
+        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com")) {
+            if (includeVideos) {
+                String message = String.format("**Here's a random video from r/%s:**\n||%s||", subreddit, mediaUrl);
+                event.getHook().sendMessage(message).queue();
             } else {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random image from r/" + subreddit)
-                        .setImage(mediaUrl);
-
-                // Send the embed and add an error handler for failed image loading
-                event.getHook().sendMessageEmbeds(embed.build()).queue(
-                        message -> {
-                            // Success callback
-                        },
-                        throwable -> {
-                            // If image failed to load, retry fetching another image
-                            System.out.println("Image failed to load, retrying...");
-                            fetchAndSendMedia(event, category, includeVideos, attempt + 1);
-                        }
-                );
+                System.out.println("Video found, but videos are not allowed.");
+                fetchAndSendMedia(event, category, includeVideos, attempt);
             }
-        } catch (IOException e) {
-            System.out.println("Failed finding Images, Retrying...");
-            fetchAndSendMedia(event, category, includeVideos, attempt + 1);
+        } else if (mediaUrl.endsWith(".gif") || mediaUrl.contains("v.redd.it")) {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random gif from r/" + subreddit)
+                    .setImage(mediaUrl);
+
+            // Send the embed and add an error handler for failed image loading
+            event.getHook().sendMessageEmbeds(embed.build()).queue(
+                    message -> {
+                        // Success callback
+                    },
+                    throwable -> {
+                        // If image failed to load, retry fetching another image
+                        System.out.println("Image failed to load, retrying...");
+                        fetchAndSendMedia(event, category, includeVideos, attempt + 1);
+                    });
+        } else if (mediaUrl.contains("reddit.com/gallery")) {
+            List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
+            if (galleryUrls.isEmpty()) {
+                fetchAndSendMedia(event, category, includeVideos, attempt + 1); // Retry with a new media URL
+                return;
+            }
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random gallery from r/" + subreddit)
+                    .setImage(galleryUrls.get(0))
+                    .setFooter("Page 1/" + galleryUrls.size());
+
+            event.getHook().sendMessageEmbeds(embed.build()).queue(message -> {
+                bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
+                bot.getGalleryManager().addButtons(message, galleryUrls.size());
+            });
+        } else {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random image from r/" + subreddit)
+                    .setImage(mediaUrl);
+
+            // Send the embed and add an error handler for failed image loading
+            event.getHook().sendMessageEmbeds(embed.build()).queue(
+                    message -> {
+                        // Success callback
+                    },
+                    throwable -> {
+                        // If image failed to load, retry fetching another image
+                        System.out.println("Image failed to load, retrying...");
+                        fetchAndSendMedia(event, category, includeVideos, attempt + 1);
+                    });
         }
     }
-
 }

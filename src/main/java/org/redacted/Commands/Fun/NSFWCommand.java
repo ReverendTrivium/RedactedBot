@@ -201,67 +201,71 @@ public class NSFWCommand extends Command {
 
         String subreddit = getRandomSubreddit(category);
 
-        try {
-            String mediaUrl = null;
-            boolean validMedia = false;
-            int attempts = 0;
+        String mediaUrl = null;
+        boolean validMedia = false;
+        int attempts = 0;
 
-            // Try fetching a valid media URL with a maximum of 10 attempts
-            while (!validMedia && attempts < 10) {
-                attempts++;
+        // Try fetching a valid media URL with a maximum of 10 attempts
+        while (!validMedia && attempts < 10) {
+            attempts++;
+            try {
                 mediaUrl = redditClient.getRandomImage(subreddit);
-                System.out.println("Media URL: " + mediaUrl);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Media URL: " + mediaUrl);
+            try {
                 validMedia = redditClient.isValidUrl(mediaUrl);
-                if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
-                    validMedia = false; // Skip videos if not desired
-                } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
-                    validMedia = false;
-                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            if (mediaUrl.contains("redgifs.com/ifr")) {
-                mediaUrl = mediaUrl.replace("ifr", "watch");
+            if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
+                validMedia = false; // Skip videos if not desired
+            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+                validMedia = false;
             }
+        }
 
-            if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("xhamster") || mediaUrl.contains("redtube") || mediaUrl.contains("pornhub")) {
-                if (includeVideos) {
-                    String message = String.format("**Here's a random NSFW video from r/%s:**\n||%s||", subreddit, mediaUrl);
-                    event.getHook().sendMessage(message).queue();
-                } else {
-                    throw new IOException("Video found, but videos are not allowed.");
-                }
-            } else if (mediaUrl.endsWith(".gif")) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW gif from r/" + subreddit)
-                        .setImage(mediaUrl);
-                event.getHook().sendMessageEmbeds(embed.build()).queue();
-            } else if (mediaUrl.contains("reddit.com/gallery")) {
-                List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
-                if (galleryUrls.isEmpty()) {
-                    fetchAndSendMedia(event, category, includeVideos, attempt + 1); // Retry with a new media URL
-                    return;
-                }
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW gallery from r/" + subreddit)
-                        .setImage(galleryUrls.get(0))
-                        .setFooter("Page 1/" + galleryUrls.size());
+        if (mediaUrl.contains("redgifs.com/ifr")) {
+            mediaUrl = mediaUrl.replace("ifr", "watch");
+        }
 
-                event.getHook().sendMessageEmbeds(embed.build()).queue(message -> {
-                    bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
-                    bot.getGalleryManager().addButtons(message, galleryUrls.size());
-                });
+        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("xhamster") || mediaUrl.contains("redtube") || mediaUrl.contains("pornhub")) {
+            if (includeVideos) {
+                String message = String.format("**Here's a random NSFW video from r/%s:**\n%s", subreddit, mediaUrl);
+                event.getHook().sendMessage(message).queue();
             } else {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW image from r/" + subreddit)
-                        .setImage(mediaUrl);
-                event.getHook().sendMessageEmbeds(embed.build()).queue();
+                System.out.println("Video found, but videos are not allowed.");
+                fetchAndSendMedia(event, category, includeVideos, attempt);
             }
-        } catch (IOException e) {
-            System.out.println("Failed finding Images, Retrying...");
-            fetchAndSendMedia(event, category, includeVideos, attempt + 1);
+        } else if (mediaUrl.endsWith(".gif")) {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW gif from r/" + subreddit)
+                    .setImage(mediaUrl);
+            event.getHook().sendMessageEmbeds(embed.build()).queue();
+        } else if (mediaUrl.contains("reddit.com/gallery")) {
+            List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
+            if (galleryUrls.isEmpty()) {
+                fetchAndSendMedia(event, category, includeVideos, attempt + 1); // Retry with a new media URL
+                return;
+            }
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW gallery from r/" + subreddit)
+                    .setImage(galleryUrls.get(0))
+                    .setFooter("Page 1/" + galleryUrls.size());
+
+            event.getHook().sendMessageEmbeds(embed.build()).queue(message -> {
+                bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
+                bot.getGalleryManager().addButtons(message, galleryUrls.size());
+            });
+        } else {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW image from r/" + subreddit)
+                    .setImage(mediaUrl);
+            event.getHook().sendMessageEmbeds(embed.build()).queue();
         }
     }
 
@@ -289,62 +293,65 @@ public class NSFWCommand extends Command {
 
         String subreddit = getRandomSubreddit(category);
 
-        try {
-            String mediaUrl = null;
-            boolean validMedia = false;
-            int attempts = 0;
+        String mediaUrl = null;
+        boolean validMedia = false;
+        int attempts = 0;
 
-            while (!validMedia && attempts < 10) {
-                attempts++;
+        while (!validMedia && attempts < 10) {
+            attempts++;
+            try {
                 mediaUrl = redditClient.getRandomImage(subreddit);
-                System.out.println("Media URL: " + mediaUrl);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Media URL: " + mediaUrl);
 
-                //Make sure their are no Comment mediaURLs
+            //Make sure their are no Comment mediaURLs
+            try {
                 validMedia = redditClient.isValidUrl(mediaUrl);
-                if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
-                    validMedia = false;
-                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            if (mediaUrl.contains("redgifs.com/ifr")) {
-                mediaUrl = mediaUrl.replace("ifr", "watch");
+            if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+                validMedia = false;
             }
+        }
 
-            if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("xhamster") || mediaUrl.contains("redtube") || mediaUrl.contains("pornhub")) {
-                String message = String.format("**Here's a random NSFW video from r/%s:**\n||%s||", subreddit, mediaUrl);
-                Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessage(message).queue();
-            } else if (mediaUrl.endsWith(".gif")) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW gif from r/" + subreddit)
-                        .setImage(mediaUrl);
-                Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue();
-            } else if (mediaUrl.contains("reddit.com/gallery")) {
-                List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
-                if (galleryUrls.isEmpty()) {
-                    fetchAndSendMedia(channelId, category, attempt + 1, event); // Retry with a new media URL
-                    return;
-                }
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW gallery from r/" + subreddit)
-                        .setImage(galleryUrls.get(0))
-                        .setFooter("Page 1/" + galleryUrls.size());
+        if (mediaUrl.contains("redgifs.com/ifr")) {
+            mediaUrl = mediaUrl.replace("ifr", "watch");
+        }
 
-                Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue(message -> {
-                    bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
-                    bot.getGalleryManager().addButtons(message, galleryUrls.size());
-                });
-            } else {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(EmbedColor.DEFAULT.color)
-                        .setTitle("Here's a random NSFW image from r/" + subreddit)
-                        .setImage(mediaUrl);
-                Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue();
+        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("xhamster") || mediaUrl.contains("redtube") || mediaUrl.contains("pornhub")) {
+            String message = String.format("**Here's a random NSFW video from r/%s:**\n%s", subreddit, mediaUrl);
+            Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessage(message).queue();
+        } else if (mediaUrl.endsWith(".gif")) {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW gif from r/" + subreddit)
+                    .setImage(mediaUrl);
+            Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue();
+        } else if (mediaUrl.contains("reddit.com/gallery")) {
+            List<String> galleryUrls = redditClient.getGalleryImages(mediaUrl);
+            if (galleryUrls.isEmpty()) {
+                fetchAndSendMedia(channelId, category, attempt + 1, event); // Retry with a new media URL
+                return;
             }
-        } catch (IOException e) {
-            System.out.println("Failed finding Images, Retrying...");
-            fetchAndSendMedia(channelId, category, attempt + 1, event);
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW gallery from r/" + subreddit)
+                    .setImage(galleryUrls.get(0))
+                    .setFooter("Page 1/" + galleryUrls.size());
+
+            Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue(message -> {
+                bot.getGalleryManager().addGallery(message.getIdLong(), galleryUrls);
+                bot.getGalleryManager().addButtons(message, galleryUrls.size());
+            });
+        } else {
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(EmbedColor.DEFAULT.color)
+                    .setTitle("Here's a random NSFW image from r/" + subreddit)
+                    .setImage(mediaUrl);
+            Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue();
         }
     }
 }

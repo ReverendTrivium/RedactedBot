@@ -52,6 +52,13 @@ public class LoopNSFWCommand extends Command {
         String category = Objects.requireNonNull(event.getOption("category")).getAsString();
         NSFWCommand nsfwCommand = (NSFWCommand) BotCommands.commandsMap.get("nsfw");
 
+        // Check to ensure this is an NSFW Channel
+        if (!event.getChannel().asTextChannel().isNSFW()) {
+            System.out.println("This is not an NSFW Channel");
+            event.getHook().sendMessage("This is not an NSFW Channel, cannot run NSFW Command in this channel").queue();
+            return;
+        }
+
         // Print the first image immediately
         nsfwCommand.executeCategory(event.getChannel().getId(), category, event);
 

@@ -186,7 +186,7 @@ public class AnimeCommand extends Command {
         }
 
         // Handling different media types
-        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com")) {
+        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com") || mediaUrl.contains("v.reddit.it")) {
             if (includeVideos) {
                 String message = String.format("**Here's a random video from r/%s:**\n%s", subreddit, mediaUrl);
                 event.getHook().sendMessage(message).queue();
@@ -194,7 +194,7 @@ public class AnimeCommand extends Command {
                 System.out.println("Video found, but videos are not allowed.");
                 fetchAndSendMedia(event, category, includeVideos, attempt + 1);
             }
-        } else if (mediaUrl.endsWith(".gif") || mediaUrl.contains("v.redd.it")) {
+        } else if (mediaUrl.endsWith(".gif")) {
             EmbedBuilder embed = new EmbedBuilder()
                     .setColor(EmbedColor.DEFAULT.color)
                     .setTitle("Here's a random gif from r/" + subreddit)

@@ -176,7 +176,7 @@ public class AnimeCommand extends Command {
             }
             if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
                 validMedia = false; // Skip videos if not desired
-            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
                 validMedia = false;
             }
         }

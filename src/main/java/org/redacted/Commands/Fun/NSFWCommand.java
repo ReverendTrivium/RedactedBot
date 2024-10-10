@@ -227,7 +227,7 @@ public class NSFWCommand extends Command {
             }
             if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
                 validMedia = false; // Skip videos if not desired
-            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
                 validMedia = false;
             }
         }
@@ -311,13 +311,13 @@ public class NSFWCommand extends Command {
             }
             System.out.println("Media URL: " + mediaUrl);
 
-            //Make sure their are no Comment mediaURLs
+            //Make sure there are no Comment or Patreon mediaURLs
             try {
                 validMedia = redditClient.isValidUrl(mediaUrl);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com")) {
+            if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
                 validMedia = false;
             }
         }

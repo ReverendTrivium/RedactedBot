@@ -37,7 +37,7 @@ public class AnimeCommand extends Command {
 
         // Initialize category to subreddit mapping
         categoryToSubreddits = new HashMap<>();
-        categoryToSubreddits.put("anime", List.of("AnimeGirls", "Animemes", "anime", "CuteAnimeGirls", "awwnimate", "Cuteanimenekos", "cuteanimeboys", "headpats",  "pouts", "AnimeBlush", "MoeBlushing"));
+        categoryToSubreddits.put("anime", List.of("AnimeGirls", "Animemes", "anime", "CuteAnimeGirls", "awwnimate", "Cuteanimenekos", "headpats",  "pouts", "AnimeBlush", "MoeBlushing"));
 
 
         // Get Reddit API Token

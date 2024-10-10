@@ -72,7 +72,6 @@ public class BotInitializer {
 
                 TextChannel introductionChannel = channelManager.getOrCreateTextChannel(guild, "introductions", "Information");
                 TextChannel moderationChannel = channelManager.getOrCreateTextChannel(guild, "mod-log", "Moderation");
-                TextChannel staffChannel = channelManager.getOrCreateTextChannel(guild, "staff-channel", "Staff");
                 TextChannel botCommands = channelManager.getOrCreateTextChannel(guild, "bot-commands", "Moderation");
                 TextChannel botFun = channelManager.getOrCreateTextChannel(guild, "bot-fun", "bot-fun");
                 TextChannel botNotifications = channelManager.getOrCreateTextChannel(guild, "bot-notifications", "bot-fun");

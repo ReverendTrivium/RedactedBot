@@ -121,11 +121,18 @@ public class AnimeCommand extends Command {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
+        // Set Category for Image Fetching
         String category =  "anime";
 
+        // Set Boolean to include videos and defer reply
         boolean includeVideos = true;
         event.deferReply().queue();
-        fetchAndSendMedia(event, category, includeVideos, 0);
+
+        // Set Attempt Variable
+        int attempt = 0;
+
+        //Call Image Fetching Function
+        fetchAndSendMedia(event, category, includeVideos, attempt);
     }
 
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
@@ -185,7 +192,7 @@ public class AnimeCommand extends Command {
                 event.getHook().sendMessage(message).queue();
             } else {
                 System.out.println("Video found, but videos are not allowed.");
-                fetchAndSendMedia(event, category, includeVideos, attempt);
+                fetchAndSendMedia(event, category, includeVideos, attempt + 1);
             }
         } else if (mediaUrl.endsWith(".gif") || mediaUrl.contains("v.redd.it")) {
             EmbedBuilder embed = new EmbedBuilder()

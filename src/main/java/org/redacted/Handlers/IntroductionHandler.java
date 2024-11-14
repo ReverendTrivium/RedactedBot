@@ -36,6 +36,7 @@ public class IntroductionHandler {
     private final MongoCollection<Document> blacklistCollection;
     private final ConcurrentMap<String, String> userIntroMessages;
     public static final ConcurrentMap<String, Boolean> staffDeletedMessages = new ConcurrentHashMap<>();
+    private boolean socialfound = false;
 
     public IntroductionHandler(Redacted bot, Guild guild, String introductionChannelId, String staffChannelId, String memberRoleId, String flagRoleId) {
         this.staffChannelId = staffChannelId;
@@ -124,23 +125,22 @@ public class IntroductionHandler {
         }
 
         for (String line : lines) {
-            if (line.toLowerCase().startsWith("name:")) {
-                String[] nameParts = line.substring(5).trim().split(" ");
-                if (nameParts.length > 1) {
-                    firstName = nameParts[0];
-                    lastName = nameParts[nameParts.length - 1];
-                } else {
-                    firstName = nameParts[0];
-                    lastName = "None";
-                }
-            } else if (line.toLowerCase().contains("instagram") || line.toLowerCase().contains("insta") || line.toLowerCase().contains("ig")) {
-                instagramHandle = line.substring(line.indexOf(":") + 1).trim();
+            if (line.toLowerCase().startsWith("name")) {
+                // Handle "Name -" and "Name:" formats
+                String name = line.contains(":") ? line.substring(line.indexOf(":") + 1).trim() : line.contains("-") ? line.substring(line.indexOf("-") + 1).trim() : "";
+                String[] nameParts = name.split("/");
+                firstName = nameParts[0].trim(); // Use only the first part before the slash
+                lastName = nameParts.length > 1 ? nameParts[1].trim() : "None";
+            } else if ((line.toLowerCase().startsWith("instagram") || line.toLowerCase().startsWith("insta") || line.toLowerCase().startsWith("ig") || line.toLowerCase().startsWith("ig tag:")) && !socialfound) {
+                instagramHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0]; // Only take the first part before a space
                 socialMediaPlatform = "instagram";
                 socialMediaHandle = instagramHandle;
-            } else if (line.toLowerCase().contains("facebook") || line.toLowerCase().contains("fb")) {
-                facebookHandle = line.substring(line.indexOf(":") + 1).trim();
+                socialfound = true;
+            } else if ((line.toLowerCase().contains("facebook") || line.toLowerCase().contains("fb")) && !socialfound) {
+                facebookHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0]; // Only take the first part before a space
                 socialMediaPlatform = "facebook";
                 socialMediaHandle = facebookHandle;
+                socialfound = true;
             }
         }
 
@@ -203,6 +203,7 @@ public class IntroductionHandler {
                 String nickname = firstName;
                 if (instagramHandle != null) {
                     nickname = String.format("%s | @%s", firstName, instagramHandle);
+                    System.out.println("Testing Nickname setting....");
                 } else if (facebookHandle != null) {
                     nickname = String.format("%s | @%s", firstName, facebookHandle);
                 }
@@ -211,7 +212,9 @@ public class IntroductionHandler {
                     nickname = firstName;
                 }
 
+                System.out.println("Trying to set Nickname...");
                 event.getGuild().modifyNickname(member, nickname).queue();
+                System.out.println("Nickname set sucessfully!");
                 event.getGuild().addRoleToMember(member, memberRole).queue();
                 userIntroMessages.put(message.getId(), member.getId());
                 saveUserIntroMessage(message.getId(), member.getId());
@@ -241,6 +244,7 @@ public class IntroductionHandler {
             Member member = event.getGuild().getMemberById(userId);
             Role adminRole = new getRolesByName().getRoleByName(event.getGuild(), "Admin");
             if (adminRole != null && member != null) {
+                assert staffChannel != null;
                 staffChannel.sendMessage(
                         String.format("%s User %s has deleted their introduction.",
                                 adminRole.getAsMention(), member.getAsMention())

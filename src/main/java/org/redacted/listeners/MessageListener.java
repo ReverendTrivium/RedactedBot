@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.redacted.Database.Data.GuildData;
 import org.redacted.Handlers.economy.EconomyHandler;
+import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.util.channels.ChannelFinder;
 
@@ -18,7 +18,7 @@ public class MessageListener extends ListenerAdapter {
 
     private final Redacted bot;
     private final Map<Long, Long> userCooldowns;
-    private final static long COOLDOWN_TIME = 60000000;
+    private final static long COOLDOWN_TIME = 60000;
 
     public MessageListener(Redacted bot) {
         this.bot = bot;
@@ -28,17 +28,22 @@ public class MessageListener extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
 
+        // Ignore messages that are not from a guild
+        if (!event.isFromGuild()) {
+            return;
+        }
+
         Guild guild = event.getGuild();
         Member member = event.getMember();
         Message message = event.getMessage();
 
-        // Ignore messages from bots and possible private DM messages.
+        // Ignore messages from bots
         if (member == null || member.getUser().isBot()) {
-            return; // Ignore bot messages
+            return;
         }
 
         long userId = event.getAuthor().getIdLong();
-        long guildId = event.getGuild().getIdLong();
+        long guildId = guild.getIdLong();
 
         // Get the current time
         long currentTime = System.currentTimeMillis();
@@ -52,7 +57,8 @@ public class MessageListener extends ListenerAdapter {
             }
         }
 
-        GuildData guildData = GuildData.get(event.getGuild(), bot);
+        // Fetch GuildData and EconomyHandler
+        GuildData guildData = GuildData.get(guild, bot);
         EconomyHandler economyHandler = guildData.getEconomyHandler();
 
         // User is not on cooldown, reward them with currency
@@ -60,8 +66,8 @@ public class MessageListener extends ListenerAdapter {
         economyHandler.addMoney(userId, rewardAmount);
 
         // Send a message to a specific channel
-        //String rewardMessage = String.format("%s has been rewarded with %d %s for being active!", member.getAsMention(), rewardAmount, economyHandler.getCurrency());
-        //sendMessageToChannelByName(guild, rewardMessage);
+        String rewardMessage = String.format("%s has been rewarded with %d %s for being active!", member.getAsMention(), rewardAmount, economyHandler.getCurrency());
+        sendMessageToChannelByName(guild, rewardMessage);
 
         // Update the user's last message time to now
         userCooldowns.put(userId, currentTime);
@@ -75,7 +81,7 @@ public class MessageListener extends ListenerAdapter {
                 channel.sendMessage(message).queue();
             }
         } else {
-            System.out.println("Channel with name '" + "bot-notifications" + "' not found.");
+            System.out.println("Channel with name 'bot-notifications' not found.");
         }
     }
 }

@@ -66,8 +66,8 @@ public class MessageListener extends ListenerAdapter {
         economyHandler.addMoney(userId, rewardAmount);
 
         // Send a message to a specific channel
-        String rewardMessage = String.format("%s has been rewarded with %d %s for being active!", member.getAsMention(), rewardAmount, economyHandler.getCurrency());
-        sendMessageToChannelByName(guild, rewardMessage);
+        //String rewardMessage = String.format("%s has been rewarded with %d %s for being active!", member.getAsMention(), rewardAmount, economyHandler.getCurrency());
+        //sendMessageToChannelByName(guild, rewardMessage);
 
         // Update the user's last message time to now
         userCooldowns.put(userId, currentTime);

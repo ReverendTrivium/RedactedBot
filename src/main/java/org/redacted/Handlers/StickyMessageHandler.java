@@ -15,7 +15,7 @@ public class StickyMessageHandler {
         this.bot = bot;
     }
 
-    public void handleStickyMessage(TextChannel channel) {
+    public void handleIntroStickyMessage(TextChannel channel) {
         // Get the guild-specific collection for sticky messages
         GuildData guildData = GuildData.get(channel.getGuild(), bot);
 
@@ -26,7 +26,7 @@ public class StickyMessageHandler {
                         ":arrow_forward:  **Template to Follow to gain access to Server:** :arrow_backward: \n" +
                                 "*Copy and Paste template below to gain access to the server!!*\n\n" +
                                 "**Name:** [real name or nickname] *(Required, will not get access to server without this)*\n" +
-                                "**Instagram:** [Don't include the @ character] *(Required, unless you would rather use Facebook)*\n" +
+                                "**Instagram Tag:** [Don't include the @ character] *(Required, unless you would rather use Facebook)*\n" +
                                 "**Facebook:** (Required, if you don't want to use Instagram)\n" +
                                 "**Pronouns:** *(Optional)*\n" +
                                 "**Location (DC/MD/VA):** *(Optional)*\n" +
@@ -42,6 +42,8 @@ public class StickyMessageHandler {
         Document stickyMessageDoc = guildData.getStickyMessagesCollection().find(new Document("channelId", channel.getIdLong())).first();
         if (stickyMessageDoc != null) {
             long messageId = stickyMessageDoc.getLong("messageId");
+            //Print Sticky Message ID:
+            System.out.println("StickMessage ID: " + messageId);
             // Delete the previous sticky message
             try {
                 channel.deleteMessageById(messageId).queue();
@@ -50,11 +52,13 @@ public class StickyMessageHandler {
             }
         }
 
-        // Send the new sticky message and save its ID to the guild-specific database
+        // Send the new sticky message and save its ID with a bot-generated flag
         channel.sendMessageEmbeds(embedBuilder.build()).queue(message -> guildData.getStickyMessagesCollection().updateOne(
                 new Document("channelId", channel.getIdLong()),
-                new Document("$set", new Document("messageId", message.getIdLong())),
+                new Document("$set", new Document("messageId", message.getIdLong())
+                        .append("isBotGenerated", true)), // Mark as bot-generated
                 new com.mongodb.client.model.UpdateOptions().upsert(true)
         ));
+        // print New Sticky Message ID
     }
 }

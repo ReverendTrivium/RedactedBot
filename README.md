@@ -17,7 +17,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/ReverendTrivium/RedactedBot">
-    <img src="https://i.imgur.com/YhesyWh.jpeg" alt="Logo" width="150" height="150">
+    <img src="https://i.imgur.com/jzRIgGF.jpeg" alt="Logo" width="150" height="150">
   </a>
 
 <h3 align="center">Redacted</h3>

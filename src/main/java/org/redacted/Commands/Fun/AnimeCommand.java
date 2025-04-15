@@ -164,20 +164,28 @@ public class AnimeCommand extends Command {
         // Try fetching a valid media URL with a maximum of 10 attempts
         while (!validMedia) {
             try {
+                // Fetch media from Reddit
                 mediaUrl = redditClient.getRandomImage(subreddit);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Media URL: " + mediaUrl);
-            try {
+
+                // Check for Forbidden (403) response
+                if (mediaUrl == null || mediaUrl.contains("\"error\":403")) {
+                    System.out.println("403 Forbidden encountered. Retrying with another subreddit...");
+                    subreddit = getRandomSubreddit(category); // Pick another subreddit
+                    continue;
+                }
+
+                System.out.println("Media URL: " + mediaUrl);
                 validMedia = redditClient.isValidUrl(mediaUrl);
+
+                // Handle invalid media
+                if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
+                    validMedia = false; // Skip videos if not desired
+                } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
+                    validMedia = false;
+                }
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
-                validMedia = false; // Skip videos if not desired
-            } else if (mediaUrl.contains("/comments") || mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
-                validMedia = false;
+                System.out.println("Error fetching media. Retrying...");
+                e.printStackTrace();
             }
         }
 

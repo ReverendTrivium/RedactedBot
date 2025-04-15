@@ -20,7 +20,7 @@ dependencies {
     implementation('io.github.cdimascio:dotenv-java:3.0.0')
     implementation ('org.mongodb:mongodb-driver-sync:5.1.0')
     implementation ('org.apache.commons:commons-collections4:4.4')
-    implementation ('org.apache.commons:commons-lang3:3.9')
+    implementation 'org.apache.commons:commons-lang3:3.13.0'
     implementation ('org.apache.httpcomponents:httpclient:4.5.13')
     implementation ('org.apache.commons:commons-math3:3.6.1')
     implementation ('org.mongodb:mongodb-driver-sync:5.1.0')
@@ -32,7 +32,12 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation group: 'org.htmlunit', name: 'htmlunit', version: '4.11.1'
+    implementation('org.htmlunit:htmlunit:4.11.1') {
+            exclude group: 'commons-logging', module: 'commons-logging'
+    }
+    implementation 'io.github.bonigarcia:webdrivermanager:5.8.0'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.12.1' // or latest 4.x
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.12.1'// for auto driver management
 }
 
 bootJar {

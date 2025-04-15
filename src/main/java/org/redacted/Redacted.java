@@ -63,6 +63,8 @@ public class Redacted {
 
     public static void main(String[] args) {
         try {
+            java.util.logging.Logger.getLogger("org.htmlunit").setLevel(java.util.logging.Level.OFF);
+            java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(java.util.logging.Level.OFF);
             new Redacted();
             System.out.println("Bot started successfully");
         } catch (LoginException e) {

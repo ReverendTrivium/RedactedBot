@@ -1,15 +1,13 @@
 package org.redacted.util.SocialMedia;
 
+import org.htmlunit.WebRequest;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebClient;
+import org.htmlunit.html.HtmlPage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +17,6 @@ import java.util.Map;
  * @author Derrick Eberlein
  */
 public class SocialMediaUtils {
-    private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public static boolean isValidSocialMediaHandle(String platform, String handle) throws IOException {
@@ -32,68 +29,39 @@ public class SocialMediaUtils {
 
     public static boolean isValidInstagramHandle(String handle) {
         String url = "https://www.instagram.com/" + handle;
-
-        Request request = new Request.Builder()
-                .url(url)
-                .header("User-Agent", "Mozilla/5.0") // Important to avoid 403
-                .build();
-
         Map<String, Object> jsonResponse = new HashMap<>();
+        jsonResponse.put("url", url);
 
-        try (Response response = client.newCall(request).execute()) {
-            jsonResponse.put("url", url);
-            jsonResponse.put("responseCode", response.code());
+        try (final WebClient webClient = new WebClient()) {
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setThrowExceptionOnScriptError(false);
+            webClient.getOptions().setUseInsecureSSL(true);
+            webClient.getOptions().setTimeout(5000);
 
-            if (response.code() == 429) {
+            WebRequest request = new WebRequest(new URL(url), HttpMethod.GET);
+            request.setAdditionalHeader("User-Agent", "Mozilla/5.0");
+
+            HtmlPage page = webClient.getPage(request);
+            String title = page.getTitleText();
+            String bodyText = page.asNormalizedText();
+
+            jsonResponse.put("pageTitle", title);
+
+            if (title.contains("Page Not Found") || bodyText.contains("Sorry, this page isn't available.")) {
                 jsonResponse.put("status", "failed");
-                jsonResponse.put("reason", "Rate limited (429)");
-                logJsonResponse(jsonResponse);
-                return false; // Alternatively retry with a different handle
-            }
-
-            if (!response.isSuccessful()) {
-                jsonResponse.put("status", "failed");
-                jsonResponse.put("reason", "Response not successful");
+                jsonResponse.put("reason", "Page Not Found");
                 logJsonResponse(jsonResponse);
                 return false;
-            }
-
-            ResponseBody body = response.body();
-            if (body != null) {
-                String responseBody = body.string();
-                jsonResponse.put("responseBody", responseBody);
-
-                Document doc = Jsoup.parse(responseBody);
-                String title = doc.title();
-                if (title.contains("Page Not Found") || title.contains("Sorry, this page isn't available.")) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Page Not Found");
-                    jsonResponse.put("pageTitle", title);
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
-
-                if (responseBody.toLowerCase().contains("polariserror")) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Page Not Found / polariserror");
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
-
-                if (!doc.select("div.error-container").isEmpty()) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Error container found");
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
             }
 
             jsonResponse.put("status", "successful");
             logJsonResponse(jsonResponse);
             return true;
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             jsonResponse.put("status", "failed");
-            jsonResponse.put("reason", "IOException occurred");
+            jsonResponse.put("reason", "Exception occurred");
             jsonResponse.put("exceptionMessage", e.getMessage());
             logJsonResponse(jsonResponse);
             return false;
@@ -102,61 +70,39 @@ public class SocialMediaUtils {
 
     public static boolean isValidFacebookHandle(String handle) {
         String url = "https://www.facebook.com/" + handle;
-
-        Request requests = new Request.Builder()
-                .url(url)
-                .header("User-Agent", "Mozilla/5.0")
-                .build();
-
         Map<String, Object> jsonResponse = new HashMap<>();
+        jsonResponse.put("url", url);
 
-        try (Response response = client.newCall(requests).execute()) {
-            jsonResponse.put("url", url);
-            jsonResponse.put("responseCode", response.code());
+        try (final WebClient webClient = new WebClient()) {
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setThrowExceptionOnScriptError(false);
+            webClient.getOptions().setUseInsecureSSL(true);
+            webClient.getOptions().setTimeout(5000);
 
-            if (!response.isSuccessful()) {
+            WebRequest request = new WebRequest(new URL(url), HttpMethod.GET);
+            request.setAdditionalHeader("User-Agent", "Mozilla/5.0");
+
+            HtmlPage page = webClient.getPage(request);
+            String title = page.getTitleText();
+            String bodyText = page.asNormalizedText();
+
+            jsonResponse.put("pageTitle", title);
+
+            if (title.contains("Page Not Found") || bodyText.contains("This content isn't available")) {
                 jsonResponse.put("status", "failed");
-                jsonResponse.put("reason", "Response not successful");
+                jsonResponse.put("reason", "Page Not Found");
                 logJsonResponse(jsonResponse);
                 return false;
             }
 
-            ResponseBody body = response.body();
-            if (body != null) {
-                String responseBody = body.string();
-                jsonResponse.put("responseBody", responseBody);
-
-                Document doc = Jsoup.parse(responseBody);
-
-                String title = doc.title();
-                if (title.contains("Page Not Found") || title.contains("Sorry, this page isn't available.")) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Page Not Found");
-                    jsonResponse.put("pageTitle", title);
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
-
-                if (responseBody.toLowerCase().contains("this content is")) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Page Not Found");
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
-
-                if (!doc.select("div.error-container").isEmpty()) {
-                    jsonResponse.put("status", "failed");
-                    jsonResponse.put("reason", "Error container found");
-                    logJsonResponse(jsonResponse);
-                    return false;
-                }
-            }
             jsonResponse.put("status", "successful");
             logJsonResponse(jsonResponse);
             return true;
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             jsonResponse.put("status", "failed");
-            jsonResponse.put("reason", "IOException occurred");
+            jsonResponse.put("reason", "Exception occurred");
             jsonResponse.put("exceptionMessage", e.getMessage());
             logJsonResponse(jsonResponse);
             return false;

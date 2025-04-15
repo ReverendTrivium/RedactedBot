@@ -44,44 +44,6 @@ public class ChannelManager {
                     e.printStackTrace();
                 }
             }
-            case "Moderation", "Staff" -> {
-                try {
-                    RoleManager roleManager = new RoleManager();
-                    Role adminRole = roleManager.getOrCreateRole(guild, "Admin", RoleHierarchyManager.ALL_PERMISSIONS, RoleHierarchyManager.ADMIN_COLOR);
-                    Role headDJRole = roleManager.getOrCreateRole(guild, "Head DJ", RoleHierarchyManager.HEAD_DJ_PERMISSIONS, RoleHierarchyManager.HEAD_DJ_COLOR);
-                    Role eventStaffRole = roleManager.getOrCreateRole(guild, "Event Staff", RoleHierarchyManager.EVENT_STAFF_PERMISSIONS, RoleHierarchyManager.EVENT_STAFF_COLOR);
-
-                    Objects.requireNonNull(channel).upsertPermissionOverride(guild.getPublicRole())
-                            .deny(Permission.VIEW_CHANNEL)
-                            .queue();
-                    channel.upsertPermissionOverride(adminRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    channel.upsertPermissionOverride(headDJRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    channel.upsertPermissionOverride(eventStaffRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    System.out.println("Updated permissions for text channel: " + name + " under category: " + categoryName);
-                } catch (Exception e) {
-                    System.err.println("Failed to update permissions for text channel: " + name);
-                    e.printStackTrace();
-                }
-            }
-            case "bot-fun" -> {
-                try {
-                    RoleManager roleManager = new RoleManager();
-                    Role memberRole = roleManager.getOrCreateRole(guild, "Member", RoleHierarchyManager.MEMBER_PERMISSIONS, RoleHierarchyManager.MEMBER_COLOR);
-                    Objects.requireNonNull(category).upsertPermissionOverride(memberRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    System.out.println("Updated permissions for category: " + name);
-                } catch (Exception e) {
-                    System.err.println("Failed to update permissions for category: " + name);
-                    e.printStackTrace();
-                }
-            }
         }
 
         return channel;

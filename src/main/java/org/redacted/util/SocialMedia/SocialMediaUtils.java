@@ -35,6 +35,7 @@ public class SocialMediaUtils {
 
         Request request = new Request.Builder()
                 .url(url)
+                .header("User-Agent", "Mozilla/5.0") // Important to avoid 403
                 .build();
 
         Map<String, Object> jsonResponse = new HashMap<>();
@@ -42,6 +43,13 @@ public class SocialMediaUtils {
         try (Response response = client.newCall(request).execute()) {
             jsonResponse.put("url", url);
             jsonResponse.put("responseCode", response.code());
+
+            if (response.code() == 429) {
+                jsonResponse.put("status", "failed");
+                jsonResponse.put("reason", "Rate limited (429)");
+                logJsonResponse(jsonResponse);
+                return false; // Alternatively retry with a different handle
+            }
 
             if (!response.isSuccessful()) {
                 jsonResponse.put("status", "failed");
@@ -56,7 +64,6 @@ public class SocialMediaUtils {
                 jsonResponse.put("responseBody", responseBody);
 
                 Document doc = Jsoup.parse(responseBody);
-
                 String title = doc.title();
                 if (title.contains("Page Not Found") || title.contains("Sorry, this page isn't available.")) {
                     jsonResponse.put("status", "failed");
@@ -80,6 +87,7 @@ public class SocialMediaUtils {
                     return false;
                 }
             }
+
             jsonResponse.put("status", "successful");
             logJsonResponse(jsonResponse);
             return true;
@@ -97,6 +105,7 @@ public class SocialMediaUtils {
 
         Request requests = new Request.Builder()
                 .url(url)
+                .header("User-Agent", "Mozilla/5.0")
                 .build();
 
         Map<String, Object> jsonResponse = new HashMap<>();

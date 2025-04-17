@@ -1,17 +1,24 @@
 package org.redacted.util.SocialMedia.Reddit;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+
+import org.jsoup.Jsoup;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.jsoup.Jsoup;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.*;
 
 public class RedditClient {
     private final OkHttpClient httpClient;
@@ -19,7 +26,12 @@ public class RedditClient {
     private final Random random;
 
     public RedditClient(OkHttpClient httpClient, String accessToken) {
-        this.httpClient = httpClient;
+        this.httpClient = new OkHttpClient.Builder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .readTimeout(Duration.ofSeconds(30))
+                .writeTimeout(Duration.ofSeconds(30))
+                .retryOnConnectionFailure(true)
+                .build();
         this.accessToken = accessToken;
         this.random = new Random();
     }
@@ -38,61 +50,67 @@ public class RedditClient {
         Request request = new Request.Builder()
                 .url(url)
                 .header("Authorization", "Bearer " + accessToken)
-                .header("User-Agent", "YourAppName")
+                .header("User-Agent", "MyBot/1.0 by u/your_reddit_user")
                 .build();
 
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+        IOException lastException = null;
 
-            String responseData = Objects.requireNonNull(response.body()).string();
+        for (int attempt = 0; attempt < 3; attempt++) {
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    System.out.println("Reddit request failed: " + response);
+                    continue;
+                }
 
-            // Log the raw response for debugging
-            //System.out.println("Response Data: " + responseData);
+                String responseData = Objects.requireNonNull(response.body()).string();
+                JsonReader reader = new JsonReader(new StringReader(responseData));
+                reader.setLenient(true);
 
-            // Use a lenient JsonReader to handle slightly malformed JSON
-            JsonReader reader = new JsonReader(new StringReader(responseData));
-            reader.setLenient(true);  // Allow lenient parsing
+                JsonArray children;
 
-            JsonArray children;
-
-            if (url.contains("random")) {
-                try {
-                    JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
-                    if (!arr.isEmpty()) {
-                        children = arr.get(0).getAsJsonObject().getAsJsonObject("data").getAsJsonArray("children");
-                    } else {
-                        throw new IOException("No data found in random.json response.");
+                if (url.contains("random")) {
+                    try {
+                        JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
+                        if (!arr.isEmpty()) {
+                            children = arr.get(0).getAsJsonObject().getAsJsonObject("data").getAsJsonArray("children");
+                        } else {
+                            throw new IOException("No data found in random.json response.");
+                        }
+                    } catch (IllegalStateException e) {
+                        JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+                        children = obj.getAsJsonObject("data").getAsJsonArray("children");
                     }
-                } catch (IllegalStateException e) {
-                    JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                    children = obj.getAsJsonObject("data").getAsJsonArray("children");
+                } else {
+                    JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+                    children = jsonObject.getAsJsonObject("data").getAsJsonArray("children");
                 }
-            } else {
-                JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-                children = jsonObject.getAsJsonObject("data").getAsJsonArray("children");
-            }
 
-            // Extract valid media URLs
-            List<String> mediaUrls = new ArrayList<>();
-            for (int i = 0; i < children.size(); i++) {
-                JsonObject postData = children.get(i).getAsJsonObject().getAsJsonObject("data");
-                String mediaUrl = extractMediaUrl(postData);
-                if (mediaUrl != null) {
-                    mediaUrls.add(mediaUrl);
+                List<String> mediaUrls = new ArrayList<>();
+                for (int i = 0; i < children.size(); i++) {
+                    JsonObject postData = children.get(i).getAsJsonObject().getAsJsonObject("data");
+                    String mediaUrl = extractMediaUrl(postData);
+                    if (mediaUrl != null) {
+                        mediaUrls.add(mediaUrl);
+                    }
                 }
-            }
 
-            if (mediaUrls.isEmpty()) {
-                throw new IOException("No valid media URLs found.");
-            }
+                if (mediaUrls.isEmpty()) {
+                    throw new IOException("No valid media URLs found.");
+                }
 
-            Collections.shuffle(mediaUrls);
-            return mediaUrls.get(0);
+                Collections.shuffle(mediaUrls);
+                return mediaUrls.get(0);
+            } catch (IOException ex) {
+                System.out.println("Retrying Reddit fetch (attempt " + (attempt + 1) + "): " + ex.getMessage());
+                lastException = ex;
+                httpClient.connectionPool().evictAll();
+            }
         }
+
+        throw new IOException("Failed to fetch Reddit image after 3 attempts.", lastException);
     }
 
     private String extractMediaUrl(JsonObject mediaData) {
-        // Simplified extraction logic, this should be adapted based on the actual Reddit JSON response structure
         if (mediaData.has("url")) {
             return mediaData.get("url").getAsString();
         } else if (mediaData.has("media")) {
@@ -119,14 +137,9 @@ public class RedditClient {
         List<String> imageUrls = new ArrayList<>();
         try {
             org.jsoup.nodes.Document doc = Jsoup.connect(galleryUrl).get();
-
-            // Log the fetched HTML to the console for inspection
-           // System.out.println(doc.html());
-
             doc.select("a[href]").forEach(element -> {
                 String url = element.attr("href");
                 if (url.contains("preview.redd.it") && url.contains("format=pjpg&auto=webp")) {
-                    // Unblur the URL
                     url = url.replace("&amp;", "&");
                     imageUrls.add(url);
                 }
@@ -137,5 +150,3 @@ public class RedditClient {
         return imageUrls;
     }
 }
-
-

@@ -36,8 +36,8 @@ dependencies {
             exclude group: 'commons-logging', module: 'commons-logging'
     }
     implementation 'io.github.bonigarcia:webdrivermanager:5.8.0'
-    implementation 'org.seleniumhq.selenium:selenium-java:4.12.1' // or latest 4.x
-    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.12.1'// for auto driver management
+    implementation 'org.seleniumhq.selenium:selenium-java:4.19.1' // or latest 4.x
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.19.1'// for auto driver management
 }
 
 bootJar {

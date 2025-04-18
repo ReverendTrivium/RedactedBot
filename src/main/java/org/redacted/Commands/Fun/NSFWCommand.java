@@ -142,7 +142,7 @@ public class NSFWCommand extends Command {
             System.out.println("Authenticating with Reddit...");
             String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
             System.out.println("Reddit API Token: " + token);
-            Instant expiration = Instant.now().plusSeconds(24 * 60 * 60); // 24 hours
+            Instant expiration = Instant.now().plusSeconds(3600); // 1 Hour
             bot.database.clearRedditToken();
             bot.database.storeRedditToken(token, expiration);
             return token;

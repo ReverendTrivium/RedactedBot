@@ -2,7 +2,6 @@ package org.redacted.util.SocialMedia.Reddit;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,21 +21,19 @@ import okhttp3.Response;
 
 public class RedditClient {
     private final OkHttpClient httpClient;
-    private final String accessToken;
+    private final RedditTokenManager tokenProvider;
     private final Random random;
 
-    public RedditClient(OkHttpClient httpClient, String accessToken) {
-        this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .readTimeout(Duration.ofSeconds(30))
-                .writeTimeout(Duration.ofSeconds(30))
-                .retryOnConnectionFailure(true)
-                .build();
-        this.accessToken = accessToken;
+    public RedditClient(OkHttpClient httpClient, RedditTokenManager tokenProvider) {
+        this.httpClient = httpClient;
+        this.tokenProvider = tokenProvider;
         this.random = new Random();
     }
 
     public String getRandomImage(String subreddit) throws IOException {
+        String accessToken = tokenProvider.getValidToken();
+        if (accessToken == null) throw new IOException("Failed to get valid Reddit access token");
+
         String[] endpoints = {"hot", "new", "top"};
         String endpoint = endpoints[random.nextInt(endpoints.length)];
         String url = "https://oauth.reddit.com/r/" + subreddit + "/" + endpoint + ".json?limit=50";
@@ -47,15 +44,18 @@ public class RedditClient {
 
         System.out.println("URL: " + url);
 
-        Request request = new Request.Builder()
-                .url(url)
-                .header("Authorization", "Bearer " + accessToken)
-                .header("User-Agent", "MyBot/1.0 by u/your_reddit_user")
-                .build();
-
         IOException lastException = null;
 
         for (int attempt = 0; attempt < 3; attempt++) {
+            String token = tokenProvider.getValidToken();
+            if (token == null) throw new IOException("Token fetch failed during retry");
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + token)
+                    .header("User-Agent", "YourAppName")
+                    .build();
+
             try (Response response = httpClient.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     System.out.println("Reddit request failed: " + response);

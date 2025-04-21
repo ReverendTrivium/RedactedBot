@@ -3,23 +3,26 @@ package org.redacted.Commands.Fun;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.bson.Document;
 import org.redacted.Redacted;
 import org.redacted.Commands.Command;
 import org.redacted.Commands.Category;
+import org.redacted.util.SocialMedia.Reddit.RedditTokenManager;
 import org.redacted.util.embeds.EmbedColor;
 import org.redacted.util.SocialMedia.Reddit.RedditClient;
 import org.redacted.util.SocialMedia.Reddit.RedditOAuth;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 
 public class AnimeCommand extends Command {
     private RedditClient redditClient;
-    private final RedditOAuth redditOAuth;
     private final Redacted bot;
     private static final int MAX_ATTEMPTS = 10;
+    private static final String[] SUBREDDITS = {
+            "AnimeGirls", "Animemes", "anime", "CuteAnimeGirls", "awwnimate",
+            "Cuteanimenekos", "headpats",  "pouts", "AnimeBlush", "MoeBlushing"
+    };
+    private final RedditTokenManager redditTokenManager;
 
     // Mapping of categories to subreddits
     private final Map<String, List<String>> categoryToSubreddits;
@@ -37,77 +40,25 @@ public class AnimeCommand extends Command {
 
         // Initialize category to subreddit mapping
         categoryToSubreddits = new HashMap<>();
-        categoryToSubreddits.put("anime", List.of("AnimeGirls", "Animemes", "anime", "CuteAnimeGirls", "awwnimate", "Cuteanimenekos", "headpats",  "pouts", "AnimeBlush", "MoeBlushing"));
-
+        categoryToSubreddits.put("anime", List.of(SUBREDDITS));
 
         // Get Reddit API Token
-        this.redditOAuth = new RedditOAuth(bot.httpClient, bot.gson);
-        String token = getRedditToken(clientID, secretID, username, password);
+        RedditOAuth redditOAuth = new RedditOAuth(bot.httpClient, bot.gson);
 
         this.name = "anime";
         this.description = "Get a random anime image! :3";
         this.category = Category.FUN;
 
+        this.redditTokenManager = new RedditTokenManager(bot.getDatabase(), redditOAuth, clientID, secretID, username, password);
+
         // Initialize the RedditClient with your access token
-        if (token != null) {
+        if (redditTokenManager != null) {
             System.out.println("Initializing RedditClient...");
-            this.redditClient = new RedditClient(bot.httpClient, token);
+            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
             System.out.println("RedditClient initialized with token");
         } else {
             System.out.println("Token was null, RedditClient not initialized");
         }
-    }
-
-    private String refreshRedditToken(String clientId, String clientSecret, String username, String password) {
-        System.out.println("Checking Reddit Token Status...");
-        Document tokenDocument = bot.database.getRedditToken();
-        if (tokenDocument != null) {
-            System.out.println("Checking to see if Token is Expired...");
-            Instant expiration = tokenDocument.getDate("expiration").toInstant();
-            if (Instant.now().isBefore(expiration)) {
-                System.out.println("Token Not Expired!!");
-                return tokenDocument.getString("token");
-            }
-        }
-
-        try {
-            System.out.println("Setting new Reddit Token...");
-            String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
-            Instant expiration = Instant.now().plusSeconds(24 * 60 * 60); // 24 hours
-            bot.database.clearRedditToken();
-            bot.database.storeRedditToken(token, expiration);
-            return token;
-        } catch (IOException e) {
-            System.out.println("Failed to authenticate with Reddit API");
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private String getRedditToken(String clientId, String clientSecret, String username, String password) {
-        Document tokenDocument = bot.database.getRedditToken();
-        if (tokenDocument != null) {
-            Instant expiration = tokenDocument.getDate("expiration").toInstant();
-            if (Instant.now().isBefore(expiration)) {
-                return tokenDocument.getString("token");
-            }
-        }
-
-        try {
-            System.out.println("Authenticating with Reddit...");
-            String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
-            System.out.println("Reddit API Token: " + token);
-            Instant expiration = Instant.now().plusSeconds(3600); // 1 Hour
-            bot.database.clearRedditToken();
-            bot.database.storeRedditToken(token, expiration);
-            return token;
-        } catch (IOException e) {
-            System.out.println("Failed to authenticate with Reddit API");
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     private String getRandomSubreddit(String category) {
@@ -144,7 +95,7 @@ public class AnimeCommand extends Command {
         String password = config.get("REDDIT_PASSWORD");
 
         // Check to make sure Reddit Token isn't expired before running command.
-        String token = refreshRedditToken(clientID, secretID, username, password);
+        String token = redditTokenManager.getValidToken();
 
         if (token == null) {
             event.getHook().sendMessage("RedditToken Refresh failed, contact Bot Administrator for support.").setEphemeral(true).queue();

@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.bson.Document;
 import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
 import org.redacted.Redacted;
@@ -17,7 +16,6 @@ import org.redacted.util.SocialMedia.Reddit.RedditTokenManager;
 import org.redacted.util.embeds.EmbedColor;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 
 public class NSFWCommand extends Command {
@@ -66,8 +64,6 @@ public class NSFWCommand extends Command {
         this.redditOAuth = new RedditOAuth(bot.httpClient, bot.gson);
         this.redditTokenManager = new RedditTokenManager(bot.getDatabase(), redditOAuth, clientID, secretID, username, password);
 
-        String token = redditTokenManager.getValidToken();
-
         this.name = "nsfw";
         this.description = "Get an nsfw image [18+ only].";
         this.category = Category.FUN;
@@ -94,15 +90,6 @@ public class NSFWCommand extends Command {
                 .addChoice("native", "native"));
 
         this.args.add(new OptionData(OptionType.BOOLEAN, "video", "Whether to include videos in the results").setRequired(false));
-
-        // Initialize the RedditClient with your access token
-        if (token != null) {
-            System.out.println("Initializing RedditClient...");
-            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
-            System.out.println("RedditClient initialized with token");
-        } else {
-            System.out.println("Token was null, RedditClient not initialized");
-        }
     }
 
     private String getRandomSubreddit(String category) {
@@ -123,6 +110,17 @@ public class NSFWCommand extends Command {
         String username = config.get("REDDIT_USERNAME");
         String password = config.get("REDDIT_PASSWORD");
 
+        String token = redditTokenManager.getValidToken();
+
+        // Initialize the RedditClient with your access token
+        if (token != null) {
+            System.out.println("Initializing RedditClient...");
+            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
+            System.out.println("RedditClient initialized with token");
+        } else {
+            System.out.println("Token was null, RedditClient not initialized");
+        }
+
         OptionMapping categoryOption = event.getOption("category");
         String category = (categoryOption != null) ? categoryOption.getAsString() : "nsfw"; // Default category if none provided
 
@@ -139,9 +137,6 @@ public class NSFWCommand extends Command {
 
         // Set Attempt Count for fetching NSFW Image
         int attempt = 0;
-
-        // Check to make sure Reddit Token isn't expired before running command.
-        String token = redditTokenManager.getValidToken();
 
         if (token != null) {
             fetchAndSendMedia(event, category, includeVideos, attempt);

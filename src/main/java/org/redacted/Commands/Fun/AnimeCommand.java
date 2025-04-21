@@ -3,16 +3,19 @@ package org.redacted.Commands.Fun;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.redacted.Redacted;
-import org.redacted.Commands.Command;
 import org.redacted.Commands.Category;
-import org.redacted.util.SocialMedia.Reddit.RedditTokenManager;
-import org.redacted.util.embeds.EmbedColor;
+import org.redacted.Commands.Command;
+import org.redacted.Redacted;
 import org.redacted.util.SocialMedia.Reddit.RedditClient;
 import org.redacted.util.SocialMedia.Reddit.RedditOAuth;
+import org.redacted.util.SocialMedia.Reddit.RedditTokenManager;
+import org.redacted.util.embeds.EmbedColor;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class AnimeCommand extends Command {
     private RedditClient redditClient;
@@ -50,15 +53,6 @@ public class AnimeCommand extends Command {
         this.category = Category.FUN;
 
         this.redditTokenManager = new RedditTokenManager(bot.getDatabase(), redditOAuth, clientID, secretID, username, password);
-
-        // Initialize the RedditClient with your access token
-        if (redditTokenManager != null) {
-            System.out.println("Initializing RedditClient...");
-            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
-            System.out.println("RedditClient initialized with token");
-        } else {
-            System.out.println("Token was null, RedditClient not initialized");
-        }
     }
 
     private String getRandomSubreddit(String category) {
@@ -81,6 +75,16 @@ public class AnimeCommand extends Command {
 
         // Set Attempt Variable
         int attempt = 0;
+
+        String token = redditTokenManager.getValidToken();
+        // Initialize the RedditClient with your access token
+        if (token!= null) {
+            System.out.println("Initializing RedditClient...");
+            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
+            System.out.println("RedditClient initialized with token");
+        } else {
+            System.out.println("Token was null, RedditClient not initialized");
+        }
 
         //Call Image Fetching Function
         fetchAndSendMedia(event, category, includeVideos, attempt);
@@ -145,7 +149,7 @@ public class AnimeCommand extends Command {
         }
 
         // Handling different media types
-        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com") || mediaUrl.contains("v.reddit.it")) {
+        if (mediaUrl.endsWith(".mp4") || mediaUrl.contains("redgifs.com/watch") || mediaUrl.contains("www.youtube.com/") || mediaUrl.contains("youtu.be") || mediaUrl.contains("x.com") || mediaUrl.contains("https://v.redd.it/")) {
             if (includeVideos) {
                 String message = String.format("**Here's a random video from r/%s:**\n%s", subreddit, mediaUrl);
                 event.getHook().sendMessage(message).queue();

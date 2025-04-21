@@ -1,23 +1,17 @@
 package org.redacted.util.SocialMedia.Reddit;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-
-import org.jsoup.Jsoup;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.jsoup.Jsoup;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.*;
 
 public class RedditClient {
     private final OkHttpClient httpClient;

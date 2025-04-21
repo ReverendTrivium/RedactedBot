@@ -1,7 +1,5 @@
 package org.redacted.util.SocialMedia.Reddit;
 
-import com.google.gson.Gson;
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.redacted.Database.Database;
 
@@ -30,22 +28,29 @@ public class RedditTokenManager {
     public String getValidToken() {
         Document tokenDoc = database.getRedditToken();
         if (tokenDoc != null) {
+            // Check if the token is still valid
             Instant expiration = tokenDoc.getDate("expiration").toInstant();
+            System.out.println("Current token expires at: " + expiration);
+            System.out.println("Time Now: " + Instant.now());
             if (Instant.now().isBefore(expiration)) {
                 return tokenDoc.getString("token");
             }
+            else {
+                System.out.println("Token expired, fetching a new one.");
+                try {
+                    String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
+                    Instant newExpiration = Instant.now().plusSeconds(3600); // 1 hour
+                    System.out.println("New token expires at: " + newExpiration);
+                    database.clearRedditToken();
+                    database.storeRedditToken(token, newExpiration);
+                    return token;
+                } catch (Exception e) {
+                    System.err.println("[RedditTokenManager] Failed to fetch new token: " + e.getMessage());
+                    return null;
+                }
+            }
         }
 
-        try {
-            String token = redditOAuth.authenticate(clientId, clientSecret, username, password);
-            Instant newExpiration = Instant.now().plusSeconds(3600); // 1 hour
-            database.clearRedditToken();
-            database.storeRedditToken(token, newExpiration);
-            return token;
-        } catch (Exception e) {
-            System.err.println("[RedditTokenManager] Failed to fetch new token: " + e.getMessage());
-            return null;
-        }
+        return null;
     }
 }
-

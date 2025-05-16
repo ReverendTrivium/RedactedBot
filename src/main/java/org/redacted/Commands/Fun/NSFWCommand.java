@@ -42,8 +42,7 @@ public class NSFWCommand extends Command {
         categoryToSubreddits = new HashMap<>();
         categoryToSubreddits.put("porn", List.of("porn", "nsfw", "RealGirls"));
         categoryToSubreddits.put("boobs", List.of("boobs", "ShakingBoobs", "YummyBoobs", "smallboobs", "PerfectBoobs", "BoobsAndTities", "Stacked"));
-        categoryToSubreddits.put("gay", List.of("GayGifs", "GayKink", "trapsarentgay", "FemBoys", "GayPorn_NSFW"));
-        categoryToSubreddits.put("lesbian", List.of("lesbians", "Lesbian_gifs", "girlskissing", "lesbianOral", "LesbianFantasy", "LesbianGoneWild", "LesbianPegging", "RoughLesbianSex", "LesbianPee"));
+        categoryToSubreddits.put("lesbian", List.of("lesbians", "Lesbian_gifs", "girlskissing", "LesbianFantasy", "LesbianGoneWild", "RoughLesbianSex"));
         categoryToSubreddits.put("furry", List.of("yiff", "FurryOnHuman", "FurryPornHeaven", "Furry_Porn", "FurryAsses", "FurryPornSubreddit"));
         categoryToSubreddits.put("hentai", List.of("hentai", "HENTAI_GIF", "Hentai__videos", "rule34", "Hentai_Interracial", "HelplessHentai", "HentaiBreeding", "CumHentai", "thick_hentai", "netorare", "PublicHentai", "HentaiAndRoleplayy", "HentaiBeast", "nhentai", "MonsterGirl", "NTR", "HentaiBullying", "HentaiAnal", "HentaiCumsluts", "EmbarrassedHentai", "UpskirtHentai", "Naruto_Hentai", "MaidHentai", "YuriHentai", "Uniform_Hentai", "HentaiSchoolGirls"));
         categoryToSubreddits.put("public", List.of("public", "PublicFlashing", "PublicSexPorn", "RealPublicNudity", "PublicFuckTube", "Caught_in_public", "PUBLICNUDITY", "PublicFetish"));
@@ -56,9 +55,6 @@ public class NSFWCommand extends Command {
         categoryToSubreddits.put("asian", List.of("AsiansGoneWild", "AsianPorn", "AsianCumsluts", "AsianBlowjobs", "AsianHotties", "SmallAsian", "SubmissiveAsianSluts", "Sexy_Asians"));
         categoryToSubreddits.put("black", List.of("BlackGirlsCentral", "UofBlack", "BlackPornMatters", "BlackHentai", "BlackTitties"));
         categoryToSubreddits.put("white", List.of("WhiteGirls", "thickwhitegirls", "CurvyWhiteGirls", "PhatAssWhiteGirl"));
-        categoryToSubreddits.put("india", List.of("downblouseIndia", "SuperModelIndia", "3SomeInIndia"));
-        categoryToSubreddits.put("arab", List.of("ArabPorn", "Arab_goddess", "BDSM_Arab", "BrownHotties"));
-        categoryToSubreddits.put("native", List.of("NativeAmericanGirls2", "NativeBums", "nativeamericanbabes"));
 
         // Get Reddit API Token
         this.redditOAuth = new RedditOAuth(bot.httpClient, bot.gson);
@@ -71,7 +67,6 @@ public class NSFWCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "category", "The type of nsfw image to generate")
                 .addChoice("porn", "porn")
                 .addChoice("boobs", "boobs")
-                .addChoice("gay", "gay")
                 .addChoice("lesbian", "lesbian")
                 .addChoice("furry", "furry")
                 .addChoice("hentai", "hentai")
@@ -84,10 +79,7 @@ public class NSFWCommand extends Command {
                 .addChoice("japanese", "japanese")
                 .addChoice("asian", "asian")
                 .addChoice("black", "black")
-                .addChoice("white", "white")
-                .addChoice("india", "india")
-                .addChoice("arab", "arab")
-                .addChoice("native", "native"));
+                .addChoice("white", "white"));
 
         this.args.add(new OptionData(OptionType.BOOLEAN, "video", "Whether to include videos in the results").setRequired(false));
     }

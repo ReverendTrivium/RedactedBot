@@ -24,7 +24,6 @@ public class LoopNSFWCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "category", "The type of nsfw image to generate")
                 .addChoice("porn", "porn")
                 .addChoice("boobs", "boobs")
-                .addChoice("gay", "gay")
                 .addChoice("lesbian", "lesbian")
                 .addChoice("furry", "furry")
                 .addChoice("hentai", "hentai")
@@ -37,10 +36,7 @@ public class LoopNSFWCommand extends Command {
                 .addChoice("japanese", "japanese")
                 .addChoice("asian", "asian")
                 .addChoice("black", "black")
-                .addChoice("white", "white")
-                .addChoice("india", "india")
-                .addChoice("arab", "arab")
-                .addChoice("native", "native").setRequired(true));
+                .addChoice("white", "white").setRequired(true));
         this.permission = Permission.MANAGE_SERVER;
         this.category = Category.FUN;
     }

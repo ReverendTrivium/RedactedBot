@@ -190,7 +190,7 @@ public class NSFWCommand extends Command {
         while (!validMedia && attempt < 10) {
             attempt++;
             try {
-                mediaUrl = redditClient.getRandomImage(subreddit);
+                mediaUrl = redditClient.getRandomImageNSFW(subreddit);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -283,7 +283,7 @@ public class NSFWCommand extends Command {
         while (!validMedia && attempt < 10) {
             attempt++;
             try {
-                mediaUrl = redditClient.getRandomImage(subreddit);
+                mediaUrl = redditClient.getRandomImageNSFW(subreddit);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

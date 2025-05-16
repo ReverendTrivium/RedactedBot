@@ -25,15 +25,17 @@ public class RedditClient {
     }
 
     public String getRandomImage(String subreddit) throws IOException {
-        String accessToken = tokenProvider.getValidToken();
-        if (accessToken == null) throw new IOException("Failed to get valid Reddit access token");
+        return getRandomImageWithFallback(subreddit, "porn");
+    }
 
-        String[] endpoints = {"hot", "new", "top"}; // Exclude "random" for reliability
+    private String getRandomImageWithFallback(String subreddit, String fallbackSubreddit) throws IOException {
+        String[] endpoints = {"hot", "new", "top"};
         List<String> endpointPool = new ArrayList<>(List.of(endpoints));
-        Collections.shuffle(endpointPool); // Randomize order
+        Collections.shuffle(endpointPool); // Randomize to vary traffic
 
         IOException lastException = null;
 
+        // Try the main subreddit first
         for (String endpoint : endpointPool) {
             String url = "https://oauth.reddit.com/r/" + subreddit + "/" + endpoint + ".json?limit=50";
             System.out.println("Trying URL: " + url);
@@ -86,7 +88,13 @@ public class RedditClient {
             System.out.println("All 3 attempts failed for endpoint: " + endpoint + ", trying next one.");
         }
 
-        throw new IOException("Failed to fetch Reddit image after trying all endpoints.", lastException);
+        // If all endpoints fail, try fallback subreddit
+        if (!subreddit.equalsIgnoreCase(fallbackSubreddit)) {
+            System.out.println("All subreddit attempts failed. Falling back to: " + fallbackSubreddit);
+            return getRandomImageWithFallback(fallbackSubreddit, fallbackSubreddit); // Avoid infinite loop
+        }
+
+        throw new IOException("Failed to fetch Reddit image after trying all endpoints and fallback.", lastException);
     }
 
     private String extractMediaUrl(JsonObject mediaData) {

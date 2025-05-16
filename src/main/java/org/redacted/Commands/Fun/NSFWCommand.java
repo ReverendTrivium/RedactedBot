@@ -144,7 +144,34 @@ public class NSFWCommand extends Command {
     }
 
     public void executeCategory(String channelId, String category, SlashCommandInteractionEvent event) {
-        // Set Int Attempts before it stops trying to find Images for LoopNSFW command
+        // Get Reddit Token Variables and Initialize Config
+        Dotenv config = bot.getConfig();
+        String clientID = config.get("REDDIT_CLIENT_ID");
+        String secretID = config.get("REDDIT_SECRET_ID");
+        String username = config.get("REDDIT_USERNAME");
+        String password = config.get("REDDIT_PASSWORD");
+
+        String token = redditTokenManager.getValidToken();
+
+        // Initialize the RedditClient with your access token
+        if (token != null) {
+            System.out.println("Initializing RedditClient...");
+            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
+            System.out.println("RedditClient initialized with token");
+        } else {
+            System.out.println("Token was null, RedditClient not initialized");
+        }
+
+        event.deferReply().queue();
+
+        // Check to ensure this is an NSFW Channel
+        if (!event.getChannel().asTextChannel().isNSFW()) {
+            System.out.println("This is not an NSFW Channel");
+            event.getHook().sendMessage("This is not an NSFW Channel, cannot run NSFW Command in this channel").queue();
+            return;
+        }
+
+        // Set Attempt Count for fetching NSFW Image
         int attempt = 0;
 
         // Call Loop Command
@@ -153,6 +180,9 @@ public class NSFWCommand extends Command {
 
     // Fetch Single NSFW Image
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
+        // Ensure RedditClient is initialized
+        ensureRedditClientInitialized();
+
         if (attempt >= MAX_ATTEMPTS) {
             event.getHook().sendMessage("Failed finding Images after multiple attempts, please try again later.").setEphemeral(true).queue();
             LoopNSFWCommand.stopLoop();
@@ -229,6 +259,9 @@ public class NSFWCommand extends Command {
     }
 
     private void fetchAndSendMediaLoop(String channelId, String category, int attempt, SlashCommandInteractionEvent event) {
+        // Ensure RedditClient is initialized
+        ensureRedditClientInitialized();
+
         // Get Reddit Token Variables and Initialize Config
         Dotenv config = bot.getConfig();
         String clientID = config.get("REDDIT_CLIENT_ID");
@@ -310,6 +343,13 @@ public class NSFWCommand extends Command {
                     .setTitle("Here's a random NSFW image from r/" + subreddit)
                     .setImage(mediaUrl);
             Objects.requireNonNull(bot.getShardManager().getTextChannelById(channelId)).sendMessageEmbeds(embed.build()).queue();
+        }
+    }
+
+    private void ensureRedditClientInitialized() {
+        if (redditClient == null) {
+            this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);
+            System.out.println("RedditClient lazily initialized");
         }
     }
 }

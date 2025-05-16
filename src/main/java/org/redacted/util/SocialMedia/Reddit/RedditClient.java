@@ -28,16 +28,12 @@ public class RedditClient {
         String accessToken = tokenProvider.getValidToken();
         if (accessToken == null) throw new IOException("Failed to get valid Reddit access token");
 
+        // Avoid using random.json for unreliable subreddits
         String[] endpoints = {"hot", "new", "top"};
         String endpoint = endpoints[random.nextInt(endpoints.length)];
         String url = "https://oauth.reddit.com/r/" + subreddit + "/" + endpoint + ".json?limit=50";
 
-        if (random.nextBoolean()) {
-            url = "https://oauth.reddit.com/r/" + subreddit + "/random.json";
-        }
-
         System.out.println("URL: " + url);
-
         IOException lastException = null;
 
         for (int attempt = 0; attempt < 3; attempt++) {

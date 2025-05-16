@@ -28,76 +28,65 @@ public class RedditClient {
         String accessToken = tokenProvider.getValidToken();
         if (accessToken == null) throw new IOException("Failed to get valid Reddit access token");
 
-        // Avoid using random.json for unreliable subreddits
-        String[] endpoints = {"hot", "new", "top"};
-        String endpoint = endpoints[random.nextInt(endpoints.length)];
-        String url = "https://oauth.reddit.com/r/" + subreddit + "/" + endpoint + ".json?limit=50";
+        String[] endpoints = {"hot", "new", "top"}; // Exclude "random" for reliability
+        List<String> endpointPool = new ArrayList<>(List.of(endpoints));
+        Collections.shuffle(endpointPool); // Randomize order
 
-        System.out.println("URL: " + url);
         IOException lastException = null;
 
-        for (int attempt = 0; attempt < 3; attempt++) {
-            String token = tokenProvider.getValidToken();
-            if (token == null) throw new IOException("Token fetch failed during retry");
+        for (String endpoint : endpointPool) {
+            String url = "https://oauth.reddit.com/r/" + subreddit + "/" + endpoint + ".json?limit=50";
+            System.out.println("Trying URL: " + url);
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .header("Authorization", "Bearer " + token)
-                    .header("User-Agent", "YourAppName")
-                    .build();
+            for (int attempt = 0; attempt < 3; attempt++) {
+                String token = tokenProvider.getValidToken();
+                if (token == null) throw new IOException("Token fetch failed during retry");
 
-            try (Response response = httpClient.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    System.out.println("Reddit request failed: " + response);
-                    continue;
-                }
+                Request request = new Request.Builder()
+                        .url(url)
+                        .header("Authorization", "Bearer " + token)
+                        .header("User-Agent", "YourAppName")
+                        .build();
 
-                String responseData = Objects.requireNonNull(response.body()).string();
-                JsonReader reader = new JsonReader(new StringReader(responseData));
-                reader.setLenient(true);
-
-                JsonArray children;
-
-                if (url.contains("random")) {
-                    try {
-                        JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
-                        if (!arr.isEmpty()) {
-                            children = arr.get(0).getAsJsonObject().getAsJsonObject("data").getAsJsonArray("children");
-                        } else {
-                            throw new IOException("No data found in random.json response.");
-                        }
-                    } catch (IllegalStateException e) {
-                        JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                        children = obj.getAsJsonObject("data").getAsJsonArray("children");
+                try (Response response = httpClient.newCall(request).execute()) {
+                    if (!response.isSuccessful()) {
+                        System.out.println("Reddit request failed: " + response);
+                        continue;
                     }
-                } else {
+
+                    String responseData = Objects.requireNonNull(response.body()).string();
+                    JsonReader reader = new JsonReader(new StringReader(responseData));
+                    reader.setLenient(true);
+
                     JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-                    children = jsonObject.getAsJsonObject("data").getAsJsonArray("children");
-                }
+                    JsonArray children = jsonObject.getAsJsonObject("data").getAsJsonArray("children");
 
-                List<String> mediaUrls = new ArrayList<>();
-                for (int i = 0; i < children.size(); i++) {
-                    JsonObject postData = children.get(i).getAsJsonObject().getAsJsonObject("data");
-                    String mediaUrl = extractMediaUrl(postData);
-                    if (mediaUrl != null) {
-                        mediaUrls.add(mediaUrl);
+                    List<String> mediaUrls = new ArrayList<>();
+                    for (int i = 0; i < children.size(); i++) {
+                        JsonObject postData = children.get(i).getAsJsonObject().getAsJsonObject("data");
+                        String mediaUrl = extractMediaUrl(postData);
+                        if (mediaUrl != null) {
+                            mediaUrls.add(mediaUrl);
+                        }
                     }
-                }
 
-                if (mediaUrls.isEmpty()) {
-                    throw new IOException("No valid media URLs found.");
+                    if (!mediaUrls.isEmpty()) {
+                        Collections.shuffle(mediaUrls);
+                        return mediaUrls.get(0);
+                    } else {
+                        throw new IOException("No valid media URLs found.");
+                    }
+                } catch (IOException ex) {
+                    System.out.println("Retrying fetch (attempt " + (attempt + 1) + ") for " + endpoint + ": " + ex.getMessage());
+                    lastException = ex;
+                    httpClient.connectionPool().evictAll();
                 }
-
-                Collections.shuffle(mediaUrls);
-                return mediaUrls.get(0);
-            } catch (IOException ex) {
-                System.out.println("Retrying Reddit fetch (attempt " + (attempt + 1) + "): " + ex.getMessage());
-                lastException = ex;
-                httpClient.connectionPool().evictAll();
             }
+
+            System.out.println("All 3 attempts failed for endpoint: " + endpoint + ", trying next one.");
         }
 
-        throw new IOException("Failed to fetch Reddit image after 3 attempts.", lastException);
+        throw new IOException("Failed to fetch Reddit image after trying all endpoints.", lastException);
     }
 
     private String extractMediaUrl(JsonObject mediaData) {

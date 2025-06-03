@@ -1,6 +1,7 @@
 package org.redacted.Commands.Fun;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -20,7 +21,7 @@ public class LoopNSFWCommand extends Command {
     public LoopNSFWCommand(Redacted bot) {
         super(bot);
         this.name = "loopnsfw";
-        this.description = "Loop NSFW posts from a specific category every 10 minutes.";
+        this.description = "Loop NSFW posts from a specific category every minute.";
         this.args.add(new OptionData(OptionType.STRING, "category", "The type of nsfw image to generate")
                 .addChoice("porn", "porn")
                 .addChoice("boobs", "boobs")
@@ -55,8 +56,13 @@ public class LoopNSFWCommand extends Command {
             return;
         }
 
+        String channelId = event.getChannel().getId();
+
         // Print the first image immediately
-        nsfwCommand.executeCategory(event.getChannel().getId(), category, event);
+        TextChannel channel = bot.getShardManager().getTextChannelById(channelId);
+        if (channel != null) {
+            nsfwCommand.executeCategory(channel, category);
+        }
 
         // Start the timer for subsequent images
         if (timer != null) {
@@ -66,9 +72,12 @@ public class LoopNSFWCommand extends Command {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                nsfwCommand.executeCategory(event.getChannel().getId(), category, event);
+                TextChannel repeatChannel = bot.getShardManager().getTextChannelById(channelId);
+                if (repeatChannel != null) {
+                    nsfwCommand.executeCategory(repeatChannel, category);
+                }
             }
-        }, 6000, 6000); // 600000ms = 10 minutes
+        }, 6000, 60000); // Delay 6 seconds, repeat every 10 minutes
 
         event.getHook().sendMessage("Looping NSFW posts from category: " + category).queue();
     }

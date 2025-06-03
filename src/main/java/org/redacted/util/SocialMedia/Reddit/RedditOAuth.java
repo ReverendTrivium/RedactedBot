@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Objects;
 
 public class RedditOAuth {
@@ -45,8 +46,32 @@ public class RedditOAuth {
             return accessToken;
         }
     }
+
+    // Method to request a new token
+    public String refreshToken() throws IOException {
+        // Make the token refresh request here
+        // (similar to how you originally got the token)
+        // For example:
+
+        Request request = new Request.Builder()
+                .url("https://www.reddit.com/api/v1/access_token")
+                .post(new FormBody.Builder()
+                        .add("grant_type", "password")
+                        .add("username", "YOUR_REDDIT_USERNAME")
+                        .add("password", "YOUR_REDDIT_PASSWORD")
+                        .build())
+                .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("YOUR_CLIENT_ID" + ":" + "YOUR_CLIENT_SECRET").getBytes()))
+                .header("User-Agent", "YourAppName")
+                .build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected response code: " + response.code());
+            }
+
+            assert response.body() != null;
+            JsonObject jsonResponse = gson.fromJson(response.body().string(), JsonObject.class);
+            return jsonResponse.get("access_token").getAsString(); // Return the new access token
+        }
+    }
 }
-
-
-
-

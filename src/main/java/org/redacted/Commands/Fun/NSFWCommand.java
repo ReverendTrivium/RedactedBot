@@ -144,7 +144,8 @@ public class NSFWCommand extends Command {
 
         if (attempt >= MAX_ATTEMPTS) {
             event.getHook().sendMessage("Failed finding Images after multiple attempts, please try again later.").setEphemeral(true).queue();
-            LoopNSFWCommand.stopLoop();
+            String stringID = event.getChannel().getId();
+            LoopNSFWCommand.stopLoop(stringID);
             return;
         }
 
@@ -241,7 +242,8 @@ public class NSFWCommand extends Command {
 
         if (attempt >= MAX_ATTEMPTS) {
             channel.sendMessage("Failed finding Images after multiple attempts, please try again later.").queue();
-            LoopNSFWCommand.stopLoop();
+            String stringID = channel.getId();
+            LoopNSFWCommand.stopLoop(stringID);
             return;
         }
 

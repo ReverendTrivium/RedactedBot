@@ -10,18 +10,20 @@ import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
 import org.redacted.Redacted;
 
+import java.util.Map;
+import java.util.concurrent.*;
+
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class LoopNSFWCommand extends Command {
 
-    private static Timer timer;
+    private static final Map<String, ScheduledFuture<?>> loopTasks = new ConcurrentHashMap<>();
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
     public LoopNSFWCommand(Redacted bot) {
         super(bot);
         this.name = "loopnsfw";
-        this.description = "Loop NSFW posts from a specific category every minute.";
+        this.description = "Loop NSFW posts from a specific category every minute in the current channel.";
         this.args.add(new OptionData(OptionType.STRING, "category", "The type of nsfw image to generate")
                 .addChoice("porn", "porn")
                 .addChoice("boobs", "boobs")
@@ -37,7 +39,8 @@ public class LoopNSFWCommand extends Command {
                 .addChoice("japanese", "japanese")
                 .addChoice("asian", "asian")
                 .addChoice("black", "black")
-                .addChoice("white", "white").setRequired(true));
+                .addChoice("white", "white")
+                .setRequired(true));
         this.permission = Permission.MANAGE_SERVER;
         this.category = Category.FUN;
     }
@@ -48,44 +51,56 @@ public class LoopNSFWCommand extends Command {
 
         String category = Objects.requireNonNull(event.getOption("category")).getAsString();
         NSFWCommand nsfwCommand = (NSFWCommand) BotCommands.commandsMap.get("nsfw");
+        String channelId = event.getChannel().getId();
 
-        // Check to ensure this is an NSFW Channel
         if (!event.getChannel().asTextChannel().isNSFW()) {
-            System.out.println("This is not an NSFW Channel");
             event.getHook().sendMessage("This is not an NSFW Channel, cannot run NSFW Command in this channel").queue();
             return;
         }
 
-        String channelId = event.getChannel().getId();
+        if (loopTasks.containsKey(channelId)) {
+            event.getHook().sendMessage("This channel is already looping NSFW posts. Use /stoploop to cancel.").queue();
+            return;
+        }
 
-        // Print the first image immediately
         TextChannel channel = bot.getShardManager().getTextChannelById(channelId);
         if (channel != null) {
             nsfwCommand.executeCategory(channel, category);
         }
 
-        // Start the timer for subsequent images
-        if (timer != null) {
-            timer.cancel();
-        }
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
+        ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(() -> {
+            try {
                 TextChannel repeatChannel = bot.getShardManager().getTextChannelById(channelId);
                 if (repeatChannel != null) {
                     nsfwCommand.executeCategory(repeatChannel, category);
                 }
+            } catch (Exception e) {
+                System.err.println("Error in scheduled NSFW loop for channel " + channelId);
+                e.printStackTrace();
             }
-        }, 6000, 60000); // Delay 6 seconds, repeat every 10 minutes
+        }, 6, 60, TimeUnit.SECONDS);
 
-        event.getHook().sendMessage("Looping NSFW posts from category: " + category).queue();
+        loopTasks.put(channelId, task);
+        event.getHook().sendMessage("Started looping NSFW posts from category: " + category + " in this channel.").queue();
     }
 
-    public static void stopLoop() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+    public static boolean stopLoop(String channelId) {
+        ScheduledFuture<?> task = loopTasks.remove(channelId);
+        if (task != null) {
+            task.cancel(false);
+            return true;
         }
+        return false;
+    }
+
+    public static void stopAllLoops() {
+        for (Map.Entry<String, ScheduledFuture<?>> entry : loopTasks.entrySet()) {
+            entry.getValue().cancel(false);
+        }
+        loopTasks.clear();
+    }
+
+    public static boolean isLooping(String channelId) {
+        return loopTasks.containsKey(channelId);
     }
 }

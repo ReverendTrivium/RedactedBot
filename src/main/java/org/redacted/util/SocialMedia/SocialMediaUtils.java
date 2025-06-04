@@ -3,8 +3,6 @@ package org.redacted.util.SocialMedia;
 import org.htmlunit.WebClient;
 import org.htmlunit.WebRequest;
 import org.htmlunit.HttpMethod;
-import org.htmlunit.html.HtmlElement;
-import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
 import io.github.cdimascio.dotenv.Dotenv;
 import com.google.gson.Gson;

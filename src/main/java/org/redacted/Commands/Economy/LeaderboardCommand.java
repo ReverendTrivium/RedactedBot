@@ -1,6 +1,7 @@
 package org.redacted.Commands.Economy;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -75,8 +76,10 @@ public class LeaderboardCommand extends Command {
         int counter = 0;
         int rank = 1;
         for (Economy profile : leaderboard) {
-            String userName = Objects.requireNonNull(Objects.requireNonNull(event.getGuild()).getMemberById(profile.getUser()))
-                    .getEffectiveName(); // Show nickname if available, otherwise username
+            if (profile.getUser() == null) continue; // Still good to skip null user IDs
+
+            Member member = event.getGuild().getMemberById(profile.getUser());
+            String userName = member != null ? member.getEffectiveName() : "\uD83D\uDEAB Left the server";
 
             long balance = profile.getBalance() != null ? profile.getBalance() : 0;
             long bank = profile.getBank() != null ? profile.getBank() : 0;
@@ -84,12 +87,13 @@ public class LeaderboardCommand extends Command {
 
             embed.appendDescription("**" + rank + ". " + userName + "**\n" +
                     "Balance: " + economyHandler.getCurrency() + " " + EconomyHandler.FORMATTER.format(total) + "\n\n");
+
             counter++;
             rank++;
 
             if (counter % USERS_PER_PAGE == 0) {
                 embeds.add(embed.build());
-                embed.setDescription(""); // Reset description for the next page
+                embed.setDescription("");
                 counter = 0;
             }
         }

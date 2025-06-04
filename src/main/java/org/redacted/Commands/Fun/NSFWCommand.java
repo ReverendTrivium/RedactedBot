@@ -160,31 +160,26 @@ public class NSFWCommand extends Command {
             try {
                 mediaUrl = redditClient.getRandomImageNSFW(subreddit);
                 if (mediaUrl == null) {
-                    String message = "No media could be fetched. Try again later.";
-                    event.getHook().sendMessage(message).queue();
+                    event.getHook().sendMessage("No media could be fetched. Try again later.").queue();
                     return;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Media URL: " + mediaUrl);
-            try {
-                // Only Check Valid URLS for non-gallery media
-                if (mediaUrl.contains("gallery")) {
-                    validMedia = true; // Skip validation for gallery URLs
+                System.out.println("Attempt " + attempt + ": Media URL -> " + mediaUrl);
+
+                // Skip full validation for Reddit galleries (.json endpoints)
+                if (mediaUrl.contains("gallery") || mediaUrl.endsWith(".json")) {
+                    validMedia = true;
                 } else {
-                    validMedia = redditClient.isValidUrl(mediaUrl);
+                    validMedia = redditClient.isValidMediaUrl(mediaUrl, includeVideos);
                 }
+
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {
-                validMedia = false; // Skip videos if not desired
-            } else if (mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
-                validMedia = false;
+                System.err.println("Error during media fetch attempt " + attempt + ": " + e.getMessage());
+                e.printStackTrace();
+                // Optional: continue silently or break depending on your tolerance
             }
         }
 
+        assert mediaUrl != null;
         if (mediaUrl.contains("redgifs.com/ifr")) {
             mediaUrl = mediaUrl.replace("ifr", "watch");
         }
@@ -260,25 +255,23 @@ public class NSFWCommand extends Command {
                     channel.sendMessage("No media could be fetched. Try again later.").queue();
                     return;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Media URL: " + mediaUrl);
-            try {
-                // Only Check Valid URLS for non-gallery media
-                if (mediaUrl.contains("gallery")) {
-                    validMedia = true; // Skip validation for gallery URLs
+
+                System.out.println("Attempt " + attempt + ": Media URL -> " + mediaUrl);
+
+                // Accept Reddit JSON gallery endpoint directly
+                if (mediaUrl.contains("gallery") || mediaUrl.endsWith(".json")) {
+                    validMedia = true;
                 } else {
-                    validMedia = redditClient.isValidUrl(mediaUrl);
+                    validMedia = redditClient.isValidMediaUrl(mediaUrl, true);
                 }
+
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (mediaUrl.contains("imgur.com") || mediaUrl.contains("patreon.com")) {
-                validMedia = false;
+                System.err.println("Error during media fetch attempt " + attempt + ": " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
+        assert mediaUrl != null;
         if (mediaUrl.contains("redgifs.com/ifr")) {
             mediaUrl = mediaUrl.replace("ifr", "watch");
         }

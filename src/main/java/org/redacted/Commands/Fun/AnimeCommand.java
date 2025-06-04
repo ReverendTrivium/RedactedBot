@@ -130,7 +130,7 @@ public class AnimeCommand extends Command {
                 }
 
                 System.out.println("Media URL: " + mediaUrl);
-                validMedia = redditClient.isValidUrl(mediaUrl);
+                validMedia = redditClient.isValidMediaUrl(mediaUrl, includeVideos);
 
                 // Handle invalid media
                 if (!includeVideos && (mediaUrl.endsWith(".mp4") || mediaUrl.contains("v.redd.it") || mediaUrl.contains("redgifs.com") || mediaUrl.contains("youtu.be") || mediaUrl.contains("youtube"))) {

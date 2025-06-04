@@ -182,17 +182,45 @@ public class RedditClient {
         return null;
     }
 
-    public boolean isValidUrl(String url) throws IOException {
+    public boolean isValidMediaUrl(String url, boolean includeVideos) throws IOException {
+        // Basic skip: known non-media or unwanted domains
+        if (!includeVideos && (
+                url.endsWith(".mp4") ||
+                        url.contains("v.redd.it") ||
+                        url.contains("redgifs.com") ||
+                        url.contains("youtu.be") ||
+                        url.contains("youtube"))
+        ) {
+            System.out.println("Skipping video: " + url);
+            return false;
+        }
+
+        if (url.contains("imgur.com") || url.contains("patreon.com")) {
+            System.out.println("Skipping unsupported domain: " + url);
+            return false;
+        }
+
+        // Skip Reddit post HTML (but allow Reddit API .json endpoints)
+        if (url.matches("https://(www\\.)?reddit\\.com/r/[^/]+/comments/[^/]+.*") && !url.endsWith(".json")) {
+            System.out.println("Skipping Reddit HTML post: " + url);
+            return false;
+        }
+
+        // Check HTTP response
         System.out.println("Checking if URL is valid: " + url);
         String accessToken = tokenProvider.getValidToken();
         Request request = new Request.Builder()
                 .url(url)
                 .header("Authorization", "Bearer " + accessToken)
-                .header("User-Agent", "EyaBot/1.0 by /u/JonTronsCareer") // Make it Reddit-compliant
+                .header("User-Agent", "EyaBot/1.0 by /u/JonTronsCareer")
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            return response.isSuccessful();
+            boolean isOk = response.isSuccessful();
+            if (!isOk) {
+                System.out.println("Request failed: " + response.code());
+            }
+            return isOk;
         }
     }
 

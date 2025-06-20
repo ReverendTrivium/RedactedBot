@@ -15,6 +15,7 @@ import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Greetings;
+import org.redacted.Database.models.SavedEmbed;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -68,6 +69,9 @@ public class Database {
         MongoCollection<Greetings> greetings = getGuildCollection(guildId, "greetings").withDocumentClass(Greetings.class);
         MongoCollection<Document> economy = getGuildCollection(guildId, "economy");
 
+        // Create a collection for saved embeds
+        MongoCollection<Document> savedEmbeds = getGuildCollection(guildId, "saved_embeds");
+
         // Add config collection for guild
         MongoCollection<Document> config = getGuildCollection(guildId, "config");
 
@@ -78,6 +82,7 @@ public class Database {
         userIntroMessages.createIndex(Indexes.descending("userId"));
         greetings.createIndex(Indexes.descending("guild"));
         economy.createIndex(Indexes.descending("economy"));
+        savedEmbeds.createIndex(Indexes.descending("messageId"));
 
         // Set up index for config collection if necessary
         config.createIndex(Indexes.descending("guildId"));
@@ -125,6 +130,10 @@ public class Database {
         // Initialize other fields as necessary
 
         return config;
+    }
+
+    public MongoCollection<SavedEmbed> getSavedEmbedsCollection(long guildId) {
+        return getGuildCollection(guildId, "saved_embeds").withDocumentClass(SavedEmbed.class);
     }
 
     /**

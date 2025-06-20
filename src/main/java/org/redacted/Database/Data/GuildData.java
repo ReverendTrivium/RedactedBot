@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.redacted.Database.Database;
 import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Economy;
+import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Handlers.GreetingHandler;
 import org.redacted.Handlers.SuggestionHandler;
 import org.redacted.Handlers.economy.EconomyHandler;
@@ -25,6 +26,7 @@ import java.util.Objects;
 public class GuildData {
 
     private static final Map<Long, GuildData> guilds = new HashMap<>();
+    @Getter
     private static Database database;
     private Config config;
 
@@ -127,4 +129,10 @@ public class GuildData {
         // Also update the in-memory config object if necessary
         this.config = database.getConfigForGuild(guildId);
     }
+
+    public MongoCollection<SavedEmbed> getSavedEmbedsCollection() {
+        return database.getGuildCollection(guildId, "saved_embeds")
+                .withDocumentClass(SavedEmbed.class);
+    }
+
 }

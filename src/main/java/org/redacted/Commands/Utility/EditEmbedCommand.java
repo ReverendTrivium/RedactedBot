@@ -1,0 +1,133 @@
+package org.redacted.Commands.Utility;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.jetbrains.annotations.NotNull;
+import org.redacted.Commands.Category;
+import org.redacted.Commands.Command;
+import org.redacted.Database.Data.GuildData;
+import org.redacted.Database.models.SavedEmbed;
+import org.redacted.Redacted;
+import org.redacted.listeners.ButtonListener;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+public class EditEmbedCommand extends Command {
+
+    public EditEmbedCommand(Redacted bot) {
+        super(bot);
+        this.name = "editembed";
+        this.description = "Edits a previously saved embed message";
+        this.category = Category.UTILITY;
+        this.permission = Permission.MANAGE_CHANNEL; // Optional: Only allow mods/staff
+        this.botPermission = Permission.MESSAGE_MANAGE;
+
+        this.args.add(new OptionData(OptionType.STRING, "messageid", "The ID of the embed message to edit", true));
+        this.args.add(new OptionData(OptionType.STRING, "image", "New image URL (optional)", false));
+        this.args.add(new OptionData(OptionType.STRING, "thumbnail", "New thumbnail URL (optional)", false));
+    }
+
+    @Override
+    public void execute(SlashCommandInteractionEvent event) {
+        String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
+        String imageUrl = event.getOption("image") != null ? Objects.requireNonNull(event.getOption("image")).getAsString() : null;
+        String thumbnailUrl = event.getOption("thumbnail") != null ? Objects.requireNonNull(event.getOption("thumbnail")).getAsString() : null;
+
+        Guild guild = event.getGuild();
+        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(Objects.requireNonNull(guild).getIdLong());
+        SavedEmbed saved = collection.find(Filters.eq("messageId", messageId)).first();
+
+        if (saved == null) {
+            event.reply("❌ Embed not found for that message ID.").setEphemeral(true).queue();
+            return;
+        }
+
+        TextChannel channel = guild.getTextChannelById(saved.getChannelId());
+        if (channel == null) {
+            event.reply("❌ Original channel not found.").setEphemeral(true).queue();
+            return;
+        }
+
+        event.reply("📌 Please type the **new title** for the embed.").setEphemeral(true).queue();
+
+        ListenerAdapter titleListener = new ListenerAdapter() {
+            @Override
+            public void onMessageReceived(@NotNull MessageReceivedEvent titleEvent) {
+                if (!titleEvent.getAuthor().equals(event.getUser())) return;
+                if (!titleEvent.getChannel().equals(event.getChannel())) return;
+
+                String newTitle = titleEvent.getMessage().getContentRaw();
+                titleEvent.getMessage().delete().queue();
+
+                bot.getShardManager().removeEventListener(this); // Remove this listener
+
+                titleEvent.getChannel().sendMessage("✍️ Got the title. Now send the **new description**.").queue();
+
+                ListenerAdapter descListener = new ListenerAdapter() {
+                    @Override
+                    public void onMessageReceived(@NotNull MessageReceivedEvent descEvent) {
+                        if (!descEvent.getAuthor().equals(event.getUser())) return;
+                        if (!descEvent.getChannel().equals(event.getChannel())) return;
+
+                        String newDescription = descEvent.getMessage().getContentRaw();
+                        descEvent.getMessage().delete().queue();
+
+                        bot.getShardManager().removeEventListener(this); // Remove this listener
+
+                        String finalImageUrl = imageUrl != null ? imageUrl : saved.getImageUrl();
+                        String finalThumbnailUrl = thumbnailUrl != null ? thumbnailUrl : saved.getThumbnailUrl();
+
+                        EmbedBuilder updated = new EmbedBuilder()
+                                .setTitle(newTitle)
+                                .setDescription(newDescription)
+                                .setColor(new Color(88, 101, 242))
+                                .setTimestamp(Instant.now())
+                                .setFooter("Edited by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+
+                        if (finalImageUrl != null && !finalImageUrl.isBlank()) updated.setImage(finalImageUrl);
+                        if (finalThumbnailUrl != null && !finalThumbnailUrl.isBlank()) updated.setThumbnail(finalThumbnailUrl);
+
+                        String embedUUID = UUID.randomUUID().toString();
+                        String userId = event.getUser().getId();
+
+                        event.getHook().sendMessageEmbeds(updated.build())
+                                .addActionRow(
+                                        Button.primary("editembed:confirm:" + userId + ":" + embedUUID + ":" + messageId, "✅ Confirm"),
+                                        Button.danger("editembed:cancel:" + userId + ":" + embedUUID + ":" + messageId, "❌ Cancel")
+                                )
+                                .setEphemeral(true)
+                                .queue();
+
+                        ButtonListener.tempEmbeds.put(embedUUID, new ButtonListener.TempEmbed(updated, saved, finalImageUrl, finalThumbnailUrl));
+                    }
+                };
+
+                bot.getShardManager().addEventListener(descListener);
+            }
+        };
+
+        bot.getShardManager().addEventListener(titleListener);
+    }
+
+    private String formatMultiline(String input) {
+        // Optionally format headers like "1. Title" into bold
+        return Arrays.stream(input.split("\n"))
+                .map(line -> line.matches("^\\d+\\.\\s.*") ? "**" + line + "**" : line)
+                .collect(Collectors.joining("\n"));
+    }
+}

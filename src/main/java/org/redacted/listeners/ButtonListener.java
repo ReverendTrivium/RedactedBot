@@ -1,9 +1,14 @@
 package org.redacted.listeners;
 
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -25,8 +30,9 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Handlers.economy.EconomyHandler;
 import org.redacted.Redacted;
 import org.redacted.util.embeds.EmbedUtils;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
+import org.redacted.Database.models.SavedEmbed;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,6 +49,7 @@ public class ButtonListener extends ListenerAdapter {
     public static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(20);
     public static final Map<String, List<MessageEmbed>> menus = new HashMap<>();
     public static final Map<String, List<Button>> buttons = new HashMap<>();
+    public static final Map<String, TempEmbed> tempEmbeds = new HashMap<>();
 
     private final Redacted bot;
 
@@ -103,7 +110,7 @@ public class ButtonListener extends ListenerAdapter {
      * Schedules a timer task to disable buttons and clear cache after a set time.
      *
      * @param uuid the uuid of the components to disable.
-     * @param hook a interaction hook pointing to original message.
+     * @param hook an interaction hook pointing to original message.
      */
     public static void disableButtons(String uuid, InteractionHook hook) {
         Runnable task = () -> {
@@ -119,6 +126,16 @@ public class ButtonListener extends ListenerAdapter {
         ButtonListener.executor.schedule(task, MINUTES_TO_DISABLE, TimeUnit.MINUTES);
     }
 
+    /**
+     * Handles button interactions.
+     * This method processes button clicks, checks if the interaction is in an NSFW channel,
+     * and determines the action based on the button ID.
+     * It also ensures that the user interacting is the one involved in the action.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to edit the original message with the updated embeds and buttons.
+     *              * @see ButtonInteractionEvent
+     */
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         if (event.getChannel().asTextChannel().isNSFW()) {
@@ -156,6 +173,9 @@ public class ButtonListener extends ListenerAdapter {
             case "poker":
                 handlePoker(event, pressedArgs, uuid);
                 break;
+            case "editembed":
+                handleEditEmbedConfirmation(event, pressedArgs);
+                break;
         }
     }
 
@@ -163,7 +183,11 @@ public class ButtonListener extends ListenerAdapter {
      * Handles the Pagination of Embedded Messages.
      *
      * @param uuid the uuid of the components to disable.
-     * @param event a interaction event pointing to the original event.
+     *             This UUID is used to retrieve the correct pagination buttons and embeds.
+     * @param event an interaction event pointing to the original event.
+     *              This event is used to edit the original message with the updated embeds and buttons.
+     * @param pressedArgs the arguments passed in the button interaction, including action type and page number.
+     *              This array contains the action type (e.g., "next", "prev") and the current page number.
      */
     private void handlePagination(ButtonInteractionEvent event, String[] pressedArgs, String uuid) {
         List<Button> components = buttons.get(uuid);
@@ -193,7 +217,16 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
-    // Handle system reset buttons
+    /**
+     * Handles the reset of a system.
+     * This method checks if the user confirmed the reset action and performs the reset accordingly.
+     * It updates the guild data and sends a confirmation message to the user.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to reply to the user with the reset status.
+     * @param pressedArgs the arguments passed in the button interaction, including action type and system name.
+     *              This array contains the action type (e.g., "yes", "no") and the system name to reset.
+     */
     private void handleReset(ButtonInteractionEvent event, String[] pressedArgs) {
         String systemName = pressedArgs[4];
         if (pressedArgs[1].equals("yes")) {
@@ -210,7 +243,18 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
-    // Handle blackjack buttons
+    /**
+     * Handles blackjack button interactions.
+     * This method processes the user's action in a blackjack game, such as hitting or standing.
+     * It checks if there is an active game for the user, and if so, it updates the game state accordingly.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to reply to the user with the game status or actions.
+     * @param pressedArgs the arguments passed in the button interaction, including action type and user IDs.
+     *              This array contains the action type (e.g., "hit", "stand") and the user ID.
+     * @param uuid the unique identifier for the interaction, used to manage the game state.
+     *              This UUID is used to retrieve the game instance associated with the user.
+     */
     private void handleBlackjack(ButtonInteractionEvent event, String[] pressedArgs, String uuid) {
         long bet = Long.parseLong(pressedArgs[4]);
         MessageEmbed embed = null;
@@ -222,7 +266,18 @@ public class ButtonListener extends ListenerAdapter {
         event.editComponents(ActionRow.of(buttons.get(uuid))).setEmbeds(embed).queue();
     }
 
-    // Handle poker buttons
+    /**
+     * Handles poker button interactions.
+     * This method processes the user's action in a poker game, such as betting, folding, calling, or raising.
+     * It checks if there is an active game for the user, and if so, it updates the game state accordingly.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to reply to the user with the game status or actions.
+     * @param pressedArgs the arguments passed in the button interaction, including action type and user IDs.
+     *              This array contains the action type (e.g., "bet", "fold", "call", "raise") and the user ID.
+     * @param uuid the unique identifier for the interaction, used to manage the game state.
+     *              This UUID is used to retrieve the game instance associated with the user.
+     */
     public void handlePoker(ButtonInteractionEvent event, String[] pressedArgs, String uuid) {
         User user = event.getUser();
         PokerCommand pokerCommand = (PokerCommand) bot.getBotCommands().getCommandByName("poker");
@@ -266,6 +321,13 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Handles modal interactions for betting or raising in poker.
+     * This method processes the user's bet or raise amount, checks their balance, and updates the game state accordingly.
+     * It also handles the bot's response based on the user's action.
+     *
+     * @param event the ModalInteractionEvent containing the interaction data.
+     */
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         if (event.getModalId().equals("bet_modal") || event.getModalId().equals("raise_modal")) {
@@ -334,8 +396,14 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
-    // This function deals with the next phase based on bets
-    // Existing dealNextPhase method for ModalInteractionEvent
+    /**
+     * Handles the next phase of the poker game after a modal interaction.
+     * This method checks the number of community cards dealt and proceeds to deal the next card (flop, turn, or river).
+     * If all community cards have been dealt, it determines the winner and updates the game status accordingly.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to edit the original message with the updated game status.
+     */
     private void dealNextPhase(ModalInteractionEvent event, TexasHoldemGame game, EmbedBuilder embed) {
         if (game.getCommunityCards().size() < 5) {
             if (game.getCommunityCards().size() < 3) {
@@ -366,7 +434,14 @@ public class ButtonListener extends ListenerAdapter {
         }
     }
 
-    // Overload dealNextPhase for ButtonInteractionEvent calls
+    /**
+     * Handles the next phase of the poker game after a button interaction.
+     * This method checks the number of community cards and deals the next card accordingly.
+     * If all community cards have been dealt, it determines the winner and updates the game status.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     *              This event is used to edit the original message with the updated game status.
+     */
     private void dealNextPhase(ButtonInteractionEvent event, TexasHoldemGame game, EmbedBuilder embed) {
         if (game.getCommunityCards().size() < 5) {
             if (game.getCommunityCards().size() < 3) {
@@ -423,5 +498,82 @@ public class ButtonListener extends ListenerAdapter {
                 Button.success("reset:yes:"+uuid+":"+systemName, Emoji.fromFormatted("\u2714")),
                 Button.danger("reset:no:"+uuid+":"+systemName, Emoji.fromUnicode("\u2716"))
         );
+    }
+
+    /**
+     * Handles the confirmation or cancellation of an embed edit.
+     * This method checks if the user is the original editor and processes the confirmation or cancellation accordingly.
+     *
+     * @param event the ButtonInteractionEvent containing the interaction data.
+     * @param args  the arguments passed in the button interaction, including action type and user IDs.
+     */
+    private void handleEditEmbedConfirmation(ButtonInteractionEvent event, String[] args) {
+        String subAction = args[1]; // "confirm" or "cancel"
+        String userId = args[2];
+        String uuid = args[3];
+        String messageId = args[4];
+
+        if (!event.getUser().getId().equals(userId)) {
+            event.reply("❌ Only the original editor can confirm or cancel this edit.").setEphemeral(true).queue();
+            return;
+        }
+
+        TempEmbed draft = tempEmbeds.get(uuid);
+        if (draft == null) {
+            event.reply("⚠️ This embed confirmation has expired.").setEphemeral(true).queue();
+            return;
+        }
+
+        if (subAction.equals("cancel")) {
+            tempEmbeds.remove(uuid);
+            event.reply("❎ Embed edit cancelled.").setEphemeral(true).queue();
+            return;
+        }
+
+        Guild guild = event.getGuild();
+        TextChannel channel = Objects.requireNonNull(guild).getTextChannelById(draft.original.getChannelId());
+        if (channel == null) {
+            event.reply("❌ Channel not found.").setEphemeral(true).queue();
+            return;
+        }
+
+        channel.retrieveMessageById(messageId).queue(original -> {
+            original.editMessageEmbeds(draft.embed.build()).queue();
+
+            draft.original.setTitle(draft.embed.build().getTitle());
+            draft.original.setDescription(draft.embed.build().getDescription());
+            draft.original.setImageUrl(draft.imageUrl);
+            draft.original.setThumbnailUrl(draft.thumbnailUrl);
+            draft.original.setTimestamp(Instant.now());
+
+            MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
+            collection.replaceOne(Filters.eq("messageId", messageId), draft.original);
+
+            tempEmbeds.remove(uuid);
+            event.reply("✅ Embed updated successfully.").setEphemeral(true).queue();
+        }, fail -> event.reply("❌ Failed to update the original message.").setEphemeral(true).queue());
+    }
+
+    /**
+     * Temporary embed class to hold embed data for editing.
+     * This class is used to store the embed being edited, the original saved embed, and any image or thumbnail URLs.
+     * It is used to facilitate the editing of embeds through button interactions.
+     * * @param embed the EmbedBuilder containing the embed data.
+     * * @param original the original SavedEmbed object from the database.
+     * * @param imageUrl the URL of the image to be displayed in the embed.
+     * * @param thumbnailUrl the URL of the thumbnail to be displayed in the embed.
+     */
+    public static class TempEmbed {
+        public final EmbedBuilder embed;
+        public final SavedEmbed original;
+        public final String imageUrl;
+        public final String thumbnailUrl;
+
+        public TempEmbed(EmbedBuilder embed, SavedEmbed original, String imageUrl, String thumbnailUrl) {
+            this.embed = embed;
+            this.original = original;
+            this.imageUrl = imageUrl;
+            this.thumbnailUrl = thumbnailUrl;
+        }
     }
 }

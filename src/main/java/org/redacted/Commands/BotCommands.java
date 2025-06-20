@@ -8,30 +8,36 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import org.redacted.Commands.Blacklist.BlacklistCommand;
+import net.dv8tion.jda.api.interactions.commands.build.*;
+import org.redacted.Commands.Blacklist.*;
 import org.redacted.Commands.Color.Pride;
-import org.redacted.Commands.Color.rolecolors;
 import org.redacted.Commands.Economy.*;
 import org.redacted.Commands.Fun.*;
 import org.redacted.Commands.Fun.Gamba.BlackJackCommand;
+import org.redacted.Commands.Fun.Gamba.PokerCommand;
 import org.redacted.Commands.Greetings.FarewellCommand;
 import org.redacted.Commands.Greetings.GreetCommand;
 import org.redacted.Commands.Greetings.GreetingsCommand;
 import org.redacted.Commands.Greetings.JoinDMCommand;
-import org.redacted.Commands.Moderation.roles;
 import org.redacted.Commands.Suggestions.RespondCommand;
 import org.redacted.Commands.Suggestions.SuggestCommand;
 import org.redacted.Commands.Suggestions.SuggestionsCommand;
 import org.redacted.Commands.Utility.*;
-import org.redacted.Commands.Utility.HelpSubCommands.CategoryHelpCommand;
+import org.redacted.Commands.Color.rolecolors;
+import org.redacted.Commands.Moderation.roles;
+import org.redacted.Commands.Utility.HelpSubCommands.*;
 import org.redacted.Redacted;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.redacted.util.GoogleSearch.GoogleSearchService;
 import org.redacted.util.embeds.EmbedUtils;
 
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import java.util.*;
 
 /**
@@ -76,7 +82,7 @@ public class BotCommands extends ListenerAdapter {
 
                     // Gamba commands
                     new BlackJackCommand(bot),
-                    //new PokerCommand(bot),
+                    new PokerCommand(bot),
 
                     // Suggestions commands
                     new RespondCommand(bot),
@@ -106,6 +112,12 @@ public class BotCommands extends ListenerAdapter {
 
                     // Utility commands
                     new Server(bot),
+                    new EmbedCommand(bot),
+                    new EditEmbedCommand(bot),
+                    new DeleteEmbedCommand(bot),
+                    new ReactionRoleCommand(bot),
+                    new ListReactionRolesCommand(bot),
+                    new ListEmbeddedMessagesCommand(bot),
                     new Ping(bot),
                     new Clear(bot),
                     new NSFWCleanCommand(bot),

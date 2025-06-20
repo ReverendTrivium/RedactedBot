@@ -46,6 +46,7 @@ public class BotInitializer {
                 new ButtonListener(bot),
                 new NSFWCleanListener(),
                 new MessageListener(bot),
+                new ReactionRoleListener(),
                 botCommands,  // Register BotCommands as an event listener
                 new BotEventListener(bot, botCommands) // Pass BotCommands to BotEventListener
         );

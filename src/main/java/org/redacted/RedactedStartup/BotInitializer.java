@@ -74,7 +74,6 @@ public class BotInitializer {
                 TextChannel introductionChannel = channelManager.getOrCreateTextChannel(guild, "introductions", "Information");
                 TextChannel moderationChannel = channelManager.getOrCreateTextChannel(guild, "mod-log", "Moderation");
                 TextChannel botCommands = channelManager.getOrCreateTextChannel(guild, "bot-commands", "Moderation");
-                TextChannel botNotifications = channelManager.getOrCreateTextChannel(guild, "bot-notifications", "bot-fun");
 
                 // Create Member and Flagged Roles
                 Role memberRole = roleManager.getOrCreateRole(guild, "Member", RoleHierarchyManager.MEMBER_PERMISSIONS, RoleHierarchyManager.MEMBER_COLOR);

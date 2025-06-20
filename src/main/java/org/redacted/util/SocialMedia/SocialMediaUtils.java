@@ -7,10 +7,15 @@ import org.htmlunit.html.HtmlPage;
 import io.github.cdimascio.dotenv.Dotenv;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Checks social media accounts to make sure they work and are real handles.
@@ -36,6 +41,38 @@ public class SocialMediaUtils {
         };
     }
 
+    /**
+     * Validates a Facebook handle by checking if the profile exists.
+     * Uses HtmlUnit to fetch the page and check for "Page Not Found" or "This content isn't available".
+     *
+     * @param handle the Facebook handle to validate
+     * @return true if the handle is valid, false otherwise
+     */
+    public static boolean isValidFacebookHandle(String handle) {
+        String url = "https://www.facebook.com/" + handle;
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            int status = connection.getResponseCode();
+            if (status == 404) return false;
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String html = reader.lines().collect(Collectors.joining());
+                return !html.contains("This content isn't available") &&
+                        !html.contains("Page Not Found");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Removed Until ChromeDriver and Selenium are updated to work with hosting company
+    /*
     public static boolean isValidFacebookHandle(String handle) {
         String url = "https://www.facebook.com/" + handle;
         Map<String, Object> jsonResponse = new HashMap<>();
@@ -80,4 +117,5 @@ public class SocialMediaUtils {
     private static void logJsonResponse(Map<String, Object> jsonResponse) {
         System.out.println(gson.toJson(jsonResponse));
     }
+     */
 }

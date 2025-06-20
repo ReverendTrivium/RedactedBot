@@ -8,6 +8,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Client for interacting with the OpenAI API to summarize Discord conversations.
+ * Uses OkHttp for HTTP requests and JSON for payloads.
+ * Requires the OPENAI_API_KEY environment variable to be set.
+ *
+ * @author Derrick Eberlein
+ */
 public class OpenAIClient {
 
     private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -17,6 +24,14 @@ public class OpenAIClient {
 
     private static final OkHttpClient client = new OkHttpClient();
 
+    /**
+     * Summarizes a given context using the OpenAI API.
+     * The context should be a string containing the conversation to summarize.
+     *
+     * @param context the conversation context to summarize
+     * @return the summary of the conversation
+     * @throws IOException if an error occurs while making the API request
+     */
     public static String summarize(String context) throws IOException {
 
         // Validate API key

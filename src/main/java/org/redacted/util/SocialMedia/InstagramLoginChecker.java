@@ -9,8 +9,22 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 
+/**
+ * Checks Instagram login credentials and verifies if a target handle exists.
+ * Uses Selenium WebDriver to perform the login and handle validation.
+ *
+ * @author Derrick Eberlein
+ */
 public class InstagramLoginChecker {
 
+    /**
+     * Logs into Instagram and checks if the target handle exists.
+     *
+     * @param username the Instagram username
+     * @param password the Instagram password
+     * @param targetHandle the Instagram handle to check
+     * @return true if the handle exists, false otherwise
+     */
     public static boolean loginAndCheck(String username, String password, String targetHandle) {
         WebDriver driver = new ChromeDriver();
 

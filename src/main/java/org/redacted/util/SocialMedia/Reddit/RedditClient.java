@@ -14,19 +14,48 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 
+/**
+ * Client for interacting with the Reddit API to fetch random images from subreddits.
+ * Supports both NSFW and SFW content, with fallback mechanisms for better reliability.
+ * Uses OkHttp for HTTP requests and Gson for JSON parsing.
+ *
+ * @author Derrick Eberlein
+ */
 public class RedditClient {
     private final OkHttpClient httpClient;
     private final RedditTokenManager tokenProvider;
 
+    /**
+     * Constructs a RedditClient with the specified OkHttpClient and RedditTokenManager.
+     *
+     * @param httpClient the OkHttpClient to use for HTTP requests
+     * @param tokenProvider the RedditTokenManager to manage OAuth tokens
+     */
     public RedditClient(OkHttpClient httpClient, RedditTokenManager tokenProvider) {
         this.httpClient = httpClient;
         this.tokenProvider = tokenProvider;
     }
 
+    /**
+     * Fetch a random NSFW image from the specified subreddit.
+     * This method is specifically designed for NSFW content and will fall back to a default subreddit if the main one fails.
+     *
+     * * @param subreddit the subreddit to fetch images from
+     * @return a URL of a random NSFW image
+     */
     public String getRandomImageNSFW(String subreddit) throws IOException {
         return getRandomImageWithFallbackNSFW(subreddit, "porn");
     }
 
+    /**
+     * Fetches a random image from the specified subreddit, with a fallback to a default subreddit if the main one fails.
+     * This method is specifically designed for NSFW content.
+     *
+     * @param subreddit the subreddit to fetch images from
+     * @param fallbackSubreddit the subreddit to fall back to if the main one fails
+     * @return a URL of a random image from the subreddit
+     * @throws IOException if an error occurs while fetching images
+     */
     private String getRandomImageWithFallbackNSFW(String subreddit, String fallbackSubreddit) throws IOException {
         String[] endpoints = {"hot", "new", "top"};
         List<String> endpointPool = new ArrayList<>(List.of(endpoints));
@@ -96,10 +125,27 @@ public class RedditClient {
         throw new IOException("Failed to fetch Reddit image after trying all endpoints and fallback.", lastException);
     }
 
+    /**
+     * Fetch a random image from the specified subreddit.
+     * This method is designed for SFW content and will fall back to a default subreddit if the main one fails.
+     *
+     * @param subreddit the subreddit to fetch images from
+     * @return a URL of a random image
+     * @throws IOException if an error occurs while fetching images
+     */
     public String getRandomImage(String subreddit) throws IOException {
         return getRandomImageWithFallback(subreddit, "MoeBlushing");
     }
 
+    /**
+     * Fetches a random image from the specified subreddit, with a fallback to a default subreddit if the main one fails.
+     * This method is specifically designed for SFW content.
+     *
+     * @param subreddit the subreddit to fetch images from
+     * @param fallbackSubreddit the subreddit to fall back to if the main one fails
+     * @return a URL of a random image from the subreddit
+     * @throws IOException if an error occurs while fetching images
+     */
     private String getRandomImageWithFallback(String subreddit, String fallbackSubreddit) throws IOException {
         String[] endpoints = {"hot", "new", "top"};
         List<String> endpointPool = new ArrayList<>(List.of(endpoints));
@@ -169,7 +215,13 @@ public class RedditClient {
         throw new IOException("Failed to fetch Reddit image after trying all endpoints and fallback.", lastException);
     }
 
-
+    /**
+     * Extracts the media URL from a Reddit post's JSON data.
+     * Handles both image and video formats.
+     *
+     * @param mediaData the JSON object containing media data
+     * @return the extracted media URL, or null if not found
+     */
     private String extractMediaUrl(JsonObject mediaData) {
         if (mediaData.has("url")) {
             return mediaData.get("url").getAsString();
@@ -182,6 +234,15 @@ public class RedditClient {
         return null;
     }
 
+    /**
+     * Validates a media URL by checking its accessibility and content type.
+     * Skips known non-media URLs and Reddit HTML posts.
+     *
+     * @param url the URL to validate
+     * @param includeVideos whether to include video URLs in validation
+     * @return true if the URL is valid media, false otherwise
+     * @throws IOException if an error occurs while checking the URL
+     */
     public boolean isValidMediaUrl(String url, boolean includeVideos) throws IOException {
         // Basic skip: known non-media or unwanted domains
         if (!includeVideos && (
@@ -224,6 +285,13 @@ public class RedditClient {
         }
     }
 
+    /**
+     * Fetches gallery images from a Reddit post URL.
+     * The URL should be in the format: https://www.reddit.com/r/subreddit/comments/post_id/title/
+     *
+     * @param galleryUrl the Reddit post URL containing the gallery
+     * @return a list of image URLs from the gallery
+     */
     public List<String> getGalleryImages(String galleryUrl) {
         List<String> imageUrls = new ArrayList<>();
         try {

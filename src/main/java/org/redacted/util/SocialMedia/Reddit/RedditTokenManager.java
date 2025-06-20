@@ -6,7 +6,10 @@ import org.redacted.Database.Database;
 import java.time.Instant;
 
 /**
- * Manages Reddit token storage and refreshing using the Database instance.
+ * Manages Reddit OAuth tokens, checking for validity and refreshing them as needed.
+ * Uses a Database instance to store and retrieve tokens.
+ *
+ * @author Derrick Eberlein
  */
 public class RedditTokenManager {
     private final Database database;
@@ -16,6 +19,16 @@ public class RedditTokenManager {
     private final String username;
     private final String password;
 
+    /**
+     * Constructs a RedditTokenManager with the provided database and RedditOAuth instance.
+     *
+     * @param database the database instance to store and retrieve tokens
+     * @param redditOAuth the RedditOAuth instance for authentication
+     * @param clientId the Reddit application client ID
+     * @param clientSecret the Reddit application client secret
+     * @param username the Reddit username
+     * @param password the Reddit password
+     */
     public RedditTokenManager(Database database, RedditOAuth redditOAuth, String clientId, String clientSecret, String username, String password) {
         this.database = database;
         this.redditOAuth = redditOAuth;
@@ -25,6 +38,11 @@ public class RedditTokenManager {
         this.password = password;
     }
 
+    /**
+     * Retrieves a valid Reddit OAuth token, refreshing it if necessary.
+     *
+     * @return the valid token as a String, or null if unable to fetch a new token
+     */
     public String getValidToken() {
         Document tokenDoc = database.getRedditToken();
         if (tokenDoc != null) {

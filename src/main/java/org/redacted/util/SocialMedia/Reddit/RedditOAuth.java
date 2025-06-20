@@ -8,15 +8,37 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Objects;
 
+/**
+ * Handles Reddit OAuth authentication using the password grant type.
+ * Requires OkHttp for HTTP requests and Gson for JSON parsing.
+ *
+ * @author Derrick Eberlein
+ */
 public class RedditOAuth {
     private final OkHttpClient httpClient;
     private final Gson gson;
 
+    /**
+     * Constructs a RedditOAuth instance with the provided OkHttpClient and Gson.
+     *
+     * @param httpClient the OkHttpClient to use for HTTP requests
+     * @param gson the Gson instance for JSON parsing
+     */
     public RedditOAuth(OkHttpClient httpClient, Gson gson) {
         this.httpClient = httpClient;
         this.gson = gson;
     }
 
+    /**
+     * Authenticates with Reddit using the password grant type.
+     *
+     * @param clientId the Reddit application client ID
+     * @param clientSecret the Reddit application client secret
+     * @param username the Reddit username
+     * @param password the Reddit password
+     * @return the access token if authentication is successful
+     * @throws IOException if an error occurs during the HTTP request
+     */
     public String authenticate(String clientId, String clientSecret, String username, String password) throws IOException {
         RequestBody formBody = new FormBody.Builder()
                 .add("grant_type", "password")
@@ -47,7 +69,12 @@ public class RedditOAuth {
         }
     }
 
-    // Method to request a new token
+    /**
+     * Refreshes the Reddit OAuth token.
+     *
+     * @return the new access token
+     * @throws IOException if an error occurs during the HTTP request
+     */
     public String refreshToken() throws IOException {
         // Make the token refresh request here
         // (similar to how you originally got the token)

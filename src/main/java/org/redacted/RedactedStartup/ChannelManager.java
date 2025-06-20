@@ -128,19 +128,6 @@ public class ChannelManager {
                     e.printStackTrace();
                 }
             }
-            case "bot-fun" -> {
-                try {
-                    RoleManager roleManager = new RoleManager();
-                    Role memberRole = roleManager.getOrCreateRole(guild, "Member", RoleHierarchyManager.MEMBER_PERMISSIONS, RoleHierarchyManager.MEMBER_COLOR);
-                    Objects.requireNonNull(category).upsertPermissionOverride(memberRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    System.out.println("Updated permissions for category: " + name);
-                } catch (Exception e) {
-                    System.err.println("Failed to update permissions for category: " + name);
-                    e.printStackTrace();
-                }
-            }
         }
 
         return category;

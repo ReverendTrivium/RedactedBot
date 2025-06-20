@@ -13,6 +13,8 @@ import org.redacted.RedactedStartup.SchedulerManager;
 import org.redacted.RedactedStartup.ShardReadyListener;
 import org.redacted.listeners.MessageSchedulerListener;
 import org.redacted.util.GalleryManager;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.security.auth.login.LoginException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,6 +30,14 @@ public class Redacted {
     public final ScheduledExecutorService scheduler;
     private final BotCommands botCommands;
 
+    @Getter
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(10); // or CachedThreadPool
+
+    /**
+     * Main class for the Redacted bot.
+     *
+     * @throws LoginException if the bot token is invalid
+     */
     public Redacted() throws LoginException {
         // Load configuration
         config = Dotenv.configure().ignoreIfMissing().load();
@@ -70,5 +80,10 @@ public class Redacted {
         } catch (LoginException e) {
             System.err.println("ERROR: Provided bot token is invalid!!");
         }
+    }
+
+    // Add shutdown hook if needed
+    public void shutdown() {
+        threadPool.shutdown();
     }
 }

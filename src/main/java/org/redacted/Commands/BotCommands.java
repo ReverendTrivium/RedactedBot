@@ -79,6 +79,7 @@ public class BotCommands extends ListenerAdapter {
                     new InspireCommand(bot),
                     new GoogleCommand(bot, googleSearchService),
                     new AnimeCommand(bot),
+                    new SummarizeCommand(bot),
 
                     // Gamba commands
                     new BlackJackCommand(bot),

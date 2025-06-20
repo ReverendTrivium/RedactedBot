@@ -19,6 +19,9 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.Roles.RoleHierarchyManager;
 import org.redacted.listeners.*;
+import org.redacted.listeners.Ticket.TicketAddUserHandler;
+import org.redacted.listeners.Ticket.TicketCloseHandler;
+import org.redacted.listeners.Ticket.TicketRemoveUserHandler;
 
 import java.util.Arrays;
 
@@ -41,12 +44,16 @@ public class BotInitializer {
         BotCommands botCommands = new BotCommands(bot); // Create a single instance of BotCommands
 
         shardManager.addEventListener(
-                new EventListener(),
-                new GalleryReactionListener(bot),
-                new ButtonListener(bot),
-                new NSFWCleanListener(),
-                new MessageListener(bot),
-                new ReactionRoleListener(),
+                new EventListener(), // Register EventListener
+                new GalleryReactionListener(bot), // Register GalleryReactionListener
+                new ButtonListener(bot), // Register ButtonListener
+                new NSFWCleanListener(), // Register NSFWCleanListener
+                new MessageListener(bot), // Register MessageListener
+                new ReactionRoleListener(), // Register ReactionRoleListener
+                new TicketListener(bot), // Register TicketListener
+                new TicketCloseHandler(bot), // Register TicketCloseHandler
+                new TicketAddUserHandler(), // Register TicketAddUserHandler
+                new TicketRemoveUserHandler(), // Register TicketRemoveUserHandler
                 botCommands,  // Register BotCommands as an event listener
                 new BotEventListener(bot, botCommands) // Pass BotCommands to BotEventListener
         );

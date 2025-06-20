@@ -123,7 +123,6 @@ public class GuildData {
         return fetchedConfig;
     }
 
-
     public void updateConfig(Bson update) {
         database.updateConfigForGuild(guildId, update);
         // Also update the in-memory config object if necessary

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Greetings;
 import org.redacted.Database.models.SavedEmbed;
+import org.redacted.Database.models.Ticket;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -72,6 +73,9 @@ public class Database {
         // Create a collection for saved embeds
         MongoCollection<Document> savedEmbeds = getGuildCollection(guildId, "saved_embeds");
 
+        // ✅ Add ticket collection
+        MongoCollection<Document> tickets = getGuildCollection(guildId, "tickets");
+
         // Add config collection for guild
         MongoCollection<Document> config = getGuildCollection(guildId, "config");
 
@@ -86,6 +90,10 @@ public class Database {
 
         // Set up index for config collection if necessary
         config.createIndex(Indexes.descending("guildId"));
+
+        // ✅ Add useful indexes for ticket lookup and status filtering
+        tickets.createIndex(Indexes.ascending("ticketId"));
+        tickets.createIndex(Indexes.ascending("status"));
     }
 
     /**
@@ -193,5 +201,9 @@ public class Database {
 
     public MongoCollection<Config> getConfigCollection() {
         return config;
+    }
+
+    public MongoCollection<Ticket> getTicketCollection(long guildId) {
+        return getGuildCollection(guildId, "tickets").withDocumentClass(Ticket.class);
     }
 }

@@ -94,7 +94,7 @@ public class LeaderboardCommand extends Command {
         for (Economy profile : leaderboard) {
             if (profile.getUser() == null) continue; // Still good to skip null user IDs
 
-            Member member = Objects.requireNonNull(event.getGuild()).getMemberById(profile.getUser());
+            Member member = event.getGuild().getMemberById(profile.getUser());
             String userName = member != null ? member.getEffectiveName() : "\uD83D\uDEAB Left the server";
 
             long balance = profile.getBalance() != null ? profile.getBalance() : 0;

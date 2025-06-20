@@ -5,10 +5,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.requests.restaction.PermissionOverrideAction;
 import org.redacted.Roles.RoleHierarchyManager;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 
@@ -69,19 +67,6 @@ public class ChannelManager {
                     e.printStackTrace();
                 }
             }
-            case "bot-fun" -> {
-                try {
-                    RoleManager roleManager = new RoleManager();
-                    Role memberRole = roleManager.getOrCreateRole(guild, "Member", RoleHierarchyManager.MEMBER_PERMISSIONS, RoleHierarchyManager.MEMBER_COLOR);
-                    Objects.requireNonNull(category).upsertPermissionOverride(memberRole)
-                            .grant(Permission.VIEW_CHANNEL)
-                            .queue();
-                    System.out.println("Updated permissions for category: " + name);
-                } catch (Exception e) {
-                    System.err.println("Failed to update permissions for category: " + name);
-                    e.printStackTrace();
-                }
-            }
         }
 
         return channel;
@@ -120,7 +105,7 @@ public class ChannelManager {
                     Role eventStaffRole = roleManager.getOrCreateRole(guild, "Event Staff", RoleHierarchyManager.EVENT_STAFF_PERMISSIONS, RoleHierarchyManager.EVENT_STAFF_COLOR);
 
                     // Deny access to everyone
-                    category.upsertPermissionOverride(guild.getPublicRole())
+                    Objects.requireNonNull(category).upsertPermissionOverride(guild.getPublicRole())
                             .deny(Permission.VIEW_CHANNEL)
                             .queue();
 

@@ -78,7 +78,7 @@ public class SummarizeCommand extends Command {
                 try {
                     String summary = OpenAIClient.summarize(context);
                     EmbedBuilder embed = new EmbedBuilder()
-                            .setTitle("📝 **Summary of the Last** " + amount + " **Messages**")
+                            .setTitle("📝 **Summary of the Last " + amount + " Messages**")
                             .setDescription(summary.length() > 4000 ? summary.substring(0, 3997) + "..." : summary)
                             .setColor(new Color(88, 101, 242))
                             .setTimestamp(Instant.now())

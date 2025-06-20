@@ -3,6 +3,12 @@ package org.redacted.util.channels;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
+/**
+ * ChannelFinder Class
+ * Utility class for finding text channels by name in a Discord guild.
+ *
+ * @author Derrick Eberlein
+ */
 public class ChannelFinder {
 
     /**

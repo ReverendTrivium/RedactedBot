@@ -9,8 +9,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 
+/**
+ * TicketAddUserHandler Class
+ * This class handles the addition of users to ticket channels in a Discord server.
+ * It listens for messages that start with "-ticket adduser" and adds the mentioned user to the ticket channel.
+ *
+ * @author Derrick Eberlein
+ */
 public class TicketAddUserHandler extends ListenerAdapter {
 
+    /**
+     * Handles incoming messages to check for the "-ticket adduser" command.
+     * If the command is detected, it adds the mentioned user to the ticket channel.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         String[] args = event.getMessage().getContentRaw().split(" ");

@@ -28,6 +28,12 @@ import java.util.Objects;
  */
 public class SuggestionsCommand extends Command {
 
+    /**
+     * Constructor for the SuggestionsCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public SuggestionsCommand(Redacted bot) {
         super(bot);
         this.name = "create-suggestions";
@@ -43,6 +49,13 @@ public class SuggestionsCommand extends Command {
         this.subCommands.add(new SubcommandData("reset", "Reset all suggestion board data and settings."));
     }
 
+    /**
+     * Executes the SuggestionsCommand.
+     * This method handles the interaction when the command is invoked.
+     * It processes the setup and modification of the suggestion board.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

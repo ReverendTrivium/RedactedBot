@@ -14,25 +14,26 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 /**
- * Handles config data for the guild and various modules.
+ * ConfigHandler Class
+ * This class manages the configuration settings for a Discord guild.
+ * It retrieves and updates the configuration from the database.
  *
  * @author Derrick Eberlein
  */
 @Getter
-@SuppressWarnings("JavadocDeclaration")
 public class ConfigHandler {
 
     private static final ScheduledExecutorService expireScheduler = Executors.newScheduledThreadPool(10);
     private static final Map<String, ScheduledFuture> expireTimers = new HashMap<>();
-
-    /**
-     * -- GETTER --
-     *  Access the config cache.
-     *
-     * @return a cache instance of the Config from database.
-     */
     private Config config;
 
+    /**
+     * Constructs a ConfigHandler for the specified guild.
+     * It retrieves the configuration from the database or creates a new one if it doesn't exist.
+     *
+     * @param bot   The Redacted bot instance.
+     * @param guild The guild for which the configuration is being created.
+     */
     public ConfigHandler(Redacted bot, Guild guild) {
 
         // Get POJO object from database

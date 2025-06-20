@@ -23,6 +23,12 @@ import java.util.Objects;
  */
 public class RobCommand extends Command {
 
+    /**
+     * Constructor for the RobCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public RobCommand(Redacted bot) {
         super(bot);
         this.name = "rob";
@@ -31,6 +37,12 @@ public class RobCommand extends Command {
         this.args.add(new OptionData(OptionType.USER, "user", "The user you want to rob.", true));
     }
 
+    /**
+     * Executes the rob command.
+     * Handles the logic for attempting to rob another user, including checks for valid targets and timeouts.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         User user = event.getUser();
         User target = Objects.requireNonNull(event.getOption("user")).getAsUser();

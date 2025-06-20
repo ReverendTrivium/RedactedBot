@@ -5,7 +5,10 @@ import lombok.Setter;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
 /**
- * POJO object that stores server greeting/farewell data.
+ * Greetings Class
+ * This class represents the greeting and farewell messages for a Discord guild.
+ * It includes fields for the guild ID, welcome channel, greeting message, farewell message,
+ * and a direct message sent to users upon joining.
  *
  * @author Derrick Eberlein
  */
@@ -25,7 +28,10 @@ public class Greetings {
     @BsonProperty("join_dm")
     private String joinDM;
 
-    /** No-argument constructor required by MongoDB POJO codec */
+    /**
+     * Default constructor initializes the greetings object with default values.
+     * This is useful for creating a new instance without any specific guild ID.
+     */
     public Greetings() {
         // Initialize fields with default values if needed
         this.welcomeChannel = null;
@@ -34,7 +40,11 @@ public class Greetings {
         this.joinDM = null;
     }
 
-    /** Constructor that accepts guild ID */
+    /**
+     * Constructs a Greetings instance for a specific guild.
+     *
+     * @param guild the ID of the guild
+     */
     public Greetings(long guild) {
         this.guild = guild;
         this.welcomeChannel = null;

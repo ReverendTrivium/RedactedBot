@@ -8,7 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * POJO object that stores data for a guild's suggestion board.
+ * Suggestion Class
+ * This class represents a suggestion board for a Discord guild.
+ * It includes fields for the guild ID, message IDs, authors, channel ID,
+ * suggestion number, and settings for response DM and anonymity.
  *
  * @author Derrick Eberlein
  */
@@ -39,7 +42,10 @@ public class Suggestion {
     @BsonProperty("is_anonymous")
     private boolean isAnonymous;
 
-    /** No-argument constructor required by MongoDB POJO codec */
+    /**
+     * Default constructor initializes the suggestion board with default values.
+     * This is useful for creating a new instance without any specific guild ID.
+     */
     public Suggestion() {
         this.messages = new ArrayList<>();
         this.authors = new ArrayList<>();
@@ -63,10 +69,20 @@ public class Suggestion {
         this.authors = new ArrayList<>();
     }
 
+    /**
+     * Returns whether the suggestion board is anonymous.
+     *
+     * @return true if suggestions are anonymous, false otherwise.
+     */
     public boolean isAnonymous() {
         return isAnonymous;
     }
 
+    /**
+     * Sets whether suggestions are anonymous.
+     *
+     * @param anonymous true if suggestions should be anonymous, false otherwise.
+     */
     public void setAnonymous(boolean anonymous) {
         isAnonymous = anonymous;
     }

@@ -13,11 +13,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Command that clears all entries in the blacklist.
+ * This command requires confirmation before proceeding with the deletion.
+ *
+ * @author Derrick Eberlein
+ */
 public class BlacklistClearCommand extends Command {
 
     private static final Map<String, Long> confirmationRequests = new HashMap<>();
     private static final long CONFIRMATION_TIMEOUT = 60 * 1000; // 60 seconds
 
+    /**
+     * Constructor for the BlacklistClearCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlacklistClearCommand(Redacted bot) {
         super(bot);
         this.name = "clear"; // Subcommand name
@@ -26,6 +38,12 @@ public class BlacklistClearCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the command when invoked.
+     * It checks for an existing confirmation request and either clears the blacklist or asks for confirmation.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String userId = event.getUser().getId();

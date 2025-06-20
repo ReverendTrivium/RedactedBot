@@ -22,6 +22,12 @@ import java.util.Objects;
  */
 public class PayCommand extends Command {
 
+    /**
+     * Constructor for the PayCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public PayCommand(Redacted bot) {
         super(bot);
         this.name = "pay";
@@ -31,6 +37,12 @@ public class PayCommand extends Command {
         this.args.add(new OptionData(OptionType.INTEGER, "amount", "The amount of money to send.", true).setMinValue(1));
     }
 
+    /**
+     * Executes the pay command.
+     * Handles the logic for transferring money from one user to another.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         // Get command data
         User user = event.getUser();

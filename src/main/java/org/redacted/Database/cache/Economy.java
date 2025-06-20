@@ -6,7 +6,11 @@ import lombok.Setter;
 import java.util.LinkedHashMap;
 
 /**
- * POJO object that stores server economy data for a user.
+ * Economy Class
+ * This class represents the economy data for a guild and optionally for a user.
+ * It includes fields for guild ID, user ID, balance, bank, and an inventory of items.
+ *
+ * @author Derrick Eberlein
  */
 @Setter
 @Getter
@@ -17,8 +21,16 @@ public class Economy {
     private Long bank;
     private LinkedHashMap<String, Long> inventory;
 
+    /**
+     * Default constructor initializes the economy data.
+     */
     public Economy() { }
 
+    /**
+     * Constructs an Economy instance for a specific guild.
+     *
+     * @param guild the ID of the guild
+     */
     public Economy(long guild) {
         this.guild = guild;
     }

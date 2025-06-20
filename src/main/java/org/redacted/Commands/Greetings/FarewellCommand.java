@@ -21,6 +21,12 @@ import java.util.Objects;
  */
 public class FarewellCommand extends Command {
 
+    /**
+     * Constructor for the FarewellCommand.
+     * Initializes the command with its name, description, category, options, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public FarewellCommand(Redacted bot) {
         super(bot);
         this.name = "farewell";
@@ -30,6 +36,13 @@ public class FarewellCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the farewell command.
+     * This method handles the interaction when the command is invoked.
+     * It either sets or removes a farewell message based on the provided options.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

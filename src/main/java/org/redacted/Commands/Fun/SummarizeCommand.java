@@ -17,8 +17,20 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Command that summarizes recent messages in a channel using OpenAI's summarization capabilities.
+ * It retrieves a specified number of recent messages and generates a summary.
+ *
+ * @author Derrick Eberlein
+ */
 public class SummarizeCommand extends Command {
 
+    /**
+     * Constructor for the SummarizeCommand.
+     * Initializes the command with its name, description, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public SummarizeCommand(Redacted bot) {
         super(bot);
 
@@ -29,6 +41,12 @@ public class SummarizeCommand extends Command {
         this.args.add(new OptionData(OptionType.INTEGER, "amount", "Number of recent messages to summarize (1–100)", false));
     }
 
+    /**
+     * Executes the summarize command.
+     * Retrieves recent messages from the channel and generates a summary using OpenAI.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         TextChannel channel = event.getChannel().asTextChannel();

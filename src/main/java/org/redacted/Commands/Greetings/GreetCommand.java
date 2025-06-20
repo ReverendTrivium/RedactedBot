@@ -22,6 +22,12 @@ import java.util.Objects;
  */
 public class GreetCommand extends Command {
 
+    /**
+     * Constructor for the GreetCommand.
+     * Initializes the command with its name, description, category, options, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public GreetCommand(Redacted bot) {
         super(bot);
         this.name = "greet";
@@ -31,6 +37,13 @@ public class GreetCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the greet command.
+     * This method handles the interaction when the command is invoked.
+     * It either sets or removes a greeting message based on the provided options.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

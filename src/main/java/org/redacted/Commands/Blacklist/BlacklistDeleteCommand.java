@@ -13,14 +13,21 @@ import org.redacted.Redacted;
 
 import java.util.Objects;
 
-
 /**
- * Command that deletes a specified individual from the blacklist
+ * Command that deletes users from the blacklist.
+ * This command allows staff members to remove a user from the blacklist based on their first name,
+ * last name, social media handle, and platform.
  *
  * @author Derrick Eberlein
  */
 public class BlacklistDeleteCommand extends Command {
 
+    /**
+     * Constructor for the BlacklistDeleteCommand.
+     * Initializes the command with its name, description, category, and required options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlacklistDeleteCommand(Redacted bot) {
         super(bot);
         this.name = "delete"; // Subcommand name
@@ -35,6 +42,13 @@ public class BlacklistDeleteCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the command when invoked.
+     * It retrieves the options provided by the user, constructs a query to find the user in the blacklist,
+     * and deletes the entry from the MongoDB collection for blacklists.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String firstName = Objects.requireNonNull(event.getOption("firstname")).getAsString();

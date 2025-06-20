@@ -24,9 +24,14 @@ import java.util.Objects;
  * @author Derrick Eberlein
  */
 public class LeaderboardCommand extends Command {
-
     private static final int USERS_PER_PAGE = 10;
 
+    /**
+     * Constructor for the LeaderboardCommand.
+     * Initializes the command with its name, description, category, and subcommands.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public LeaderboardCommand(Redacted bot) {
         super(bot);
         this.name = "leaderboard";
@@ -35,6 +40,12 @@ public class LeaderboardCommand extends Command {
         this.subCommands.add(new SubcommandData("rank", "Shows the server's economy leaderboard"));
     }
 
+    /**
+     * Executes the leaderboard command.
+     * Handles the "rank" subcommand to display the economy leaderboard.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (Objects.equals(event.getSubcommandName(), "rank")) {
@@ -42,6 +53,11 @@ public class LeaderboardCommand extends Command {
         }
     }
 
+    /**
+     * Displays the leaderboard of users with the highest net worth.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     private void displayLeaderboard(SlashCommandInteractionEvent event) {
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
         List<Economy> leaderboard = economyHandler.getLeaderboardAsList();
@@ -78,7 +94,7 @@ public class LeaderboardCommand extends Command {
         for (Economy profile : leaderboard) {
             if (profile.getUser() == null) continue; // Still good to skip null user IDs
 
-            Member member = event.getGuild().getMemberById(profile.getUser());
+            Member member = Objects.requireNonNull(event.getGuild()).getMemberById(profile.getUser());
             String userName = member != null ? member.getEffectiveName() : "\uD83D\uDEAB Left the server";
 
             long balance = profile.getBalance() != null ? profile.getBalance() : 0;

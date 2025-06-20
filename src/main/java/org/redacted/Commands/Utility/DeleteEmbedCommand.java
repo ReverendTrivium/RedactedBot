@@ -17,8 +17,21 @@ import org.redacted.Redacted;
 
 import java.util.Objects;
 
+/**
+ * Command to delete a previously saved embed message.
+ * This command allows users with the appropriate permissions to remove an embed message
+ * that was saved in the database.
+ *
+ * @author Derrick Eberlein
+ */
 public class DeleteEmbedCommand extends Command {
 
+    /**
+     * Constructor for the DeleteEmbedCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public DeleteEmbedCommand(Redacted bot) {
         super(bot);
         this.name = "deleteembed";
@@ -30,6 +43,13 @@ public class DeleteEmbedCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "messageid", "The ID of the embed message to delete", true));
     }
 
+    /**
+     * Executes the DeleteEmbedCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the saved embed message by its ID and deletes it from the channel and database.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();

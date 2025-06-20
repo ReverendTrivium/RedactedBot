@@ -2,6 +2,7 @@ package org.redacted.Commands.Utility;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bson.Document;
 import org.redacted.Commands.Category;
@@ -15,8 +16,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Command to list all scheduled messages for the server.
+ * This command retrieves and displays a list of scheduled messages that have been set up in the database.
+ * It is useful for managing and reviewing scheduled messages.
+ *
+ * @author Derrick Eberlein
+ */
 public class ListScheduledMessagesCommand extends Command {
 
+    /**
+     * Constructor for the ListScheduledMessagesCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public ListScheduledMessagesCommand(Redacted bot) {
         super(bot);
         this.name = "list-scheduled";
@@ -25,6 +39,13 @@ public class ListScheduledMessagesCommand extends Command {
         this.permission = Permission.MANAGE_CHANNEL;
     }
 
+    /**
+     * Executes the ListScheduledMessagesCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves all scheduled messages from the database and formats them into embeds for display.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Get the guild ID from the event
@@ -67,7 +88,13 @@ public class ListScheduledMessagesCommand extends Command {
         ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.replyEmbeds(embeds.get(0).build()), toMessageEmbeds(embeds));
     }
 
-    private List<net.dv8tion.jda.api.entities.MessageEmbed> toMessageEmbeds(List<EmbedBuilder> embeds) {
+    /**
+     * Converts a list of EmbedBuilder objects to a list of MessageEmbed objects.
+     *
+     * @param embeds The list of EmbedBuilder objects to convert.
+     * @return A list of MessageEmbed objects.
+     */
+    private List<MessageEmbed> toMessageEmbeds(List<EmbedBuilder> embeds) {
         List<net.dv8tion.jda.api.entities.MessageEmbed> messageEmbeds = new ArrayList<>();
         for (EmbedBuilder builder : embeds) {
             messageEmbeds.add(builder.build());

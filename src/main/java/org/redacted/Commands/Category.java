@@ -19,6 +19,12 @@ public enum Category {
     public final String emoji;
     public final String name;
 
+    /**
+     * Constructor for the Category enum.
+     *
+     * @param emoji The emoji representing the category.
+     * @param name  The name of the category.
+     */
     Category(String emoji, String name) {
         this.emoji = emoji;
         this.name = name;

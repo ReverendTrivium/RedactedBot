@@ -25,7 +25,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 /**
- * Handles Introduction Channel Messages for server authorization.
+ * IntroductionHandler Class
+ * This class handles user introductions in a Discord guild.
+ * It processes introduction messages, checks for blacklisted names or social media handles,
+ * and manages user roles based on the introduction content.
  *
  * @author Derrick Eberlein
  */
@@ -39,6 +42,17 @@ public class IntroductionHandler {
     private final ConcurrentMap<String, String> userIntroMessages;
     public static final ConcurrentMap<String, Boolean> staffDeletedMessages = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs an IntroductionHandler for the specified guild.
+     * It initializes the necessary collections and loads existing user introduction messages.
+     *
+     * @param bot                  The Redacted bot instance.
+     * @param guild                The guild for which the introduction handler is being created.
+     * @param introductionChannelId The ID of the channel where introductions are posted.
+     * @param staffChannelId       The ID of the channel where staff notifications are sent.
+     * @param memberRoleId         The ID of the role assigned to members after successful introduction.
+     * @param flagRoleId           The ID of the role assigned to flagged users.
+     */
     public IntroductionHandler(Redacted bot, Guild guild, String introductionChannelId, String staffChannelId, String memberRoleId, String flagRoleId) {
         this.bot = bot;
         this.staffChannelId = staffChannelId;
@@ -59,6 +73,10 @@ public class IntroductionHandler {
         loadUserIntroMessages();
     }
 
+    /**
+     * Loads existing user introduction messages from the database into memory.
+     * This method is called during initialization to populate the userIntroMessages map.
+     */
     private void loadUserIntroMessages() {
         List<Document> documents = userIntroMessagesCollection.find().into(new ArrayList<>());
         for (Document doc : documents) {
@@ -74,6 +92,14 @@ public class IntroductionHandler {
         }
     }
 
+    /**
+     * Waits for the GuildData and its configuration to be initialized.
+     * This method will keep checking until the GuildData is available or a timeout occurs.
+     *
+     * @param guild The guild for which the data is being initialized.
+     * @param bot   The Redacted bot instance.
+     * @return The initialized GuildData, or null if initialization fails after the timeout.
+     */
     private GuildData waitForGuildDataInitialization(Guild guild, Redacted bot) {
         GuildData guildData;
         long timeout = 5000L; // Maximum wait time in milliseconds
@@ -94,15 +120,35 @@ public class IntroductionHandler {
         return null; // Return null if the initialization fails after the timeout
     }
 
+    /**
+     * Saves a user introduction message to the database.
+     * This method is called when a user posts an introduction message.
+     *
+     * @param messageId The ID of the introduction message.
+     * @param userId    The ID of the user who posted the introduction.
+     */
     private void saveUserIntroMessage(String messageId, String userId) {
         Document doc = new Document("messageId", messageId).append("userId", userId);
         userIntroMessagesCollection.replaceOne(Filters.eq("messageId", messageId), doc, new ReplaceOptions().upsert(true));
     }
 
+    /**
+     * Removes a user introduction message from the database.
+     * This method is called when a user deletes their introduction message.
+     *
+     * @param messageId The ID of the introduction message to be removed.
+     */
     private void removeUserIntroMessage(String messageId) {
         userIntroMessagesCollection.deleteOne(Filters.eq("messageId", messageId));
     }
 
+    /**
+     * Handles the introduction message received event.
+     * It processes the introduction, checks for blacklisted names or social media handles,
+     * and manages user roles based on the introduction content.
+     *
+     * @param event The MessageReceivedEvent containing the introduction message.
+     */
     public void handleIntroduction(MessageReceivedEvent event) {
         Message message = event.getMessage();
         Member member = event.getMember();
@@ -201,6 +247,19 @@ public class IntroductionHandler {
         }
     }
 
+    /**
+     * Flags a user for review based on their introduction content.
+     * It removes the member role, adds the flag role, and notifies staff in the staff channel.
+     *
+     * @param event                The MessageReceivedEvent containing the introduction message.
+     * @param member               The member being flagged.
+     * @param staffChannel         The channel where staff notifications are sent.
+     * @param memberRole           The role assigned to members after successful introduction.
+     * @param flagRole             The role assigned to flagged users.
+     * @param socialMediaPlatform  The social media platform used by the user.
+     * @param socialMediaHandle    The social media handle provided by the user.
+     * @param reason               The reason for flagging the user.
+     */
     private void flagUser(MessageReceivedEvent event, Member member, TextChannel staffChannel, Role memberRole, Role flagRole, String socialMediaPlatform, String socialMediaHandle, String reason) {
         event.getGuild().removeRoleFromMember(member, memberRole).queue();
         event.getGuild().addRoleToMember(member, flagRole).queue();
@@ -215,6 +274,17 @@ public class IntroductionHandler {
         }
     }
 
+    /**
+     * Approves a user based on their introduction content.
+     * It sets the user's nickname, adds the member role, and saves the introduction message.
+     *
+     * @param event                The MessageReceivedEvent containing the introduction message.
+     * @param member               The member being approved.
+     * @param memberRole           The role assigned to members after successful introduction.
+     * @param firstName            The first name of the user.
+     * @param instagramHandle      The Instagram handle provided by the user, if any.
+     * @param facebookHandle       The Facebook handle provided by the user, if any.
+     */
     private void approveUser(MessageReceivedEvent event, Member member, Role memberRole, String firstName, String instagramHandle, String facebookHandle) {
         String nickname = firstName;
         if (instagramHandle != null) {
@@ -236,16 +306,34 @@ public class IntroductionHandler {
         System.out.println("User Intro Message ID: " + event.getMessage().getId());
     }
 
+    /**
+     * Sends a direct message to the user.
+     *
+     * @param member  The member to whom the DM will be sent.
+     * @param message The message content to send.
+     */
     private void sendDM(Member member, String message) {
         member.getUser().openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
     }
 
-
+    /**
+     * Checks if a direct message should be sent to the user based on their roles.
+     *
+     * @param member The member to check.
+     * @return true if the DM should be sent, false otherwise.
+     */
     private boolean shouldSendDM(Member member) {
         // Only send DM if the member does not have any role other than the default @everyone role
         return member.getRoles().stream().allMatch(Role::isPublicRole);
     }
 
+    /**
+     * Handles the deletion of an introduction message.
+     * It checks if the deleted message was a user introduction and not a bot-generated sticky message.
+     * If it was a user introduction, it removes the user's role and sends a notification to the staff channel.
+     *
+     * @param event The MessageDeleteEvent containing the deleted message details.
+     */
     public void handleIntroductionDeletion(MessageDeleteEvent event) {
         TextChannel staffChannel = event.getGuild().getTextChannelById(staffChannelId);
         String messageId = event.getMessageId();
@@ -289,6 +377,12 @@ public class IntroductionHandler {
         }
     }
 
+    /**
+     * Marks a message as deleted by staff.
+     * This method is used to track messages that have been deleted by staff members.
+     *
+     * @param messageId The ID of the message to mark as deleted.
+     */
     public static void markAsStaffDeleted(String messageId) {
         staffDeletedMessages.put(messageId, true);
     }

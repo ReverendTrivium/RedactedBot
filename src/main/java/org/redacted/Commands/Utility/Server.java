@@ -18,6 +18,12 @@ import java.util.Objects;
  */
 public class Server extends Command {
 
+    /**
+     * Constructor for the Server command.
+     * Initializes the command with its name, description, and category.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public Server(Redacted bot) {
         super(bot);
         this.name = "server";
@@ -25,6 +31,13 @@ public class Server extends Command {
         this.category = Category.UTILITY;
     }
 
+    /**
+     * Executes the Server command.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves server information and formats it into an embed for display.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         String guildTime = TimeFormat.RELATIVE.format(Objects.requireNonNull(guild).getTimeCreated().toInstant().toEpochMilli());

@@ -23,8 +23,21 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Command to create and send a custom embed message to a specified channel.
+ * This command allows users with the appropriate permissions to create an embed
+ * with a title, description, image, and thumbnail.
+ *
+ * @author Derrick Eberlein
+ */
 public class EmbedCommand extends Command {
 
+    /**
+     * Constructor for the EmbedCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public EmbedCommand(Redacted bot) {
         super(bot);
         this.name = "embed";
@@ -39,6 +52,13 @@ public class EmbedCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "thumbnail", "Thumbnail URL for top-right of embed", false));
     }
 
+    /**
+     * Executes the EmbedCommand.
+     * This method handles the interaction when the command is invoked.
+     * It prompts the user for a title and description, then creates and sends the embed.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         TextChannel targetChannel = Objects.requireNonNull(event.getOption("channel")).getAsChannel().asTextChannel();
@@ -108,6 +128,13 @@ public class EmbedCommand extends Command {
         });
     }
 
+    /**
+     * Formats a multiline string for better readability in embeds.
+     * It can optionally format headers like "1. Title" into bold.
+     *
+     * @param input The input string to format.
+     * @return The formatted string.
+     */
     private String formatMultiline(String input) {
         // Optionally format headers like "1. Title" into bold
         return Arrays.stream(input.split("\n"))

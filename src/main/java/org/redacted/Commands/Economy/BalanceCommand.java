@@ -23,6 +23,12 @@ import java.util.Objects;
  */
 public class BalanceCommand extends Command {
 
+    /**
+     * Constructor for the BalanceCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BalanceCommand(Redacted bot) {
         super(bot);
         this.name = "balance";
@@ -31,6 +37,12 @@ public class BalanceCommand extends Command {
         this.args.add(new OptionData(OptionType.USER, "user", "See another user's balance"));
     }
 
+    /**
+     * Executes the balance command.
+     * Retrieves the user's balance and bank values, then sends an embed message with the information.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         // Get user
         OptionMapping userOption = event.getOption("user");

@@ -20,6 +20,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * TicketListener Class
+ * This class listens for messages in a specific channel to open tickets for user feedback or reporting.
+ * It creates a private text channel for the user and admins to discuss the ticket.
+ *
+ * @author Derrick Eberlein
+ */
 public class TicketListener extends ListenerAdapter {
 
     private static final Pattern TICKET_OPEN_PATTERN = Pattern.compile("^-ticket open (.+)$", Pattern.CASE_INSENSITIVE);
@@ -27,9 +34,20 @@ public class TicketListener extends ListenerAdapter {
     private static final String CATEGORY_NAME = "Private Feedback / Reporting";
     private static final String ADMIN_ROLE_NAME = "Admin";
 
+    /**
+     * Constructs a TicketListener with the provided Redacted bot instance.
+     *
+     * @param bot the Redacted bot instance
+     */
     public TicketListener(Redacted bot) {
     }
 
+    /**
+     * Handles incoming messages to check for the "-ticket open" command.
+     * If the command is detected, it creates a new ticket channel for the user.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) return;
@@ -103,6 +121,12 @@ public class TicketListener extends ListenerAdapter {
         event.getMessage().delete().queue();
     }
 
+    /**
+     * Creates an EmbedBuilder with a welcome message for the ticket channel.
+     *
+     * @param member The Member who opened the ticket.
+     * @return An EmbedBuilder with the welcome message.
+     */
     private static @NotNull EmbedBuilder getEmbedBuilder(Member member) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(new Color(88, 101, 242));

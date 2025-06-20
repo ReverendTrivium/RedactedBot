@@ -18,18 +18,45 @@ import org.redacted.Roles.getRolesByName;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * ReactionRoleListener Class
+ * This class listens for reaction events on messages and assigns or removes roles
+ * based on the reactions.
+ * It is designed to work with saved embeds that have a mapping of emojis to role names.
+ *
+ * @author Derrick Eberlein
+ */
 public class ReactionRoleListener extends ListenerAdapter {
 
+    /**
+     * Handles message reaction events.
+     * If the reaction is added, it assigns the corresponding role to the user.
+     * If the reaction is removed, it removes the corresponding role from the user.
+     *
+     * @param event The GenericMessageReactionEvent containing the reaction details.
+     */
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
         handleReaction(event, true);
     }
 
+    /**
+     * Handles message reaction removal events.
+     * If the reaction is removed, it removes the corresponding role from the user.
+     *
+     * @param event The MessageReactionRemoveEvent containing the reaction removal details.
+     */
     @Override
     public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
         handleReaction(event, false);
     }
 
+    /**
+     * Handles the reaction event and assigns or removes roles based on the reaction emoji.
+     *
+     * @param event The GenericMessageReactionEvent containing the reaction details.
+     * @param addRole True if the role should be added, false if it should be removed.
+     */
     private void handleReaction(GenericMessageReactionEvent event, boolean addRole) {
         if (Objects.requireNonNull(event.getUser()).isBot()) return;
 

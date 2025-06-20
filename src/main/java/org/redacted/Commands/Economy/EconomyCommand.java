@@ -23,6 +23,12 @@ import java.util.Objects;
  */
 public class EconomyCommand extends Command {
 
+    /**
+     * Constructor for the EconomyCommand.
+     * Initializes the command with its name, description, category, and subcommands.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public EconomyCommand(Redacted bot) {
         super(bot);
         this.name = "manage-economy";
@@ -39,6 +45,12 @@ public class EconomyCommand extends Command {
                 .addOptions(new OptionData(OptionType.INTEGER, "amount", "The amount of money to remove", true)));
     }
 
+    /**
+     * Executes the economy command.
+     * Handles subcommands for modifying the economy configuration, such as changing the currency symbol or adding/removing money from users.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

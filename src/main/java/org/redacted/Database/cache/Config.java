@@ -53,11 +53,19 @@ public class Config {
 
     private LinkedHashMap<String, String> shop; // Maps item names to ids
 
+    /**
+     * Default constructor initializes the autoRoles set and shop map.
+     */
     public Config() {
         this.autoRoles = new HashSet<>();
         this.shop = new LinkedHashMap<>();
     }
 
+    /**
+     * Constructor that initializes the guild ID and sets default values for other fields.
+     *
+     * @param guild the guild ID
+     */
     public Config(long guild) {
         this.guildId = guild;
         this.premium = null;
@@ -65,10 +73,19 @@ public class Config {
         this.currency = EconomyHandler.DEFAULT_CURRENCY;  // Ensure default currency is set
     }
 
-
+    /**
+     * Adds an auto role to the set of auto roles.
+     *
+     * @param roleID the ID of the role to add
+     */
     public void addAutoRole(long roleID) {
         this.autoRoles.add(roleID);
     }
 
+    /**
+     * Removes an auto role from the set of auto roles.
+     *
+     * @param roleID the ID of the role to remove
+     */
     public void removeAutoRole(long roleID) { this.autoRoles.remove(roleID); }
 }

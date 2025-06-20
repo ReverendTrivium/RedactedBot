@@ -20,6 +20,12 @@ import java.net.http.HttpResponse;
  */
 public class InspireCommand extends Command {
 
+    /**
+     * Constructor for the InspireCommand.
+     * Initializes the command with its name, description, and category.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public InspireCommand(Redacted bot) {
         super(bot);
         this.name = "inspire";
@@ -27,6 +33,12 @@ public class InspireCommand extends Command {
         this.category = Category.FUN;
     }
 
+    /**
+     * Executes the inspire command.
+     * Fetches a random inspiring quote from the InspiroBot API and replies with it.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         try {

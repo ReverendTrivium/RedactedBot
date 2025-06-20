@@ -13,8 +13,21 @@ import org.redacted.Redacted;
 
 import java.util.Objects;
 
+/**
+ * Command to delete a scheduled message by its ID.
+ * This command allows users with the appropriate permissions to remove a scheduled message
+ * that was previously set up in the database.
+ *
+ * @author Derrick Eberlein
+ */
 public class DeleteScheduledMessageCommand extends Command {
 
+    /**
+     * Constructor for the DeleteScheduledMessageCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public DeleteScheduledMessageCommand(Redacted bot) {
         super(bot);
         this.name = "delete-scheduled";
@@ -24,6 +37,13 @@ public class DeleteScheduledMessageCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "id", "The ID of the scheduled message to delete.", true));
     }
 
+    /**
+     * Executes the DeleteScheduledMessageCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the scheduled message by its ID and deletes it from the database.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = Objects.requireNonNull(event.getOption("id")).getAsString();

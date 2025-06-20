@@ -34,6 +34,12 @@ public class BlackJackCommand extends Command {
     public static final Map<String, Stack<Cards>> decks = new HashMap<>();
     public static final Map<String, ScheduledFuture> resetTimers = new HashMap<>();
 
+    /**
+     * Constructor for the BlackJackCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlackJackCommand(Redacted bot) {
         super(bot);
         this.name = "blackjack";
@@ -42,6 +48,12 @@ public class BlackJackCommand extends Command {
         this.args.add(new OptionData(OptionType.INTEGER, "bet", "The amount you want to wager", true).setMinValue(1));
     }
 
+    /**
+     * Executes the blackjack command.
+     * Handles the logic for starting a new game of blackjack.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Check if game already exists

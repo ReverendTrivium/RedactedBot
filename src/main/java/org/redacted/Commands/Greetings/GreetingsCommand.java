@@ -28,6 +28,12 @@ import java.util.Objects;
  */
 public class GreetingsCommand extends Command {
 
+    /**
+     * Constructor for the GreetingsCommand.
+     * Initializes the command with its name, description, category, subcommands, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public GreetingsCommand(Redacted bot) {
         super(bot);
         this.name = "greetings-config";
@@ -41,6 +47,13 @@ public class GreetingsCommand extends Command {
         this.subCommands.add(new SubcommandData("reset", "Reset all greetings data and settings."));
     }
 
+    /**
+     * Executes the greetings command.
+     * This method handles the interaction when the command is invoked.
+     * It allows users to set or remove a welcome channel, display the current greetings config, or reset the greetings system.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

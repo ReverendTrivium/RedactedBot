@@ -23,6 +23,12 @@ import java.util.Objects;
  */
 public class WithdrawCommand extends Command {
 
+    /**
+     * Constructor for the WithdrawCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public WithdrawCommand(Redacted bot) {
         super(bot);
         this.name = "withdraw";
@@ -31,6 +37,12 @@ public class WithdrawCommand extends Command {
         this.args.add(new OptionData(OptionType.INTEGER, "amount", "The amount of money you want to deposit.").setMinValue(1));
     }
 
+    /**
+     * Executes the withdraw command.
+     * Checks the user's bank balance, validates the withdrawal amount, and withdraws the money from the bank.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         User user = event.getUser();
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();

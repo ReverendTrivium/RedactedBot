@@ -19,6 +19,12 @@ import java.util.Objects;
  */
 public class WorkCommand extends Command {
 
+    /**
+     * Constructor for the WorkCommand.
+     * Initializes the command with its name, description, and category.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public WorkCommand(Redacted bot) {
         super(bot);
         this.name = "work";
@@ -26,6 +32,12 @@ public class WorkCommand extends Command {
         this.category = Category.ECONOMY;
     }
 
+    /**
+     * Executes the work command.
+     * Checks if the user is on timeout, and if not, allows them to work and receive money.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         long user = event.getUser().getIdLong();
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();

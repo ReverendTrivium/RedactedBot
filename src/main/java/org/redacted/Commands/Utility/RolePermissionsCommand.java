@@ -15,8 +15,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Command to print all permissions of a specified role in the server.
+ * This command retrieves the permissions of a role by its name and displays them in an embed.
+ * It is useful for server administrators to check role permissions.
+ *
+ * @author Derrick Eberlein
+ */
 public class RolePermissionsCommand extends Command {
 
+    /**
+     * Constructor for the RolePermissionsCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public RolePermissionsCommand(Redacted bot) {
         super(bot);
         this.name = "rolepermissions";
@@ -26,6 +39,13 @@ public class RolePermissionsCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "rolename", "The name of the role to check permissions for", true));
     }
 
+    /**
+     * Executes the RolePermissionsCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the role by its name and lists all permissions associated with it.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         OptionMapping roleOption = event.getOption("rolename");

@@ -20,6 +20,12 @@ import java.util.Objects;
  */
 public class RespondCommand extends Command {
 
+    /**
+     * Constructor for the RespondCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public RespondCommand(Redacted bot) {
         super(bot);
         this.name = "respond";
@@ -37,6 +43,13 @@ public class RespondCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "reason", "The reason for your response"));
     }
 
+    /**
+     * Executes the RespondCommand.
+     * This method handles the interaction when the command is invoked.
+     * It processes the response to a suggestion and updates the suggestion board accordingly.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

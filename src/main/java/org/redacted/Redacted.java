@@ -19,6 +19,12 @@ import java.util.concurrent.Executors;
 import javax.security.auth.login.LoginException;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+ * Main class for the Redacted bot.
+ * Initializes the bot, database, and other components.
+ *
+ * @author Derrick Eberlein
+ */
 @Getter
 public class Redacted {
     public Gson gson;
@@ -71,6 +77,12 @@ public class Redacted {
         BotInitializer.registerListeners(shardManager, this);
     }
 
+    /**
+     * Main method to start the Redacted bot.
+     * Initializes the bot and handles any exceptions related to login.
+     *
+     * @param args command line arguments (not used)
+     */
     public static void main(String[] args) {
         try {
             java.util.logging.Logger.getLogger("org.htmlunit").setLevel(java.util.logging.Level.OFF);
@@ -82,7 +94,10 @@ public class Redacted {
         }
     }
 
-    // Add shutdown hook if needed
+    /**
+     * Shuts down the Redacted bot and its components.
+     * This method should be called when the bot is no longer needed.
+     */
     public void shutdown() {
         threadPool.shutdown();
     }

@@ -23,6 +23,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * MessageSchedulerListener Class
+ * This class listens for messages in a Discord server and allows users to schedule messages
+ * with a title, content, destination channel, repeat interval, and time.
+ * It handles the scheduling and rescheduling of messages based on user input.
+ *
+ * @author Derrick Eberlein
+ */
 public class MessageSchedulerListener extends ListenerAdapter {
 
     private final Redacted bot;
@@ -35,6 +43,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
     private LocalDateTime time;
     private boolean awaitingTimeInput = false;
 
+    /**
+     * Constructs a MessageSchedulerListener with the provided Redacted bot and database.
+     *
+     * @param bot      The Redacted bot instance.
+     * @param database The database instance for storing scheduled messages.
+     */
     public MessageSchedulerListener(Redacted bot, Database database) {
         this.bot = bot;
         this.scheduler = Executors.newScheduledThreadPool(1);
@@ -47,6 +61,13 @@ public class MessageSchedulerListener extends ListenerAdapter {
         });
     }
 
+    /**
+     * Starts listening for user input in the specified channel.
+     * This method sets the user and initiates the message scheduling process.
+     *
+     * @param channel The channel where the user will provide input.
+     * @param user    The user who is scheduling the message.
+     */
     public void startListening(TextChannel channel, User user) {
         this.user = user;
         System.out.println("Start listening for user: " + user.getName() + " in channel: " + channel.getName());
@@ -54,6 +75,13 @@ public class MessageSchedulerListener extends ListenerAdapter {
         bot.getShardManager().addEventListener(this);
     }
 
+    /**
+     * Loads scheduled messages from the database for the specified guild and reschedules them.
+     * This method retrieves all scheduled messages, checks their scheduled time, and either runs them immediately
+     * or schedules them for future execution.
+     *
+     * @param guildData The GuildData instance containing the scheduled messages collection.
+     */
     public void loadAndRescheduleMessages(GuildData guildData) {
         System.out.println("Loading and rescheduling messages from the database for guild: " + guildData.getGuildId());
 
@@ -103,6 +131,14 @@ public class MessageSchedulerListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Formats the message with a title and content.
+     * If the title is null, it only returns the content.
+     *
+     * @param title   The title of the message.
+     * @param content The content of the message.
+     * @return The formatted message as a string.
+     */
     private String formatMessage(String title, String content) {
         StringBuilder formattedMessage = new StringBuilder();
         if (title != null) {
@@ -112,6 +148,18 @@ public class MessageSchedulerListener extends ListenerAdapter {
         return formattedMessage.toString();
     }
 
+    /**
+     * Reschedules a message to be sent at a specific time with a repeat interval.
+     * This method sends the message to the specified destination channel and handles repeating messages.
+     *
+     * @param destination The channel where the message will be sent.
+     * @param title       The title of the message.
+     * @param content     The content of the message.
+     * @param repeat      The repeat interval in seconds (0 for no repeat).
+     * @param time        The time when the message should be sent.
+     * @param messageId   The ID of the message in the database for rescheduling purposes.
+     * @param guildData   The GuildData instance containing the scheduled messages collection.
+     */
     private void rescheduleMessage(TextChannel destination, String title, String content, long repeat, LocalDateTime time, String messageId, GuildData guildData) {
         StringBuilder formattedMessage = new StringBuilder();
         if (title != null) {
@@ -136,6 +184,13 @@ public class MessageSchedulerListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Handles incoming messages from users.
+     * It processes the user's input to schedule a message with a title, content, destination channel,
+     * repeat interval, and time. It also handles cancellation of the scheduling process.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.getAuthor().equals(user)) {
@@ -221,6 +276,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Asks the user for the title of the message.
+     * This method sends a message to the specified channel asking for the title input.
+     *
+     * @param channel The channel where the user will provide the title.
+     */
     private void askForTitle(TextChannel channel) {
         System.out.println("Asking for title...");
         channel.sendMessage("\uD83D\uDCDD **What is the message's title?**\n" +
@@ -229,6 +290,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
                 "Type cancel to stop.").queue();
     }
 
+    /**
+     * Asks the user for the content of the message.
+     * This method sends a message to the specified channel asking for the content input.
+     *
+     * @param channel The channel where the user will provide the content.
+     */
     private void askForContent(TextChannel channel) {
         System.out.println("Asking for content...");
         channel.sendMessage("\uD83D\uDCDD**What is the message's content?**\n" +
@@ -236,6 +303,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
                 "Type cancel to stop.").queue();
     }
 
+    /**
+     * Asks the user for the destination channel where the message will be sent.
+     * This method sends a message to the specified channel asking for the channel input.
+     *
+     * @param channel The channel where the user will provide the destination channel.
+     */
     private void askForChannel(TextChannel channel) {
         System.out.println("Asking for channel...");
         channel.sendMessage("\uD83D\uDCDD **Which channel should this message send in?**\n" +
@@ -243,6 +316,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
                 "Type cancel to stop.").queue();
     }
 
+    /**
+     * Asks the user for the repeat interval of the message.
+     * This method sends a message to the specified channel asking for the repeat interval input.
+     *
+     * @param channel The channel where the user will provide the repeat interval.
+     */
     private void askForRepeat(TextChannel channel) {
         System.out.println("Asking for repeat interval...");
         channel.sendMessage("\uD83D\uDD01 **How often do you want this message to repeat?**\n" +
@@ -252,6 +331,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
                 "Type cancel to stop.").queue();
     }
 
+    /**
+     * Asks the user for the time when the message should be sent.
+     * This method sends a message to the specified channel asking for the time input.
+     *
+     * @param channel The channel where the user will provide the time.
+     */
     private void askForTime(TextChannel channel) {
         System.out.println("Asking for time...");
         channel.sendMessage(":alarm_clock: **When do you want to send the message?**\n" +
@@ -260,6 +345,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
                 "Type cancel to stop.").queue();
     }
 
+    /**
+     * Schedules the message to be sent at the specified time.
+     * This method formats the message and schedules it for sending, including handling repeat intervals.
+     *
+     * @param schedulingChannel The channel where the scheduling confirmation will be sent.
+     */
     private void scheduleMessage(TextChannel schedulingChannel) {
         System.out.println("Scheduling message...");
 
@@ -311,6 +402,13 @@ public class MessageSchedulerListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Parses the repeat interval from the user's input.
+     * This method converts the repeat string into seconds based on the specified format.
+     *
+     * @param repeat The repeat interval string (e.g., "6h", "30m", "5d").
+     * @return The repeat interval in seconds.
+     */
     private long parseRepeatInterval(String repeat) {
         System.out.println("Parsing repeat interval: " + repeat);
         long seconds = 0;
@@ -326,6 +424,12 @@ public class MessageSchedulerListener extends ListenerAdapter {
         return seconds;
     }
 
+    /**
+     * Cancels the message scheduling process.
+     * This method sends a cancellation message to the user and removes the listener.
+     *
+     * @param channel The channel where the cancellation message will be sent.
+     */
     private void cancel(TextChannel channel) {
         System.out.println("Cancelling message scheduling...");
         channel.sendMessage("Message scheduling has been canceled.").queue();

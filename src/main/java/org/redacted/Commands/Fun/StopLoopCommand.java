@@ -10,8 +10,20 @@ import org.redacted.Redacted;
 
 import java.util.Objects;
 
+/**
+ * Command that stops NSFW loops in the current channel or all channels.
+ * Utilizes the LoopNSFWCommand to manage the looping tasks.
+ *
+ * @author Derrick Eberlein
+ */
 public class StopLoopCommand extends Command {
 
+    /**
+     * Constructor for the StopLoopCommand.
+     * Initializes the command with its name, description, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public StopLoopCommand(Redacted bot) {
         super(bot);
         this.name = "stoploop";
@@ -21,6 +33,12 @@ public class StopLoopCommand extends Command {
         this.args.add(new OptionData(OptionType.BOOLEAN, "all", "Set to true to stop all NSFW loops. Default is just this channel."));
     }
 
+    /**
+     * Executes the stop loop command.
+     * Stops the NSFW loop in the current channel or all channels based on the provided option.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         boolean stopAll = event.getOption("all") != null && Objects.requireNonNull(event.getOption("all")).getAsBoolean();

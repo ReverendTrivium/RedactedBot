@@ -154,6 +154,12 @@ public class BotCommands extends ListenerAdapter {
         }
     }
 
+    /**
+     * Registers commands for a specific guild.
+     * This method is used to register slash commands for a specific guild.
+     *
+     * @param guild The guild for which commands are being registered.
+     */
     public void registerCommandsForGuild(Guild guild) {
         System.out.println("Registering commands for guild: " + guild.getName());
 
@@ -164,6 +170,12 @@ public class BotCommands extends ListenerAdapter {
         );
     }
 
+    /**
+     * Unpacks the command data into a list of CommandData objects.
+     * This method is used to prepare commands for registration with Discord.
+     *
+     * @return List of CommandData objects representing the commands.
+     */
     public static List<CommandData> unpackCommandData() {
         List<CommandData> commandData = new ArrayList<>();
         for (Command command : commands) {
@@ -184,6 +196,12 @@ public class BotCommands extends ListenerAdapter {
         return commandData;
     }
 
+    /**
+     * Handles slash command interactions.
+     * This method is called when a slash command interaction occurs.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         System.out.println("Received slash command interaction: " + event.getName());
@@ -208,6 +226,13 @@ public class BotCommands extends ListenerAdapter {
         }
     }
 
+    /**
+     * Retrieves a command by its name.
+     * This method is used to fetch a command object based on its name.
+     *
+     * @param name The name of the command to retrieve.
+     * @return The Command object associated with the given name, or null if not found.
+     */
     public Command getCommandByName(String name) {
         return commandsMap.get(name);  // Fetches command by its name
     }

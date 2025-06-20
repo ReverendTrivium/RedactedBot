@@ -19,6 +19,13 @@ import org.redacted.util.embeds.EmbedColor;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Command that fetches NSFW images from Reddit based on specified categories.
+ * Utilizes the RedditClient to interact with the Reddit API and fetch media.
+ * Supports both images and videos, with a maximum of 10 attempts to find valid media.
+ *
+ * @author Derrick Eberlein
+ */
 public class NSFWCommand extends Command {
     private RedditClient redditClient;
     private final Redacted bot;
@@ -28,6 +35,12 @@ public class NSFWCommand extends Command {
     // Mapping of categories to subreddits
     private final Map<String, List<String>> categoryToSubreddits;
 
+    /**
+     * Constructor for the NSFWCommand.
+     * Initializes the command with its name, description, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public NSFWCommand(Redacted bot) {
         super(bot);
         this.bot = bot;
@@ -84,6 +97,13 @@ public class NSFWCommand extends Command {
         this.args.add(new OptionData(OptionType.BOOLEAN, "video", "Whether to include videos in the results").setRequired(false));
     }
 
+    /**
+     * Returns a random subreddit based on the specified category.
+     * If the category is not found or has no subreddits, defaults to "nsfw".
+     *
+     * @param category The category for which to get a subreddit.
+     * @return A random subreddit from the specified category.
+     */
     private String getRandomSubreddit(String category) {
         List<String> subreddits = categoryToSubreddits.get(category);
         if (subreddits == null || subreddits.isEmpty()) {
@@ -93,6 +113,13 @@ public class NSFWCommand extends Command {
         return subreddits.get(random.nextInt(subreddits.size()));
     }
 
+    /**
+     * Executes the NSFW command.
+     * Fetches a random NSFW image or video from Reddit based on the specified category.
+     * Checks if the command is executed in an NSFW channel and handles the media fetching logic.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Get Reddit Token Variables and Initialize Config
@@ -129,6 +156,13 @@ public class NSFWCommand extends Command {
         }
     }
 
+    /**
+     * Executes the NSFW command in a specific text channel with a given category.
+     * This method is used for the LoopNSFWCommand to fetch and send media in a loop.
+     *
+     * @param channelId The TextChannel where the media will be sent.
+     * @param category  The category of NSFW content to fetch.
+     */
     public void executeCategory(TextChannel channelId, String category) {
         // Set Int Attempts before it stops trying to find Images for LoopNSFW command
         int attempt = 0;
@@ -137,7 +171,15 @@ public class NSFWCommand extends Command {
         fetchAndSendMediaLoop(channelId, category, attempt);
     }
 
-    // Fetch Single NSFW Image
+    /**
+     * Fetches and sends a random NSFW media (image or video) from Reddit based on the specified category.
+     * Handles retries and ensures valid media is sent.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     * @param category The category of NSFW content to fetch.
+     * @param includeVideos Whether to include videos in the results.
+     * @param attempt The current attempt number for fetching media.
+     */
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
         // Ensure RedditClient is initialized
         ensureRedditClientInitialized();
@@ -223,6 +265,14 @@ public class NSFWCommand extends Command {
         }
     }
 
+    /**
+     * Fetches and sends a random NSFW media (image or video) in a loop.
+     * This method is used for the LoopNSFWCommand to continuously fetch and send media.
+     *
+     * @param channel The TextChannel where the media will be sent.
+     * @param category The category of NSFW content to fetch.
+     * @param attempt The current attempt number for fetching media.
+     */
     private void fetchAndSendMediaLoop(TextChannel channel, String category, int attempt) {
         // Ensure RedditClient is initialized
         ensureRedditClientInitialized();
@@ -310,6 +360,10 @@ public class NSFWCommand extends Command {
         }
     }
 
+    /**
+     * Ensures that the RedditClient is initialized.
+     * This method is called lazily to avoid unnecessary initialization if the client is not used.
+     */
     private void ensureRedditClientInitialized() {
         if (redditClient == null) {
             this.redditClient = new RedditClient(bot.httpClient, redditTokenManager);

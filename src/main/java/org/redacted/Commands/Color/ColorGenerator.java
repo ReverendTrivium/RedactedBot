@@ -5,6 +5,12 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * ColorGenerator class is responsible for generating random colors
+ * while avoiding a predefined set of disallowed colors.
+ *
+ * @author Derrick Eberlein
+ */
 public class ColorGenerator {
 
     private static final Set<String> DISALLOWED_COLORS = new HashSet<>();
@@ -19,6 +25,11 @@ public class ColorGenerator {
         DISALLOWED_COLORS.add("#3f51b5");
     }
 
+    /**
+     * Generates a random color that is not in the disallowed colors set.
+     *
+     * @return A random Color object that is not disallowed.
+     */
     public static Color getRandomColor() {
         Random random = new Random();
         String color;

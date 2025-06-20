@@ -25,6 +25,12 @@ import java.util.Objects;
  */
 public class SuggestCommand extends Command {
 
+    /**
+     * Constructor for the SuggestCommand.
+     * Initializes the command with its name, description, category, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public SuggestCommand(Redacted bot) {
         super(bot);
         this.name = "suggest";
@@ -33,6 +39,13 @@ public class SuggestCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "suggestion", "The content for your suggestion", true));
     }
 
+    /**
+     * Executes the SuggestCommand.
+     * This method handles the interaction when the command is invoked.
+     * It processes the suggestion and sends it to the designated suggestion channel.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();

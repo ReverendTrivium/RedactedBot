@@ -21,6 +21,12 @@ public class welcome extends Command {
         this.category = Category.FUN;
     }
 
+    /**
+     * Executes the welcome command.
+     * Welcomes the user to the server with their nickname or username.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // run the '/welcome' command

@@ -14,12 +14,19 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Command that returns all members in the blacklist
+ * Command that retrieves all users in the blacklist.
+ * This command allows staff members to view all entries in the blacklist.
  *
  * @author Derrick Eberlein
  */
 public class BlacklistGetCommand extends Command {
 
+    /**
+     * Constructor for the BlacklistGetCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlacklistGetCommand(Redacted bot) {
         super(bot);
         this.name = "get"; // Subcommand name
@@ -29,6 +36,12 @@ public class BlacklistGetCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the command when invoked.
+     * It retrieves all entries from the blacklist collection and formats them for display.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         long guildId = Objects.requireNonNull(event.getGuild()).getIdLong();
@@ -62,6 +75,12 @@ public class BlacklistGetCommand extends Command {
         }
     }
 
+    /**
+     * Capitalizes the first letter of a string and converts the rest to lowercase.
+     *
+     * @param str The string to capitalize.
+     * @return The capitalized string.
+     */
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) {
             return str;

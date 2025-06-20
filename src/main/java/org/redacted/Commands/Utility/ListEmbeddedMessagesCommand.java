@@ -16,8 +16,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Command to list all saved embed messages for the server.
+ * This command retrieves and displays a list of embed messages that have been saved in the database.
+ * It is useful for managing and reviewing previously created embeds.
+ *
+ * @author Derrick Eberlein
+ */
 public class ListEmbeddedMessagesCommand extends Command {
 
+    /**
+     * Constructor for the ListEmbeddedMessagesCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public ListEmbeddedMessagesCommand(Redacted bot) {
         super(bot);
         this.name = "listembeddedmessages";
@@ -26,6 +39,13 @@ public class ListEmbeddedMessagesCommand extends Command {
         this.permission = Permission.MANAGE_CHANNEL;
     }
 
+    /**
+     * Executes the ListEmbeddedMessagesCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves all saved embed messages from the database and formats them into an embed for display.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();

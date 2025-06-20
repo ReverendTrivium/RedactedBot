@@ -17,6 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Command that fetches and sends a random anime image from various subreddits.
+ * This command interacts with the Reddit API to retrieve
+ * images and handles different media types such as images, gifs, and videos.
+ *
+ * @author Derrick Eberlein
+ */
 public class AnimeCommand extends Command {
     private RedditClient redditClient;
     private final Redacted bot;
@@ -30,6 +37,12 @@ public class AnimeCommand extends Command {
     // Mapping of categories to subreddits
     private final Map<String, List<String>> categoryToSubreddits;
 
+    /**
+     * Constructor for the AnimeCommand.
+     * Initializes the command with its name, description, category, and Reddit API credentials.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public AnimeCommand(Redacted bot) {
         super(bot);
         this.bot = bot;
@@ -55,6 +68,13 @@ public class AnimeCommand extends Command {
         this.redditTokenManager = new RedditTokenManager(bot.getDatabase(), redditOAuth, clientID, secretID, username, password);
     }
 
+    /**
+     * Returns a random subreddit from the specified category.
+     * If the category has no subreddits, it defaults to "anime".
+     *
+     * @param category The category for which to get a random subreddit.
+     * @return A random subreddit name.
+     */
     private String getRandomSubreddit(String category) {
         List<String> subreddits = categoryToSubreddits.get(category);
         if (subreddits == null || subreddits.isEmpty()) {
@@ -64,6 +84,12 @@ public class AnimeCommand extends Command {
         return subreddits.get(random.nextInt(subreddits.size()));
     }
 
+    /**
+     * Executes the anime command.
+     * This method fetches a random anime image from Reddit and sends it in the Discord channel.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Set Category for Image Fetching
@@ -90,6 +116,16 @@ public class AnimeCommand extends Command {
         fetchAndSendMedia(event, category, includeVideos, attempt);
     }
 
+    /**
+     * Fetches a random anime image from Reddit and sends it in the Discord channel.
+     * This method handles different media types such as images, gifs, and videos,
+     * and retries fetching if the media is invalid or if an error occurs.
+     * * It uses the RedditClient to interact with the Reddit API and retrieve media URLs.
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     * @param category The category of media to fetch (e.g., "anime").
+     * @param includeVideos Whether to include videos in the media fetch.
+     * @param attempt The current attempt number for fetching media, used to limit retries.
+     */
     private void fetchAndSendMedia(SlashCommandInteractionEvent event, String category, boolean includeVideos, int attempt) {
         // Get Reddit Token Variables and Initialize Config
         Dotenv config = bot.getConfig();

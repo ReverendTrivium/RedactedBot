@@ -9,6 +9,14 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * SavedEmbed Class
+ * This class represents an embed message that has been saved in the database.
+ * It contains fields for message ID, channel ID, guild ID, title, description,
+ * author ID, timestamp, emoji-role mapping, image URL, and thumbnail URL.
+ *
+ * @author Derrick Eberlein
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

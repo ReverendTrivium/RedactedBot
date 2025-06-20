@@ -16,7 +16,8 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Command that generates a cute picture from reddit.
+ * Command that allows users to ask a question to the magic 8-ball.
+ * Provides a random response from a predefined list of answers.
  *
  * @author Derrick Eberlein
  */
@@ -38,6 +39,11 @@ public class EightBallCommand extends Command {
             "Outlook not so good.",
             "My sources say no.");
 
+    /**
+     * Constructor for the EightBallCommand.
+     * @param bot The Redacted bot instance.
+     *            Initializes the command with its name, description, and category.
+     */
     public EightBallCommand(Redacted bot) {
         super(bot);
         this.name = "8ball";
@@ -46,6 +52,12 @@ public class EightBallCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "question", "The question to ask the 8ball", true));
     }
 
+    /**
+     * Executes the 8ball command.
+     * Checks if the question is too long, then randomly selects a response from the list of responses.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String question = Objects.requireNonNull(event.getOption("question")).getAsString();

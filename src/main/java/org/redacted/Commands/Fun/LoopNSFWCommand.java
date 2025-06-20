@@ -15,11 +15,23 @@ import java.util.concurrent.*;
 
 import java.util.Objects;
 
+/**
+ * Command that loops NSFW posts from a specific category every minute in the current channel.
+ * Utilizes a ScheduledExecutorService to manage the looping tasks.
+ *
+ * @author Derrick Eberlein
+ */
 public class LoopNSFWCommand extends Command {
 
     private static final Map<String, ScheduledFuture<?>> loopTasks = new ConcurrentHashMap<>();
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
+    /**
+     * Constructor for the LoopNSFWCommand.
+     * Initializes the command with its name, description, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public LoopNSFWCommand(Redacted bot) {
         super(bot);
         this.name = "loopnsfw";
@@ -45,6 +57,13 @@ public class LoopNSFWCommand extends Command {
         this.category = Category.FUN;
     }
 
+    /**
+     * Executes the loopnsfw command.
+     * Checks if the channel is NSFW, starts a looping task to fetch NSFW posts from the specified category,
+     * and sends a confirmation message.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().setEphemeral(true).queue();
@@ -84,6 +103,12 @@ public class LoopNSFWCommand extends Command {
         event.getHook().sendMessage("Started looping NSFW posts from category: " + category + " in this channel.").queue();
     }
 
+    /**
+     * Stops the looping task for the specified channel.
+     *
+     * @param channelId The ID of the channel to stop the loop for.
+     * @return true if the loop was stopped, false if it was not running.
+     */
     public static boolean stopLoop(String channelId) {
         ScheduledFuture<?> task = loopTasks.remove(channelId);
         if (task != null) {
@@ -93,6 +118,9 @@ public class LoopNSFWCommand extends Command {
         return false;
     }
 
+    /**
+     * Stops all looping tasks across all channels.
+     */
     public static void stopAllLoops() {
         for (Map.Entry<String, ScheduledFuture<?>> entry : loopTasks.entrySet()) {
             entry.getValue().cancel(false);
@@ -100,6 +128,12 @@ public class LoopNSFWCommand extends Command {
         loopTasks.clear();
     }
 
+    /**
+     * Checks if a looping task is currently running for the specified channel.
+     *
+     * @param channelId The ID of the channel to check.
+     * @return true if a loop is running for the channel, false otherwise.
+     */
     public static boolean isLooping(String channelId) {
         return loopTasks.containsKey(channelId);
     }

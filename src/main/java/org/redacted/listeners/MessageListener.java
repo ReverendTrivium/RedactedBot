@@ -14,17 +14,36 @@ import org.redacted.util.channels.ChannelFinder;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * MessageListener Class
+ * This class listens for messages in a Discord server and rewards users with currency
+ * for being active, while implementing a cooldown mechanism to prevent spam.
+ *
+ * @author Derrick Eberlein
+ */
 public class MessageListener extends ListenerAdapter {
 
     private final Redacted bot;
     private final Map<Long, Long> userCooldowns;
     private final static long COOLDOWN_TIME = 60000;
 
+    /**
+     * Constructs a MessageListener with the provided Redacted bot instance.
+     *
+     * @param bot the Redacted bot instance
+     */
     public MessageListener(Redacted bot) {
         this.bot = bot;
         this.userCooldowns = new HashMap<>();
     }
 
+    /**
+     * Handles incoming messages in the guild.
+     * If the message is from a user (not a bot), it rewards them with currency
+     * and implements a cooldown mechanism to prevent spam.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
 
@@ -73,6 +92,12 @@ public class MessageListener extends ListenerAdapter {
         userCooldowns.put(userId, currentTime);
     }
 
+    /**
+     * Sends a message to a specific channel by its name.
+     *
+     * @param guild   The Guild where the channel is located.
+     * @param message The message to send.
+     */
     private void sendMessageToChannelByName(Guild guild, String message) {
         Long channelId = ChannelFinder.getChannelIdByName(guild, "bot-notifications");
         if (channelId != null) {

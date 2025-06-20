@@ -26,7 +26,9 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 /**
- * Database for the Redacted Bot
+ * Database Class
+ * This class handles the connection to the MongoDB database and provides methods to interact with various collections.
+ * It initializes collections for guild-specific data and provides methods for global operations like storing Reddit tokens.
  *
  * @author Derrick Eberlein
  */
@@ -36,6 +38,12 @@ public class Database {
     public @NotNull MongoCollection<Config> config;
     public @NotNull MongoCollection<Document> redditTokenCollection;
 
+    /**
+     * Constructor for Database class.
+     * Initializes the MongoDB connection and sets up the necessary collections.
+     *
+     * @param uri The MongoDB connection URI.
+     */
     public Database(String uri) {
         // Setup MongoDB database with URI.
         CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
@@ -56,12 +64,24 @@ public class Database {
         config.createIndex(guildIndex);
     }
 
-    // Method to get a guild-specific collection
+    /**
+     * Get a guild-specific collection by guild ID and collection name.
+     *
+     * @param guildId The ID of the guild.
+     * @param collectionName The name of the collection.
+     * @return The MongoCollection for the specified guild and collection.
+     */
     public MongoCollection<Document> getGuildCollection(long guildId, String collectionName) {
         return database.getCollection("guild_" + guildId + "_" + collectionName);
     }
 
-    // Initialize collections for a new guild
+    /**
+     * Setup collections for a specific guild.
+     * This method initializes various collections for a guild, such as blacklist, scheduled messages, sticky messages,
+     * user intro messages, greetings, economy, saved embeds, tickets, and config.
+     *
+     * @param guildId The ID of the guild for which to set up collections.
+     */
     public void setupCollectionsForGuild(long guildId) {
         MongoCollection<Document> blacklist = getGuildCollection(guildId, "blacklist");
         MongoCollection<Document> scheduledMessages = getGuildCollection(guildId, "scheduled_messages");
@@ -98,26 +118,43 @@ public class Database {
 
     /**
      * Global Methods for entire bot to function
+     *
+     * Store a Reddit token (global)
+     * This method stores a Reddit token along with its expiration time in the database.
+     *
+     * @param token The Reddit token to store.
+     * @param expiration The expiration time of the token.
      */
-    // Store a Reddit token (global)
     public void storeRedditToken(String token, Instant expiration) {
         Document document = new Document("token", token)
                 .append("expiration", expiration);
         redditTokenCollection.insertOne(document);
     }
 
-    // Get a Reddit token (global)
+    /**
+     * Get the Reddit token (global)
+     * This method retrieves the first Reddit token stored in the database.
+     *
+     * @return The first Reddit token document, or null if no token is found.
+     */
     public Document getRedditToken() {
         return redditTokenCollection.find().first();
     }
 
-    // Clear Reddit token (global)
+    /**
+     * Clear the Reddit token (global)
+     * This method deletes all Reddit tokens stored in the database.
+     */
     public void clearRedditToken() {
         redditTokenCollection.deleteMany(new Document());
     }
 
     /**
-     * Guild-specific methods
+     * Get the configuration for a specific guild.
+     * This method retrieves the configuration settings for a guild from the database.
+     *
+     * @param guildId The ID of the guild for which to retrieve the configuration.
+     * @return The Config object containing the guild's configuration, or null if not found.
      */
     public Config getConfigForGuild(long guildId) {
         MongoCollection<Document> configCollection = getGuildCollection(guildId, "config");
@@ -140,12 +177,23 @@ public class Database {
         return config;
     }
 
+    /**
+     * Get the collection for saved embeds for a specific guild.
+     * This method retrieves the MongoDB collection for saved embeds associated with a guild.
+     *
+     * @param guildId The ID of the guild for which to retrieve the saved embeds collection.
+     * @return The MongoCollection for saved embeds, with the document class set to SavedEmbed.
+     */
     public MongoCollection<SavedEmbed> getSavedEmbedsCollection(long guildId) {
         return getGuildCollection(guildId, "saved_embeds").withDocumentClass(SavedEmbed.class);
     }
 
     /**
-     * Method to update a previous Config object in the database
+     * Update the configuration for a specific guild.
+     * This method updates the configuration settings for a guild in the database.
+     *
+     * @param guildId The ID of the guild for which to update the configuration.
+     * @param update The Bson object containing the update operations to apply.
      */
     public void updateConfig(long guildId, Bson update) {
         // Get the collection where the config for the guild is stored
@@ -160,7 +208,11 @@ public class Database {
     }
 
     /**
-     * Method to insert a new Config object into the database
+     * Insert a new configuration for a specific guild.
+     * This method inserts a new configuration document into the database for a guild.
+     *
+     * @param guildId The ID of the guild for which to insert the configuration.
+     * @param config The Config object containing the configuration settings to insert.
      */
     public void insertConfig(long guildId, Config config) {
         MongoCollection<Document> configCollection = getGuildCollection(guildId, "config");
@@ -174,18 +226,36 @@ public class Database {
         System.out.println("Config inserted for guild: " + guildId);
     }
 
-    // Method to update the configuration for a specific guild
+    /**
+     * Update the configuration for a specific guild using a Bson update object.
+     * This method applies an update operation to the configuration document for a guild.
+     *
+     * @param guildId The ID of the guild for which to update the configuration.
+     * @param update The Bson object containing the update operations to apply.
+     */
     public void updateConfigForGuild(long guildId, Bson update) {
         Bson filter = Filters.eq("guildId", guildId);
         config.updateOne(filter, update);
     }
 
+    /**
+     * Get the collection for scheduled messages for a specific guild.
+     * This method retrieves the MongoDB collection for scheduled messages associated with a guild.
+     *
+     * @param guildId The ID of the guild for which to retrieve the scheduled messages collection.
+     * @return The MongoCollection for scheduled messages, with the document class set to Document.
+     */
     public List<Document> getScheduledMessages(long guildId) {
         MongoCollection<Document> scheduledMessages = getGuildCollection(guildId, "scheduled_messages");
         return scheduledMessages.find().into(new ArrayList<>());
     }
 
-    // Greetings methods
+    /**
+     * Initialize greetings for a specific guild.
+     * This method checks if greetings exist for the guild and creates a new Greetings object if not.
+     *
+     * @param guildId The ID of the guild for which to initialize greetings.
+     */
     public void initializeGreetingsForGuild(long guildId) {
         MongoCollection<Greetings> greetings = getGuildCollection(guildId, "greetings").withDocumentClass(Greetings.class);
         if (getGreetings(guildId) == null) {
@@ -194,15 +264,35 @@ public class Database {
         }
     }
 
+    /**
+     * Get the greetings for a specific guild.
+     * This method retrieves the Greetings object for a guild from the database.
+     *
+     * @param guildId The ID of the guild for which to retrieve greetings.
+     * @return The Greetings object containing the greeting and farewell messages, or null if not found.
+     */
     public Greetings getGreetings(long guildId) {
         MongoCollection<Greetings> greetings = getGuildCollection(guildId, "greetings").withDocumentClass(Greetings.class);
         return greetings.find(new Document("guild", guildId)).first();
     }
 
+    /**
+     * Get the configuration collection.
+     * This method retrieves the MongoDB collection for global configuration settings.
+     *
+     * @return The MongoCollection for global configuration, with the document class set to Config.
+     */
     public MongoCollection<Config> getConfigCollection() {
         return config;
     }
 
+    /**
+     * Get the collection for tickets for a specific guild.
+     * This method retrieves the MongoDB collection for tickets associated with a guild.
+     *
+     * @param guildId The ID of the guild for which to retrieve the ticket collection.
+     * @return The MongoCollection for tickets, with the document class set to Ticket.
+     */
     public MongoCollection<Ticket> getTicketCollection(long guildId) {
         return getGuildCollection(guildId, "tickets").withDocumentClass(Ticket.class);
     }

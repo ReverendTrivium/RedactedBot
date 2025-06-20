@@ -24,14 +24,34 @@ import java.util.Comparator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * TicketCloseHandler Class
+ * This class handles the closing of ticket channels in a Discord server.
+ * It listens for messages that start with "-ticket close" and processes the ticket closure,
+ * including saving transcripts and media attachments.
+ *
+ * @author Derrick Eberlein
+ */
 public class TicketCloseHandler extends ListenerAdapter {
 
     private final Redacted bot;
 
+    /**
+     * Constructs a TicketCloseHandler with the provided Redacted bot instance.
+     *
+     * @param bot the Redacted bot instance
+     */
     public TicketCloseHandler(Redacted bot) {
         this.bot = bot;
     }
 
+    /**
+     * Handles incoming messages to check for the "-ticket close" command.
+     * If the command is detected, it processes the ticket closure, saves transcripts,
+     * and handles media attachments.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         String[] args = event.getMessage().getContentRaw().split(" ", 3);
@@ -127,6 +147,12 @@ public class TicketCloseHandler extends ListenerAdapter {
         });
     }
 
+    /**
+     * Zips the contents of a directory into a zip file.
+     *
+     * @param sourceDir the directory to zip
+     * @param zipFile   the output zip file
+     */
     private void zipDirectory(File sourceDir, File zipFile) {
         try (FileOutputStream fos = new FileOutputStream(zipFile);
              ZipOutputStream zos = new ZipOutputStream(fos)) {

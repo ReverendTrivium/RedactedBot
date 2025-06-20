@@ -15,6 +15,13 @@ import java.util.Objects;
  * @author Derrick Eberlein
  */
 public class roles extends Command {
+
+    /**
+     * Constructor for the roles command.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public roles (Redacted bot) {
         super(bot);
         this.name = "role";
@@ -23,6 +30,13 @@ public class roles extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the roles command.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves and sends a list of all roles in the server.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // run the '/roles' command

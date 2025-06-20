@@ -10,8 +10,20 @@ import org.redacted.Roles.getRolesByName;
 
 import java.util.Objects;
 
+/**
+ * Command that starts cycling rainbow pride roles for Pride Month.
+ * This command allows administrators to initiate a color cycling effect for a specific role.
+ *
+ * @author Derrick Eberlein
+ */
 public class rolecolors extends Command {
 
+    /**
+     * Constructor for the rolecolors command.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public rolecolors(Redacted bot) {
         super(bot);
         this.name = "rolecolors";
@@ -20,6 +32,12 @@ public class rolecolors extends Command {
         this.permission = Permission.ADMINISTRATOR;
     }
 
+    /**
+     * Executes the command when invoked.
+     * It retrieves the role by name, sets the interval for color cycling, and starts the color cycling process.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().setEphemeral(true).queue();

@@ -25,8 +25,21 @@ import org.redacted.listeners.Ticket.TicketRemoveUserHandler;
 
 import java.util.Arrays;
 
+/**
+ * BotInitializer Class
+ * Initializes the Discord bot with the provided token and registers event listeners.
+ * This class is responsible for setting up the bot's status, activity, and caching policies.
+ *
+ * @author Derrick Eberlein
+ */
 public class BotInitializer {
 
+    /**
+     * Initializes the bot with the provided token and sets up the shard manager.
+     *
+     * @param token The bot token to authenticate with Discord.
+     * @return A ShardManager instance for managing shards of the bot.
+     */
     public static ShardManager initializeBot(String token) {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
 
@@ -40,6 +53,12 @@ public class BotInitializer {
         return builder.build();
     }
 
+    /**
+     * Registers all event listeners with the ShardManager.
+     *
+     * @param shardManager The ShardManager instance to register listeners with.
+     * @param bot The Redacted bot instance to pass to the listeners.
+     */
     public static void registerListeners(ShardManager shardManager, Redacted bot) {
         BotCommands botCommands = new BotCommands(bot); // Create a single instance of BotCommands
 
@@ -100,6 +119,14 @@ public class BotInitializer {
         });
     }
 
+    /**
+     * Waits for the GuildData and its configuration to be initialized.
+     * This method will retry until the GuildData is available or a timeout occurs.
+     *
+     * @param guild The guild to check for initialization.
+     * @param bot The Redacted bot instance.
+     * @return The initialized GuildData, or null if it fails to initialize within the timeout.
+     */
     private static GuildData waitForGuildDataInitialization(Guild guild, Redacted bot) {
         GuildData guildData;
         long timeout = 5000L; // Maximum wait time in milliseconds

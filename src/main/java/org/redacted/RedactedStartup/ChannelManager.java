@@ -9,12 +9,32 @@ import org.redacted.Roles.RoleHierarchyManager;
 
 import java.util.Objects;
 
-
+/**
+ * ChannelManager Class
+ * Manages the creation and permission settings of text channels and categories in a Discord guild.
+ * It ensures that channels are created with the correct permissions based on their category.
+ *
+ * @author Derrick Eberlein
+ */
 public class ChannelManager {
 
+    /**
+     * Default constructor for ChannelManager.
+     * Initializes a new instance of the ChannelManager class.
+     */
     public ChannelManager() {
     }
 
+    /**
+     * Gets or creates a text channel in the specified guild with the given name and category.
+     * If the channel already exists, it returns the existing channel.
+     * If the channel does not exist, it creates a new one under the specified category.
+     *
+     * @param guild The guild where the text channel should be created or found.
+     * @param name The name of the text channel to create or find.
+     * @param categoryName The name of the category under which the text channel should be created.
+     * @return The TextChannel object representing the created or found text channel.
+     */
     public TextChannel getOrCreateTextChannel(Guild guild, String name, String categoryName) {
         Category category = getOrCreateCategory(guild, categoryName);
         TextChannel channel = guild.getTextChannelsByName(name, true).stream().findFirst().orElse(null);
@@ -72,6 +92,15 @@ public class ChannelManager {
         return channel;
     }
 
+    /**
+     * Gets or creates a category in the specified guild with the given name.
+     * If the category already exists, it returns the existing category.
+     * If the category does not exist, it creates a new one and sets appropriate permissions.
+     *
+     * @param guild The guild where the category should be created or found.
+     * @param name The name of the category to create or find.
+     * @return The Category object representing the created or found category.
+     */
     public Category getOrCreateCategory(Guild guild, String name) {
         Category category = guild.getCategoriesByName(name, true).stream().findFirst().orElse(null);
         if (category == null) {

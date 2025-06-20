@@ -18,8 +18,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Command to list all emoji-role mappings for a given saved embed message.
+ * This command retrieves and displays the reaction roles associated with a specific saved embed message.
+ * It is useful for managing reaction roles in the server.
+ *
+ * @author Derrick Eberlein
+ */
 public class ListReactionRolesCommand extends Command {
 
+    /**
+     * Constructor for the ListReactionRolesCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public ListReactionRolesCommand(Redacted bot) {
         super(bot);
         this.name = "listreactionroles";
@@ -30,6 +43,13 @@ public class ListReactionRolesCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "messageid", "The ID of the saved embed", true));
     }
 
+    /**
+     * Executes the ListReactionRolesCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the saved embed message by its ID and lists all associated reaction roles.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();

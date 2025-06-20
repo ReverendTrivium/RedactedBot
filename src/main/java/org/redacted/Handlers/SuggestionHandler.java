@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Handles the suggestion board for a guild.
+ * SuggestionHandler Class
+ * This class manages suggestions for a Discord guild.
+ * It allows setting up a suggestion channel, adding suggestions, responding to suggestions,
+ * and toggling anonymous mode and response DMs.
  *
  * @author Derrick Eberlein
  */

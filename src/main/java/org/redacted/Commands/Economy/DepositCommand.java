@@ -23,6 +23,12 @@ import java.util.Objects;
  */
 public class DepositCommand extends Command {
 
+    /**
+     * Constructor for the DepositCommand.
+     * Initializes the command with its name, description, category, and options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public DepositCommand(Redacted bot) {
         super(bot);
         this.name = "deposit";
@@ -31,6 +37,12 @@ public class DepositCommand extends Command {
         this.args.add(new OptionData(OptionType.INTEGER, "amount", "The amount of money you want to deposit.").setMinValue(1));
     }
 
+    /**
+     * Executes the deposit command.
+     * Checks the user's balance, validates the deposit amount, and deposits the money into the bank.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         User user = event.getUser();
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();

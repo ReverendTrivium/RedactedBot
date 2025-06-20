@@ -27,8 +27,21 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Command to edit a previously saved embed message.
+ * This command allows users with the appropriate permissions to modify an embed message
+ * that was saved in the database.
+ *
+ * @author Derrick Eberlein
+ */
 public class EditEmbedCommand extends Command {
 
+    /**
+     * Constructor for the EditEmbedCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public EditEmbedCommand(Redacted bot) {
         super(bot);
         this.name = "editembed";
@@ -42,6 +55,13 @@ public class EditEmbedCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "thumbnail", "New thumbnail URL (optional)", false));
     }
 
+    /**
+     * Executes the EditEmbedCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the saved embed message by its ID and allows the user to edit its title and description.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
@@ -124,6 +144,13 @@ public class EditEmbedCommand extends Command {
         bot.getShardManager().addEventListener(titleListener);
     }
 
+    /**
+     * Formats a multiline string for better readability in embeds.
+     * This method can be used to format headers or other multiline text.
+     *
+     * @param input The input string to format.
+     * @return The formatted string.
+     */
     private String formatMultiline(String input) {
         // Optionally format headers like "1. Title" into bold
         return Arrays.stream(input.split("\n"))

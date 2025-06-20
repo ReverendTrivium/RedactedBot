@@ -19,10 +19,22 @@ import org.redacted.util.embeds.EmbedUtils;
 
 import java.util.*;
 
+/**
+ * Command that displays a list of all commands and categories.
+ * This command is used to help users find commands and understand their usage.
+ *
+ * @author Derrick Eberlein
+ */
 public class Help extends Command {
 
     private static final int COMMANDS_PER_PAGE = 6;
 
+    /**
+     * Constructor for the Help command.
+     * Initializes the command with its name, description, category, and required arguments.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public Help(Redacted bot) {
         super(bot);
         this.name = "help";
@@ -37,6 +49,13 @@ public class Help extends Command {
         this.args.add(new OptionData(OptionType.STRING, "command", "See details for this command"));
     }
 
+    /**
+     * Executes the Help command.
+     * This method handles the interaction when the command is invoked.
+     * It displays a list of commands and their details based on the provided options.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         // Create a hashmap that groups commands by categories.

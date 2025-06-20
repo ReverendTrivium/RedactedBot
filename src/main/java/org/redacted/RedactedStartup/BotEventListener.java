@@ -14,16 +14,35 @@ import org.redacted.Roles.RoleHierarchyManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * BotEventListener Class
+ * Handles events related to the bot's lifecycle, such as when it is ready or joins a new guild.
+ * Initializes necessary configurations and roles for each guild.
+ *
+ * @author Derrick Eberlein
+ */
 public class BotEventListener extends ListenerAdapter {
 
     private final Redacted bot;
     private final BotCommands botCommands; // Reference to the BotCommands instance
 
+    /**
+     * Constructs a BotEventListener with the provided Redacted bot instance and BotCommands.
+     *
+     * @param bot the Redacted bot instance
+     * @param botCommands the BotCommands instance for command registration
+     */
     public BotEventListener(Redacted bot, BotCommands botCommands) {
         this.bot = bot;
         this.botCommands = botCommands;
     }
 
+    /**
+     * Called when the bot is ready and connected to Discord.
+     * Initializes all guilds the bot is already in.
+     *
+     * @param event the ReadyEvent containing information about the bot's readiness
+     */
     @Override
     public void onReady(ReadyEvent event) {
         System.out.println("Bot is ready and connected as " + event.getJDA().getSelfUser().getName());
@@ -34,6 +53,12 @@ public class BotEventListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Called when the bot joins a new guild.
+     * Initializes the new guild with necessary configurations and roles.
+     *
+     * @param event the GuildJoinEvent containing information about the new guild
+     */
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         Guild guild = event.getGuild();
@@ -43,6 +68,11 @@ public class BotEventListener extends ListenerAdapter {
         initializeGuild(guild);
     }
 
+    /**
+     * Initializes the guild with necessary configurations, roles, and commands.
+     *
+     * @param guild the Guild to initialize
+     */
     private void initializeGuild(Guild guild) {
         // Step 1: Initialize the database for the new guild
         setupDatabaseForGuild(guild);
@@ -56,6 +86,11 @@ public class BotEventListener extends ListenerAdapter {
         System.out.println("Setup completed for guild: " + guild.getName());
     }
 
+    /**
+     * Sets up the database for the guild, ensuring necessary collections and configurations exist.
+     *
+     * @param guild the Guild to set up
+     */
     private void setupDatabaseForGuild(Guild guild) {
         System.out.println("Setting up database for guild: " + guild.getName());
 
@@ -100,6 +135,11 @@ public class BotEventListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Sets up roles for the guild, creating necessary roles and adjusting their hierarchy.
+     *
+     * @param guild the Guild to set up roles for
+     */
     private void setupRolesForGuild(Guild guild) {
         System.out.println("Setting up roles for guild: " + guild.getName());
 

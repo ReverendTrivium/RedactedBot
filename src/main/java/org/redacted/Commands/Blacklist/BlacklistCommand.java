@@ -8,8 +8,21 @@ import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
 import org.redacted.Redacted;
 
+/**
+ * BlacklistCommand Class
+ * This class handles the management of a blacklist in a Discord server.
+ * It allows staff members to add, delete, clear, and retrieve users from the blacklist.
+ *
+ * @author Derrick Eberlein
+ */
 public class BlacklistCommand extends Command {
 
+    /**
+     * Constructor for the BlacklistCommand.
+     * Initializes the command with its name, description, category, and subcommands.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlacklistCommand(Redacted bot) {
         super(bot);
         this.name = "blacklist";
@@ -39,6 +52,12 @@ public class BlacklistCommand extends Command {
         this.subCommands.add(new SubcommandData("get", "Get all users in the blacklist"));
     }
 
+    /**
+     * Executes the command when invoked.
+     * It checks the subcommand name and delegates the execution to the appropriate subcommand handler.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String subcommandName = event.getSubcommandName();

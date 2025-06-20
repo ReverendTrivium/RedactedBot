@@ -14,6 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+
+/**
+ * Service for performing Google searches using the Custom Search JSON API.
+ * Requires the GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID environment variables to be set.
+ * Uses OkHttp for HTTP requests and Gson for JSON parsing.
+ *
+ * @author Derrick Eberlein
+ */
 @Getter
 @Setter
 public class GoogleSearchService {
@@ -25,10 +33,21 @@ public class GoogleSearchService {
 
     private final OkHttpClient httpClient;
 
+    /**
+     * Constructs a GoogleSearchService instance with an OkHttpClient.
+     * The API key and search engine ID are loaded from environment variables.
+     */
     public GoogleSearchService() {
         this.httpClient = new OkHttpClient();
     }
 
+    /**
+     * Performs a search using the Google Custom Search JSON API.
+     *
+     * @param query the search query
+     * @return a list of SearchResult objects containing the search results
+     * @throws Exception if an error occurs during the search
+     */
     public List<SearchResult> search(String query) throws Exception {
         List<SearchResult> results = new ArrayList<>();
 
@@ -61,6 +80,9 @@ public class GoogleSearchService {
         return results;
     }
 
+    /**
+     * Represents a search result from Google Custom Search.
+     */
     @Getter
     public static class SearchResult {
         private final String title;

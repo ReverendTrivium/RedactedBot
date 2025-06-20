@@ -6,6 +6,14 @@ import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.time.Instant;
 
+/**
+ * Ticket Class
+ * This class represents a support ticket in the database.
+ * It contains fields for ticket ID, reason, channel ID, guild ID, user ID,
+ * creator username, status, opened and closed timestamps, and close reason.
+ *
+ * @author Derrick Eberlein
+ */
 @Data
 @Getter
 public class Ticket {
@@ -39,6 +47,7 @@ public class Ticket {
 
     @BsonProperty("closeReason")
     private String closeReason;
+
 
     public String getCreatorTag() {
         return creatorUsername != null ? creatorUsername : String.valueOf(userId);

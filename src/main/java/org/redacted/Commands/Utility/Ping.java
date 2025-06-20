@@ -13,6 +13,12 @@ import org.redacted.util.embeds.EmbedColor;
  */
 public class Ping extends Command {
 
+    /**
+     * Constructor for the Ping command.
+     * Initializes the command with its name, description, and category.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public Ping(Redacted bot) {
         super(bot);
         this.name = "ping";
@@ -20,6 +26,13 @@ public class Ping extends Command {
         this.category = Category.UTILITY;
     }
 
+    /**
+     * Executes the Ping command.
+     * This method handles the interaction when the command is invoked.
+     * It calculates the latency and sends a response with the ping information.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
         long time = System.currentTimeMillis();

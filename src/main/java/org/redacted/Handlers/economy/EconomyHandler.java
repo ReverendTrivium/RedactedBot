@@ -19,7 +19,10 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Handles the server economy backend.
+ * EconomyHandler Class
+ * This class manages the economy system for a Discord guild, including user balances,
+ * bank accounts, and various economy-related commands such as work, crime, and rob.
+ * It interacts with the database to store and retrieve user economy data.
  *
  * @author Derrick Eberlein
  */
@@ -40,6 +43,12 @@ public class EconomyHandler {
     private final GuildData guildData; // Add reference to GuildData
     private String currency;
 
+    /**
+     * Constructs an EconomyHandler for a specific guild.
+     *
+     * @param guild the guild this handler is for.
+     * @param guildData the GuildData instance containing economy data.
+     */
     public EconomyHandler(Guild guild, GuildData guildData) {
         this.guild = guild;
         this.guildData = guildData;
@@ -70,7 +79,11 @@ public class EconomyHandler {
     }
 
     /**
-     * Adds a random amount between 200-1200 to the user's balance and get a reply back.
+     * Work for money.
+     * 1 in 3 chance to earn 200-1200 of the currency.
+     *
+     * @param userID the ID of user to work for.
+     * @return an EconomyReply object with response, ID number, and success boolean.
      */
     public EconomyReply work(long userID) {
         int amount = ThreadLocalRandom.current().nextInt(1000) + 200;
@@ -419,7 +432,8 @@ public class EconomyHandler {
 
 
     /**
-     * Resets the currency symbol to the default emoji.
+     * Resets the currency to the default value.
+     * This will update the in-memory Config object, the database, and the EconomyHandler's currency field.
      */
     public void resetCurrency() {
         // Update in-memory Config object
@@ -434,7 +448,7 @@ public class EconomyHandler {
     }
 
     /**
-     * The different types of timeouts
+     * Enum representing different types of timeouts for economy commands.
      */
     public enum TIMEOUT_TYPE {
         WORK, CRIME, ROB

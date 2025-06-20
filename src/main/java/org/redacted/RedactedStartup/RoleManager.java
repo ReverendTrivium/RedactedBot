@@ -9,7 +9,19 @@ import java.awt.*;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * RoleManager Class
+ * Manages the creation and permission settings of roles in a Discord guild.
+ * It ensures that roles are created with the correct permissions and color, and can adjust role hierarchy.
+ *
+ * @author Derrick Eberlein
+ */
 public class RoleManager {
+
+    /**
+     * Default constructor for RoleManager.
+     * Initializes a new instance of the RoleManager class.
+     */
     public Role getOrCreateRole(Guild guild, String name, EnumSet<Permission> permissions, Color color) {
         Role role = guild.getRolesByName(name, true).stream().findFirst().orElse(null);
         Role botRole = guild.getBotRole();
@@ -59,6 +71,13 @@ public class RoleManager {
         return role;
     }
 
+    /**
+     * Adjusts the role hierarchy in the guild based on the provided list of roles.
+     * The roles should be provided in the desired order of hierarchy.
+     *
+     * @param guild The guild where the role hierarchy should be adjusted.
+     * @param rolesInOrder The list of roles in the desired order of hierarchy.
+     */
     public void adjustRoleHierarchy(Guild guild, List<Role> rolesInOrder) {
         if (rolesInOrder == null || rolesInOrder.isEmpty()) {
             System.out.println("No roles provided to adjust hierarchy.");

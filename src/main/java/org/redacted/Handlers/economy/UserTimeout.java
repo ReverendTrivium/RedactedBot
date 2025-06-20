@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents timeout timestamps for economy backend.
+ * UserTimeout Class
+ * This class represents the timeouts for various user activities in the economy system.
+ * It tracks the timeouts for work, crime, and rob actions for a specific user.
  *
  * @author Derrick Eberlein
  */
@@ -17,6 +19,11 @@ public class UserTimeout {
     private Long crimeTimeout;
     private Long robTimeout;
 
+    /**
+     * Constructs a UserTimeout with the specified user ID.
+     *
+     * @param user The ID of the user for whom the timeout is being created.
+     */
     public UserTimeout(long user) {
         this.user = user;
     }

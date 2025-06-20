@@ -9,6 +9,13 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * ColorCyclerPride class is responsible for cycling through a predefined set of colors
+ * representing the Pride Flag. It changes the color of a specified role in a Discord server
+ * at regular intervals.
+ *
+ * @author Derrick Eberlein
+ */
 public class ColorCyclerPride {
     private static final List<String> COLORS = new ArrayList<>();
     private int currentIndex = 0;
@@ -23,12 +30,24 @@ public class ColorCyclerPride {
         COLORS.add("#fb607f"); // Bright Pink
     }
 
+    /**
+     * Cycles through the predefined colors and returns the next color.
+     *
+     * @return The next color in the cycle as a Color object.
+     */
     public Color cycleColor() {
         String color = COLORS.get(currentIndex);
         currentIndex = (currentIndex + 1) % COLORS.size();
         return Color.decode(color);
     }
 
+    /**
+     * Starts the color cycling process for a specified role in a Discord guild.
+     *
+     * @param guild The Discord guild where the role exists.
+     * @param interval The time interval in milliseconds for changing the color.
+     * @param roleID The ID of the role whose color will be changed.
+     */
     public void changeColorsPride(Guild guild, long interval, String roleID) {
         // Set Variables
         System.out.println("[ Info ] Starting color cycling for role ID: " + roleID + " in server: " + guild.getName());

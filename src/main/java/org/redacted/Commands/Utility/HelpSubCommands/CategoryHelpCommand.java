@@ -17,11 +17,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Command that displays a list of all commands in a specific category.
+ * This command is used to help users find commands related to a specific topic.
+ *
+ * @author Derrick Eberlein
+ */
 public class CategoryHelpCommand extends Command {
 
     private static final int COMMANDS_PER_PAGE = 6;
     private final Category category;
 
+    /**
+     * Constructor for the CategoryHelpCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot      The Redacted bot instance.
+     * @param category The category of commands to display.
+     */
     public CategoryHelpCommand(Redacted bot, Category category) {
         super(bot);
         this.name = category.name().toLowerCase();
@@ -35,6 +48,13 @@ public class CategoryHelpCommand extends Command {
         this.subCommands.add(new SubcommandData("help", "Display a list of all " + category.name().toLowerCase() + " commands"));
     }
 
+    /**
+     * Executes the CategoryHelpCommand.
+     * This method handles the interaction when the command is invoked.
+     * It displays a list of commands in the specified category.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (Objects.equals(event.getSubcommandName(), "help")) {
@@ -42,6 +62,12 @@ public class CategoryHelpCommand extends Command {
         }
     }
 
+    /**
+     * Displays the commands in the specified category.
+     * It creates a paginated menu of commands for the user to browse.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     private void displayCategoryCommands(SlashCommandInteractionEvent event) {
         // Create a hashmap that groups commands by categories.
         HashMap<Category, List<Command>> categories = new HashMap<>();

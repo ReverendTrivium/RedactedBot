@@ -11,7 +11,12 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Handles localized responses to economy commands.
+ * EconomyLocalization Class
+ * This class handles the localization of economy-related responses
+ * by reading from a JSON file.
+ *
+ * It provides methods to get responses for work, crime success, and crime failure,
+ * as well as a response for avoiding fines by having no cash on hand.
  *
  * @author Derrick Eberlein
  */
@@ -24,7 +29,8 @@ public class EconomyLocalization {
     private final String[] crimeFail;
 
     /**
-     * Reads economy.json responses into local memory
+     * Constructor for EconomyLocalization.
+     * It reads the economy responses from a JSON file and initializes the response arrays.
      */
     public EconomyLocalization() {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(PATH);

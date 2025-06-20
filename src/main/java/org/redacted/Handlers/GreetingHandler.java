@@ -10,7 +10,10 @@ import org.redacted.Database.Database;
 import org.redacted.Database.cache.Greetings;
 
 /**
- * Handles server messages (greeting, farewell, joinDM, etc).
+ * GreetingHandler Class
+ * This class manages greeting and farewell messages for a Discord guild.
+ * It allows setting and removing greeting, farewell, and join DM messages,
+ * as well as managing the welcome channel.
  *
  * @author Derrick Eberlein
  */
@@ -22,6 +25,13 @@ public class GreetingHandler {
     private final Bson filter;
     private Greetings greetings;
 
+    /**
+     * Constructs a GreetingHandler for the specified guild.
+     * It initializes the greetings collection and retrieves or creates the greetings data for the guild.
+     *
+     * @param guild    The guild for which the greeting handler is being created.
+     * @param database The database instance to access the guild-specific greetings collection.
+     */
     public GreetingHandler(Guild guild, Database database) {
         this.guild = guild;
 
@@ -42,7 +52,7 @@ public class GreetingHandler {
     /**
      * Set a greeting message for this server.
      *
-     * @param msg the message to send on join.
+     * @param msg the message to send on member join.
      */
     public void setGreet(String msg) {
         greetings.setGreeting(msg);

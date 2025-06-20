@@ -21,8 +21,21 @@ import org.redacted.Roles.getRolesByName;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * Command to add a reaction role to a saved embed message.
+ * This command allows users to link a reaction emoji to a specific role on an embed message
+ * that has been previously saved in the database.
+ *
+ * @author Derrick Eberlein
+ */
 public class ReactionRoleCommand extends Command {
 
+    /**
+     * Constructor for the ReactionRoleCommand.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public ReactionRoleCommand(Redacted bot) {
         super(bot);
         this.name = "reactionrole";
@@ -36,6 +49,13 @@ public class ReactionRoleCommand extends Command {
         this.args.add(new OptionData(OptionType.STRING, "role", "Role name to assign", true));
     }
 
+    /**
+     * Executes the ReactionRoleCommand.
+     * This method handles the interaction when the command is invoked.
+     * It retrieves the saved embed message by its ID and adds a reaction role mapping.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
@@ -88,6 +108,12 @@ public class ReactionRoleCommand extends Command {
         });
     }
 
+    /**
+     * Checks if the provided emoji string is in the custom emoji format.
+     *
+     * @param emoji The emoji string to check.
+     * @return true if the emoji is in custom format, false otherwise.
+     */
     private boolean isCustomEmojiFormat(String emoji) {
         return Pattern.matches("<a?:\\w{2,32}:\\d{17,20}>", emoji);
     }

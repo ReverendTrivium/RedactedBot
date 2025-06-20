@@ -19,6 +19,12 @@ import java.util.Objects;
  */
 public class CrimeCommand extends Command {
 
+    /**
+     * Constructor for the CrimeCommand.
+     * Initializes the command with its name, description, and category.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public CrimeCommand(Redacted bot) {
         super(bot);
         this.name = "crime";
@@ -26,6 +32,12 @@ public class CrimeCommand extends Command {
         this.category = Category.ECONOMY;
     }
 
+    /**
+     * Executes the crime command.
+     * Checks if the user is on timeout, and if not, attempts to commit a crime.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     public void execute(SlashCommandInteractionEvent event) {
         long user = event.getUser().getIdLong();
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();

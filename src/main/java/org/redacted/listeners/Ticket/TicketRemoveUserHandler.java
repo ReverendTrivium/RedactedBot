@@ -9,8 +9,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * TicketRemoveUserHandler Class
+ * This class handles the removal of users from ticket channels in a Discord server.
+ * It listens for messages that start with "-ticket removeuser" and removes the mentioned user from the ticket channel.
+ *
+ * @author Derrick Eberlein
+ */
 public class TicketRemoveUserHandler extends ListenerAdapter {
 
+    /**
+     * Handles incoming messages to check for the "-ticket removeuser" command.
+     * If the command is detected, it removes the mentioned user from the ticket channel.
+     *
+     * @param event The MessageReceivedEvent containing the message and context.
+     */
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         String[] args = event.getMessage().getContentRaw().split(" ");

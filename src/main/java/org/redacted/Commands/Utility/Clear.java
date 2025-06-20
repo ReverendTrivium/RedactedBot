@@ -14,9 +14,20 @@ import org.redacted.listeners.IntroductionListener;
 
 import java.util.Objects;
 
-
+/**
+ * Command that clears all messages in a channel or all messages from a specific user in the channel.
+ * This command is typically used by staff members to manage message clutter.
+ *
+ * @author Derrick Eberlein
+ */
 public class Clear extends Command {
 
+    /**
+     * Constructor for the Clear command.
+     * Initializes the command with its name, description, category, and required permissions.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public Clear(Redacted bot) {
         super(bot);
         this.name = "clear";
@@ -26,6 +37,13 @@ public class Clear extends Command {
         this.args.add(new OptionData(OptionType.USER, "user", "The user whose messages you want to delete"));
     }
 
+    /**
+     * Executes the Clear command.
+     * This method handles the interaction when the command is invoked.
+     * It clears all messages in the channel or all messages from a specific user in the channel.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         TextChannel channel = event.getChannel().asTextChannel();
@@ -42,10 +60,22 @@ public class Clear extends Command {
         }
     }
 
+    /**
+     * Marks a message as deleted by staff.
+     * This is used to keep track of messages that have been cleared by staff members.
+     *
+     * @param messageId The ID of the message to mark as deleted.
+     */
     private void markMessageAsStaffDeleted(String messageId) {
         IntroductionListener.markAsStaffDeleted(messageId);
     }
 
+    /**
+     * Clears all messages in the specified channel.
+     * This method iterates through the message history and deletes each message.
+     *
+     * @param channel The TextChannel from which to clear messages.
+     */
     private void clearAllMessagesInChannel(TextChannel channel) {
         channel.getIterableHistory().queue(messages -> {
             for (Message message : messages) {
@@ -55,6 +85,13 @@ public class Clear extends Command {
         });
     }
 
+    /**
+     * Clears all messages from a specific user in the specified channel.
+     * This method iterates through the message history and deletes messages authored by the specified user.
+     *
+     * @param channel The TextChannel from which to clear messages.
+     * @param member  The Member whose messages should be deleted.
+     */
     private void clearMessagesFromUserInChannel(TextChannel channel, Member member) {
         channel.getIterableHistory().queue(messages -> {
             for (Message message : messages) {

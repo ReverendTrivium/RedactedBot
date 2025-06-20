@@ -8,13 +8,35 @@ import org.redacted.Redacted;
 
 import java.time.Instant;
 
+/**
+ * StickyMessageHandler Class
+ * This class handles the creation and management of sticky messages in a Discord channel.
+ * It allows for setting an introduction sticky message that provides a template for new members to follow.
+ * It retrieves the previous sticky message from the database, deletes it if it exists,
+ * and sends a new sticky message with a template for introductions.
+ *
+ * @author Derrick Eberlein
+ */
 public class StickyMessageHandler {
     private final Redacted bot;
 
+    /**
+     * Constructs a StickyMessageHandler with the provided Redacted bot instance.
+     *
+     * @param bot the Redacted bot instance
+     */
     public StickyMessageHandler(Redacted bot) {
         this.bot = bot;
     }
 
+    /**
+     * Handles the introduction sticky message in the specified text channel.
+     * It creates an embed message with a template for new members to follow,
+     * retrieves the previous sticky message ID, deletes it if it exists,
+     * and sends a new sticky message with the template.
+     *
+     * @param channel The text channel where the sticky message will be sent.
+     */
     public void handleIntroStickyMessage(TextChannel channel) {
         // Get the guild-specific collection for sticky messages
         GuildData guildData = GuildData.get(channel.getGuild(), bot);

@@ -19,6 +19,12 @@ import java.util.Objects;
  */
 public class BlacklistAddCommand extends Command {
 
+    /**
+     * Constructor for the BlacklistAddCommand.
+     * Initializes the command with its name, description, category, and required options.
+     *
+     * @param bot The Redacted bot instance.
+     */
     public BlacklistAddCommand(Redacted bot) {
         super(bot);
         this.name = "add";
@@ -33,6 +39,13 @@ public class BlacklistAddCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+    /**
+     * Executes the command when invoked.
+     * It retrieves the options provided by the user, constructs a new blacklist entry,
+     * and inserts it into the MongoDB collection for blacklists.
+     *
+     * @param event The SlashCommandInteractionEvent containing the command invocation details.
+     */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String firstName = Objects.requireNonNull(event.getOption("firstname")).getAsString();

@@ -81,4 +81,3 @@ public class SocialMediaUtils {
         System.out.println(gson.toJson(jsonResponse));
     }
 }
-// Note: This code uses HtmlUnit for web scraping. Make sure to include the necessary dependencies in your project.

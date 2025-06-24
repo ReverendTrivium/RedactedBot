@@ -1,143 +1,121 @@
 package org.redacted.util.SocialMedia;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import com.google.gson.*;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.time.Duration;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Validates Instagram handles by checking if the profile exists.
- * Uses a direct HTTP request to check for a 404 status code.
- * Removed Selenium-based validation due to hosting issues.
+ * Uses ScraperAPI's Async method to scrape the page and check for availability.
  *
  * @author Derrick Eberlein
  */
 public class InstagramValidator {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+    private static final String API_KEY = dotenv.get("SCRAPERAPI_KEY");
+    private static final String SUBMIT_URL = "https://async.scraperapi.com/jobs";
 
     /**
-     * Validates an Instagram handle by checking if the profile exists.
-     * Uses a direct HTTP request to check for a 404 status code.
+     * Uses ScraperAPI's Async method to validate whether an Instagram handle exists.
      *
-     * @param handle the Instagram handle to validate
-     * @return true if the handle is valid, false otherwise
+     * @param handle Instagram handle (without @)
+     * @return true if handle exists and page is available, false otherwise
      */
     public static boolean isInstagramHandleValid(String handle) {
-        String url = "https://www.instagram.com/" + handle + "/";
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-
-            int status = connection.getResponseCode();
-            if (status == 404) return false;
-
-            // Optional: parse content to confirm it's not a "Sorry" or "not available" page
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                String html = reader.lines().collect(Collectors.joining());
-                return !html.contains("Sorry, this page isn't available");
+            // Step 1: Submit async job
+            System.out.println("Submitting async scrape job for Instagram handle: " + handle);
+            String payload = "{"
+                    + "\"apiKey\": \"" + API_KEY + "\","
+                    + "\"urls\": [\"https://www.instagram.com/" + handle + "/\"],"
+                    + "\"render\": true"
+                    + "}";
+            HttpURLConnection conn = (HttpURLConnection) new URL(SUBMIT_URL).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(payload.getBytes(StandardCharsets.UTF_8));
             }
-        } catch (IOException e) {
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                System.err.println("Failed to submit scrape job.");
+                return false;
+            }
+
+            JsonArray jobArray;
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                jobArray = JsonParser.parseReader(in).getAsJsonArray();
+            }
+
+            if (jobArray.isEmpty()) {
+                System.err.println("Empty job response.");
+                return false;
+            }
+
+            JsonObject job = jobArray.get(0).getAsJsonObject();
+            String statusUrl = job.get("statusUrl").getAsString();
+
+            // Step 2: Poll for job completion
+            JsonObject jobStatus;
+            int maxAttempts = 10;
+            int attempts = 0;
+
+            do {
+                Thread.sleep(2000);
+                HttpURLConnection statusConn = (HttpURLConnection) new URL(statusUrl).openConnection();
+                statusConn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(statusConn.getInputStream()))) {
+                    jobStatus = JsonParser.parseReader(in).getAsJsonObject();
+                }
+
+                String status = jobStatus.get("status").getAsString();
+                if (status.equalsIgnoreCase("failed")) {
+                    System.err.println("Scrape job failed.");
+                    return false;
+                }
+
+                if (status.equalsIgnoreCase("successful")) {
+                    break;
+                }
+
+            } while (++attempts < maxAttempts);
+
+            System.out.println("Response:" + gson.toJson(jobStatus));
+
+            if (!jobStatus.has("responseBody")) {
+                System.err.println("No responseBody found in successful job.");
+                return false;
+            }
+
+            // Step 3: Inspect responseBody
+            String responseBody = jobStatus.get("responseBody").getAsString();
+            return !responseBody.contains("Sorry, this page isn't available") &&
+                    !responseBody.contains("The link you followed may be broken") &&
+                    !responseBody.contains("Page Not Found");
+
+        } catch (Exception e) {
+            System.err.println("Exception during async scrape: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    // Removed Until ChromeDriver and Selenium are updated to work with hosting company
-    /*
-    public static boolean isInstagramHandleValid(String handle) {
-        Map<String, Object> jsonResponse = new HashMap<>();
-        String url = "https://www.instagram.com/" + handle;
-        jsonResponse.put("url", url);
 
-        String username = dotenv.get("INSTAGRAM_USERNAME");
-        String password = dotenv.get("INSTAGRAM_PASSWORD");
-
-        if (username == null || password == null) {
-            jsonResponse.put("status", "failed");
-            jsonResponse.put("reason", "Missing credentials in .env");
-            logJson(jsonResponse);
-            return false;
-        }
-
-        WebDriverManager.chromedriver().setup();
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless", "--disable-gpu", "--no-sandbox");
-        WebDriver driver = new ChromeDriver(options);
-
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-
-            // Go to Instagram login page
-            driver.get("https://www.instagram.com/accounts/login/");
-
-            // Wait for login form
-            WebElement usernameInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
-            WebElement passwordInput = driver.findElement(By.name("password"));
-            usernameInput.sendKeys(username);
-            passwordInput.sendKeys(password);
-
-            WebElement loginButton = driver.findElement(By.cssSelector("button[type='submit']"));
-            loginButton.click();
-
-            // Wait for post-login redirect (we can wait for homepage or something stable)
-            wait.until(ExpectedConditions.urlContains("/"));
-
-            // Go to target profile
-            driver.get(url);
-
-            // Wait for body to confirm page load
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
-
-            String title = driver.getTitle();
-            String pageSource = driver.getPageSource();
-
-            jsonResponse.put("pageTitle", title);
-
-            if (title.contains("Page Not Found") || pageSource.contains("Sorry, this page isn't available.")) {
-                jsonResponse.put("status", "failed");
-                jsonResponse.put("reason", "Page Not Found");
-                logJson(jsonResponse);
-                return false;
-            }
-
-            jsonResponse.put("status", "successful");
-            logJson(jsonResponse);
-            return true;
-
-        } catch (Exception e) {
-            jsonResponse.put("status", "failed");
-            jsonResponse.put("reason", "Exception occurred");
-            jsonResponse.put("exceptionMessage", e.getMessage());
-            logJson(jsonResponse);
-            return false;
-        } finally {
-            driver.quit();
-        }
-    }
-
+    /**
+     * Logs the JSON response to the console.
+     *
+     * @param json the JSON object to log
+     */
     private static void logJson(Map<String, Object> json) {
         System.out.println(gson.toJson(json));
     }
-
-     */
 }

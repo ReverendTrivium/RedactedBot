@@ -73,6 +73,7 @@ public class BotInitializer {
                 new TicketCloseHandler(bot), // Register TicketCloseHandler
                 new TicketAddUserHandler(), // Register TicketAddUserHandler
                 new TicketRemoveUserHandler(), // Register TicketRemoveUserHandler
+                new ReactionListener(bot), // Register ReactionListener
                 botCommands,  // Register BotCommands as an event listener
                 new BotEventListener(bot, botCommands) // Pass BotCommands to BotEventListener
         );
@@ -100,6 +101,8 @@ public class BotInitializer {
                 TextChannel introductionChannel = channelManager.getOrCreateTextChannel(guild, "introductions", "Information");
                 TextChannel moderationChannel = channelManager.getOrCreateTextChannel(guild, "mod-log", "Moderation");
                 TextChannel botCommands = channelManager.getOrCreateTextChannel(guild, "bot-commands", "Moderation");
+                TextChannel botFun = channelManager.getOrCreateTextChannel(guild, "bot-fun", "bot-fun");
+                TextChannel botNotifications = channelManager.getOrCreateTextChannel(guild, "bot-notifications", "bot-fun");
 
                 // Create Member and Flagged Roles
                 Role memberRole = roleManager.getOrCreateRole(guild, "Member", RoleHierarchyManager.MEMBER_PERMISSIONS, RoleHierarchyManager.MEMBER_COLOR);

@@ -5,15 +5,14 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.redacted.Redacted;
 import org.redacted.Handlers.IntroductionHandler;
 import org.redacted.Handlers.StickyMessageHandler;
-
-import static org.redacted.Handlers.IntroductionHandler.staffDeletedMessages;
-
+import org.redacted.Redacted;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static org.redacted.Handlers.IntroductionHandler.staffDeletedMessages;
 
 /**
  * IntroductionListener Class
@@ -106,6 +105,7 @@ public class IntroductionListener extends ListenerAdapter {
     public static void markAsStaffDeleted(String messageId) {
         staffDeletedMessages.put(messageId, true);
     }
+
 
     /**
      * Shuts down the scheduler used for delayed message deletion.

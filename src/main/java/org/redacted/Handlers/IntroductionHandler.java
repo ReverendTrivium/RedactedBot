@@ -15,6 +15,7 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.Roles.getRolesByName;
 import org.redacted.util.SocialMedia.SocialMediaUtils;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -224,21 +225,33 @@ public class IntroductionHandler {
             } else {
                 // Validate social media handles
                 if (instagramHandle != null) {
-                    if (SocialMediaUtils.isValidSocialMediaHandle("instagram", instagramHandle)) {
+                    Boolean result = SocialMediaUtils.isValidSocialMediaHandle("instagram", instagramHandle);
+
+                    if (Boolean.FALSE.equals(result)) {
                         isFlagged = true;
                         reason = "invalid Instagram handle";
+                    } else if (result == null) {
+                        IntroductionValidatorFallback.handleManualFallback(instagramHandle, member, staffChannel, firstName, instagramHandle, null);
+                        // Return early so no nickname/role assignment is attempted
+                        return;
                     }
                 } else if (facebookHandle != null) {
-                    if (SocialMediaUtils.isValidSocialMediaHandle("facebook", facebookHandle)) {
+                    Boolean result = SocialMediaUtils.isValidSocialMediaHandle("facebook", facebookHandle);
+
+                    if (Boolean.FALSE.equals(result)) {
                         isFlagged = true;
-                        reason = "invalid Facebook handle";
+                        reason = "invalid Instagram handle";
+                    } else if (result == null) {
+                        IntroductionValidatorFallback.handleManualFallback(facebookHandle, member, staffChannel, firstName, null, facebookHandle);
+                        // Return early so no nickname/role assignment is attempted
+                        return;
                     }
                 }
             }
 
             // Decide whether to flag or approve the user
             if (isFlagged) {
-                flagUser(event, member, staffChannel, memberRole, flagRole, socialMediaPlatform, socialMediaHandle, reason);
+                flagUser(event, member, staffChannel, memberRole, flagRole, socialMediaPlatform, socialMediaHandle, reason, firstName, instagramHandle, facebookHandle);
             } else {
                 approveUser(event, member, memberRole, firstName, instagramHandle, facebookHandle);
             }
@@ -260,17 +273,23 @@ public class IntroductionHandler {
      * @param socialMediaHandle    The social media handle provided by the user.
      * @param reason               The reason for flagging the user.
      */
-    private void flagUser(MessageReceivedEvent event, Member member, TextChannel staffChannel, Role memberRole, Role flagRole, String socialMediaPlatform, String socialMediaHandle, String reason) {
+    private void flagUser(MessageReceivedEvent event, Member member, TextChannel staffChannel, Role memberRole, Role flagRole, String socialMediaPlatform, String socialMediaHandle, String reason, String firstName, String instagramHandle, String facebookHandle) {
         event.getGuild().removeRoleFromMember(member, memberRole).queue();
         event.getGuild().addRoleToMember(member, flagRole).queue();
         event.getGuild().modifyNickname(member, null).queue();
         sendDM(member, "Your introduction has been flagged. A staff member will review your information.");
         Role adminRole = new getRolesByName().getRoleByName(event.getGuild(), "Admin");
         if (adminRole != null) {
-            staffChannel.sendMessage(
-                    String.format("%s User %s has been flagged due to %s. \nSocial Media: %s \nHandle: %s",
-                            adminRole.getAsMention(), member.getAsMention(), reason, socialMediaPlatform, socialMediaHandle)
-            ).queue();
+            staffChannel.sendMessage(String.format(
+                    "%s User %s has been flagged due to %s.\nSocial Media: %s\nHandle: %s",
+                    adminRole.getAsMention(), member.getAsMention(), reason, socialMediaPlatform, socialMediaHandle
+            )).queue(msg -> {
+                msg.addReaction(Emoji.fromUnicode("✅")).queue();
+
+                // Use msg here instead of undefined variable
+                ManualVerificationTracker.addPendingVerification(msg.getIdLong(), member.getIdLong(),
+                        firstName, instagramHandle, facebookHandle);
+            });
         }
     }
 
@@ -285,7 +304,7 @@ public class IntroductionHandler {
      * @param instagramHandle      The Instagram handle provided by the user, if any.
      * @param facebookHandle       The Facebook handle provided by the user, if any.
      */
-    private void approveUser(MessageReceivedEvent event, Member member, Role memberRole, String firstName, String instagramHandle, String facebookHandle) {
+    public void approveUser(MessageReceivedEvent event, Member member, Role memberRole, String firstName, String instagramHandle, String facebookHandle) {
         String nickname = firstName;
         if (instagramHandle != null) {
             nickname = String.format("%s | @%s", firstName, instagramHandle);

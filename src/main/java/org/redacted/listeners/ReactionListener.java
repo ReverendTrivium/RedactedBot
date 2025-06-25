@@ -55,8 +55,10 @@ public class ReactionListener extends ListenerAdapter {
         Map<String, String> userInfo = IntroductionValidatorFallback.pendingManualApprovals.remove(messageId);
         long userId = Long.parseLong(userInfo.get("userId"));
         String firstName = userInfo.get("firstName");
-        String instagramHandle = userInfo.get("instagramHandle");
-        String facebookHandle = userInfo.get("facebookHandle");
+        String instagramHandle = userInfo.get("instagram");
+        String facebookHandle = userInfo.get("facebook");
+
+
 
         Guild guild = event.getGuild();
         Member member = guild.getMemberById(userId);

@@ -67,7 +67,7 @@ public class IntroductionListener extends ListenerAdapter {
                                 channel.sendMessage("Please follow the introduction template to gain access to the server.").queue()
                         );
                     }
-                }, 5, TimeUnit.SECONDS); // Delay of 3 seconds (adjust as necessary)
+                }, 5, TimeUnit.MINUTES); // Delay of 3 seconds (adjust as necessary)
             }
         }
     }

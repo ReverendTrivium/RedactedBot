@@ -32,16 +32,14 @@ public class SocialMediaUtils {
      * @throws IOException if an error occurs during validation
      */
     public static Boolean isValidSocialMediaHandle(String platform, String handle) throws IOException {
-        /* Debugging Instagram login
-        String username = dotenv.get("INSTAGRAM_USERNAME");
-        String password = dotenv.get("INSTAGRAM_PASSWORD");
-        return InstagramLoginChecker.loginAndCheck(username, password, handle);
-
-         */
-        return !switch (platform.toLowerCase()) {
-            case "instagram" -> InstagramValidator.isInstagramHandleValid(handle);
-            case "facebook" -> isValidFacebookHandle(handle);
-            default -> true;
+        return switch (platform.toLowerCase()) {
+            case "instagram" -> {
+                yield InstagramValidator.isInstagramHandleValid(handle); // could be true, false, or null (handled by caller)
+            }
+            case "facebook" -> {
+                yield isValidFacebookHandle(handle);
+            }
+            default -> true; // Assume valid for unknown platforms
         };
     }
 

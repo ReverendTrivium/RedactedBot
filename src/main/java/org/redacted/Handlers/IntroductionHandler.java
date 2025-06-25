@@ -305,6 +305,12 @@ public class IntroductionHandler {
      * @param facebookHandle       The Facebook handle provided by the user, if any.
      */
     public void approveUser(MessageReceivedEvent event, Member member, Role memberRole, String firstName, String instagramHandle, String facebookHandle) {
+        // Debugging output
+        System.out.println("Approving user: " + member.getUser().getName() + " with first name: " + firstName);
+        System.out.println("Instagram handle: " + instagramHandle);
+        System.out.println("Facebook handle: " + facebookHandle);
+
+        // Set the nickname based on the first name and social media handles
         String nickname = firstName;
         if (instagramHandle != null) {
             nickname = String.format("%s | @%s", firstName, instagramHandle);

@@ -3,8 +3,10 @@ package org.redacted.Handlers;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import org.redacted.Roles.getRolesByName;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -35,12 +37,14 @@ public class IntroductionValidatorFallback {
      */
     public static void handleManualFallback(String handle, Member member, TextChannel channel, String firstName,
                                             String instagramHandle, String facebookHandle) {
+
+        Role adminRole = new getRolesByName().getRoleByName(channel.getGuild(), "Admin");
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Manual Verification Required");
         embed.setColor(Color.ORANGE);
         embed.setDescription(String.format(
-                "I couldn't automatically verify the Instagram handle **@%s**.\n\n" +
-                        "Please manually check the profile using the link below and react with ✅ if valid.", handle));
+                "%s I couldn't automatically verify the Instagram handle **@%s**.\n\n" +
+                        "Please manually check the profile using the link below and react with ✅ if valid.", adminRole, handle));
         embed.addField("Instagram Profile", "https://www.instagram.com/" + handle + "/", false);
         embed.setFooter("Automatic check was blocked or rate-limited.");
 

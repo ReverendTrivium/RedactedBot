@@ -99,6 +99,9 @@ public class Database {
         // Add config collection for guild
         MongoCollection<Document> config = getGuildCollection(guildId, "config");
 
+        // Add Google Calendar events collection
+        MongoCollection<Document> calendarEvents = getGuildCollection(guildId, "calendar_events");
+
         // Setup indexes for each collection as needed
         blacklist.createIndex(Indexes.descending("userId"));
         scheduledMessages.createIndex(Indexes.descending("time"));
@@ -107,6 +110,7 @@ public class Database {
         greetings.createIndex(Indexes.descending("guild"));
         economy.createIndex(Indexes.descending("economy"));
         savedEmbeds.createIndex(Indexes.descending("messageId"));
+        calendarEvents.createIndex(Indexes.descending("discordEventId"));
 
         // Set up index for config collection if necessary
         config.createIndex(Indexes.descending("guildId"));
@@ -175,6 +179,17 @@ public class Database {
         // Initialize other fields as necessary
 
         return config;
+    }
+
+    /**
+     * Get the collection for calendar events for a specific guild.
+     * This method retrieves the MongoDB collection for calendar events associated with a guild.
+     *
+     * @param guildId The ID of the guild for which to retrieve the calendar events collection.
+     * @return The MongoCollection for calendar events, with the document class set to Document.
+     */
+    public MongoCollection<Document> getCalendarEventCollection(long guildId) {
+        return getGuildCollection(guildId, "calendar_events");
     }
 
     /**

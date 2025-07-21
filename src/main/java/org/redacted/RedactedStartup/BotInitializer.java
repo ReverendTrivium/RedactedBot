@@ -47,7 +47,7 @@ public class BotInitializer {
         builder.setActivity(Activity.watching("Over All"));
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
         builder.setChunkingFilter(ChunkingFilter.ALL);
-        builder.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT);
+        builder.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.SCHEDULED_EVENTS);
         builder.enableCache(CacheFlag.ACTIVITY, CacheFlag.ONLINE_STATUS);
 
         return builder.build();
@@ -74,6 +74,7 @@ public class BotInitializer {
                 new TicketAddUserHandler(), // Register TicketAddUserHandler
                 new TicketRemoveUserHandler(), // Register TicketRemoveUserHandler
                 new ReactionListener(bot), // Register ReactionListener
+                new DiscordEventListener(bot), // Register DiscordEventListener
                 botCommands,  // Register BotCommands as an event listener
                 new BotEventListener(bot, botCommands) // Pass BotCommands to BotEventListener
         );

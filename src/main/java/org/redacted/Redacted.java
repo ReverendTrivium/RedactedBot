@@ -13,6 +13,8 @@ import org.redacted.RedactedStartup.SchedulerManager;
 import org.redacted.RedactedStartup.ShardReadyListener;
 import org.redacted.listeners.MessageSchedulerListener;
 import org.redacted.util.GalleryManager;
+import org.redacted.util.GoogleCalendar.CalendarAPI;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,6 +37,7 @@ public class Redacted {
     public final GalleryManager galleryManager;
     public final ScheduledExecutorService scheduler;
     private final BotCommands botCommands;
+    private final CalendarAPI calendarAPI;
 
     @Getter
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10); // or CachedThreadPool
@@ -75,6 +78,10 @@ public class Redacted {
 
         // Register other listeners
         BotInitializer.registerListeners(shardManager, this);
+
+        // Setup Google Calendar API
+        calendarAPI = new CalendarAPI();
+        System.out.println("Google Calendar API initialized");
     }
 
     /**

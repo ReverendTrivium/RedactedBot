@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.listeners.MessageSchedulerListener;
+import org.redacted.util.GoogleCalendar.CalendarSyncUtil;
 
 /**
  * ShardReadyListener Class
@@ -39,6 +40,9 @@ public class ShardReadyListener extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         System.out.println("All shards are ready. Loading and rescheduling messages for each guild...");
+
+        // Sync existing Discord events to Google Calendar
+        CalendarSyncUtil.syncExistingDiscordEvents(bot);
 
         // Iterate over each guild the bot is part of
         for (Guild guild : event.getJDA().getGuilds()) {

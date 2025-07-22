@@ -7,11 +7,11 @@ import org.jetbrains.annotations.NotNull;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.listeners.MessageSchedulerListener;
+import org.redacted.listeners.MusicListener;
 import org.redacted.util.GoogleCalendar.CalendarSyncUtil;
 
 /**
- * ShardReadyListener Class
- * This listener is triggered when all shards of the bot are ready.
+ * ShardReadyListener is responsible for handling the event when all shards of the bot are ready.
  * It loads and reschedules messages for each guild the bot is part of.
  *
  * @author Derrick Eberlein
@@ -19,23 +19,26 @@ import org.redacted.util.GoogleCalendar.CalendarSyncUtil;
 public class ShardReadyListener extends ListenerAdapter {
     private final Redacted bot;
     private final MessageSchedulerListener schedulerListener;
+    private final MusicListener musicListener;
 
     /**
-     * Constructs a ShardReadyListener with the provided Redacted bot instance and MessageSchedulerListener.
+     * Constructor for ShardReadyListener.
      *
-     * @param bot the Redacted bot instance
-     * @param schedulerListener the MessageSchedulerListener instance for message scheduling
+     * @param bot The Redacted bot instance.
+     * @param schedulerListener The MessageSchedulerListener instance to handle message scheduling.
+     * @param musicListener The MusicListener instance to handle music-related events.
      */
-    public ShardReadyListener(Redacted bot, MessageSchedulerListener schedulerListener) {
+    public ShardReadyListener(Redacted bot, MessageSchedulerListener schedulerListener, MusicListener musicListener) {
         this.bot = bot;
         this.schedulerListener = schedulerListener;
+        this.musicListener = musicListener;
     }
 
     /**
-     * Called when all shards are ready.
-     * This method iterates over each guild the bot is part of and loads/reschedules messages.
+     * This method is called when all shards are ready.
+     * It loads and reschedules messages for each guild the bot is part of.
      *
-     * @param event the ReadyEvent containing information about the bot's readiness
+     * @param event The ReadyEvent containing information about the bot's readiness.
      */
     @Override
     public void onReady(@NotNull ReadyEvent event) {

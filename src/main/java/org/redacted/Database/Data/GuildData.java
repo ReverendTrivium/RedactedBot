@@ -13,6 +13,7 @@ import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Economy;
 import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Handlers.GreetingHandler;
+import org.redacted.Handlers.MusicHandler;
 import org.redacted.Handlers.SuggestionHandler;
 import org.redacted.Handlers.economy.EconomyHandler;
 import org.redacted.Redacted;
@@ -22,9 +23,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * GuildData Class
- * This class represents data and handlers for a specific Discord guild.
- * It manages configurations, suggestion handling, greeting handling, and economy handling.
+ * GuildData class holds all the data related to a specific guild (server) in Discord.
+ * It manages configurations, handlers for suggestions, greetings, music, and economy.
+ * It also provides methods to interact with the database for guild-specific operations.
  *
  * @author Derrick Eberlein
  */
@@ -40,17 +41,17 @@ public class GuildData {
     private final long guildId;
     private final SuggestionHandler suggestionHandler;
     private final GreetingHandler greetingHandler;
+    public MusicHandler musicHandler;
     // Method to retrieve the EconomyHandler
     @Getter
     private final EconomyHandler economyHandler;
 
     /**
-     * Constructs a GuildData instance for the specified guild.
-     * It initializes the guild ID, retrieves or creates the configuration,
-     * and sets up the necessary handlers for suggestions, greetings, and economy.
+     * Constructor for GuildData, initializes the guild data with the provided guild and bot instance.
+     * It sets up the database collections, retrieves or creates the configuration, and initializes handlers.
      *
      * @param guild The guild for which this data is being created.
-     * @param bot   The Redacted bot instance to pass to handlers
+     * @param bot   The Redacted bot instance.
      */
     public GuildData(Guild guild, Redacted bot) {
         this.guildId = guild.getIdLong();
@@ -91,26 +92,25 @@ public class GuildData {
         // Initialize other handlers with the correct parameters
         this.suggestionHandler = new SuggestionHandler(guild, bot, database);
         this.greetingHandler = new GreetingHandler(guild, database);
+
+        this.musicHandler = null;
     }
 
     /**
-     * Initializes the static database instance.
-     * This method should be called once at the start of the application
-     * to set up the database connection.
+     * Initializes the GuildData class with the provided database instance.
+     * This method should be called once during the bot's startup to set up the database connection.
      *
-     * @param db The Database instance to be used for all guild data operations.
+     * @param db The Database instance to be used for guild data operations.
      */
     public static void init(Database db) {
         database = db;
     }
 
     /**
-     * Retrieves or creates a GuildData instance for the specified guild.
-     * If the guild data already exists, it returns the existing instance.
-     * Otherwise, it creates a new instance and stores it in the static map.
+     * Retrieves the GuildData instance for a given guild, creating it if it doesn't exist.
      *
-     * @param guild The guild for which to retrieve or create GuildData.
-     * @param bot   The Redacted bot instance to pass to handlers
+     * @param guild The guild for which to retrieve the GuildData.
+     * @param bot   The Redacted bot instance.
      * @return The GuildData instance for the specified guild.
      */
     public static GuildData get(@NotNull Guild guild, Redacted bot) {
@@ -118,40 +118,36 @@ public class GuildData {
     }
 
     /**
-     * Retrieves the MongoDB collection for the blacklist of this guild.
-     * This collection is used to store blacklisted users or entities for the guild.
+     * Retrieves the collection for suggestions in this guild.
      *
-     * @return The MongoCollection<Document> representing the blacklist for this guild.
+     * @return MongoCollection of suggestions for this guild.
      */
     public MongoCollection<Document> getBlacklistCollection() {
         return database.getGuildCollection(guildId, "blacklist");
     }
 
     /**
-     * Retrieves the MongoDB collection for scheduled messages of this guild.
-     * This collection is used to store messages that are scheduled to be sent at a later time.
+     * Retrieves the collection for scheduled messages in this guild.
      *
-     * @return The MongoCollection<Document> representing the scheduled messages for this guild.
+     * @return MongoCollection of scheduled messages for this guild.
      */
     public MongoCollection<Document> getScheduledMessagesCollection() {
         return database.getGuildCollection(guildId, "scheduled_messages");
     }
 
     /**
-     * Retrieves the MongoDB collection for sticky messages of this guild.
-     * This collection is used to store messages that should remain pinned or highlighted in a channel.
+     * Retrieves the collection for sticky messages in this guild.
      *
-     * @return The MongoCollection<Document> representing the sticky messages for this guild.
+     * @return MongoCollection of sticky messages for this guild.
      */
     public MongoCollection<Document> getStickyMessagesCollection() {
         return database.getGuildCollection(guildId, "sticky_messages");
     }
 
     /**
-     * Retrieves the MongoDB collection for user introduction messages of this guild.
-     * This collection is used to store messages that introduce users to the guild.
+     * Retrieves the collection for user intro messages in this guild.
      *
-     * @return The MongoCollection<Document> representing the user introduction messages for this guild.
+     * @return MongoCollection of user intro messages for this guild.
      */
     public MongoCollection<Document> getUserIntroMessagesCollection() {
         return database.getGuildCollection(guildId, "user_intro_messages");
@@ -159,7 +155,6 @@ public class GuildData {
 
     /**
      * Retrieves the guild ID as a String.
-     * This method is useful for logging or displaying the guild ID in a user-friendly format.
      *
      * @return The guild ID as a String.
      */
@@ -168,10 +163,9 @@ public class GuildData {
     }
 
     /**
-     * Retrieves the MongoDB collection for economy data of this guild.
-     * This collection is used to store economy-related information such as user balances, transactions, etc.
+     * Retrieves the economy collection for this guild.
      *
-     * @return The MongoCollection<Economy> representing the economy data for this guild.
+     * @return MongoCollection of Economy documents for this guild.
      */
     public MongoCollection<Economy> getEconomyCollection() {
         // Use withDocumentClass to get the correct type of Economy instead of Document.
@@ -180,9 +174,9 @@ public class GuildData {
 
     /**
      * Retrieves the configuration for this guild.
-     * If the configuration does not exist, it will throw an exception to catch the error early.
      *
      * @return The Config object for this guild.
+     * @throws IllegalStateException if the config cannot be found or created.
      */
     public Config getConfig() {
         // Fetch the config for this guild
@@ -197,7 +191,6 @@ public class GuildData {
 
     /**
      * Updates the configuration for this guild with the provided update.
-     * This method updates the database and also refreshes the in-memory config object.
      *
      * @param update The Bson update to apply to the guild's configuration.
      */
@@ -208,10 +201,9 @@ public class GuildData {
     }
 
     /**
-     * Retrieves the MongoDB collection for saved embeds of this guild.
-     * This collection is used to store embeds that can be reused or referenced later.
+     * Retrieves the collection for saved embeds in this guild.
      *
-     * @return The MongoCollection<SavedEmbed> representing the saved embeds for this guild.
+     * @return MongoCollection of SavedEmbed documents for this guild.
      */
     public MongoCollection<SavedEmbed> getSavedEmbedsCollection() {
         return database.getGuildCollection(guildId, "saved_embeds")

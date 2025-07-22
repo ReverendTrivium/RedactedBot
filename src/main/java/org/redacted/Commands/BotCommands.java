@@ -19,6 +19,7 @@ import org.redacted.Commands.Greetings.FarewellCommand;
 import org.redacted.Commands.Greetings.GreetCommand;
 import org.redacted.Commands.Greetings.GreetingsCommand;
 import org.redacted.Commands.Greetings.JoinDMCommand;
+import org.redacted.Commands.Music.*;
 import org.redacted.Commands.Suggestions.RespondCommand;
 import org.redacted.Commands.Suggestions.SuggestCommand;
 import org.redacted.Commands.Suggestions.SuggestionsCommand;
@@ -80,6 +81,18 @@ public class BotCommands extends ListenerAdapter {
                     new GoogleCommand(bot, googleSearchService),
                     new AnimeCommand(bot),
                     new SummarizeCommand(bot),
+
+                    // Music commands
+                    new NowPlayingCommand(bot),
+                    new PauseCommand(bot),
+                    new PlayCommand(bot),
+                    new QueueCommand(bot),
+                    new RepeatCommand(bot),
+                    new ResumeCommand(bot),
+                    new SeekCommand(bot),
+                    new SkipCommand(bot),
+                    new StopCommand(bot),
+                    new VolumeCommand(bot),
 
                     // Gamba commands
                     new BlackJackCommand(bot),
@@ -150,17 +163,20 @@ public class BotCommands extends ListenerAdapter {
         for (Command cmd : cmds) {
             commandsMap.put(cmd.name, cmd);
             commands.add(cmd);
-            System.out.println("Command registered: " + cmd.name);
+
+            // Debug output to confirm command registration
+            //System.out.println("Command registered: " + cmd.name);
         }
     }
 
     /**
-     * Registers commands for a specific guild.
-     * This method is used to register slash commands for a specific guild.
+     * Registers all commands for a specific guild.
+     * This method should be called when the bot is ready or when a guild is joined.
      *
-     * @param guild The guild for which commands are being registered.
+     * @param guild The guild to register commands for.
      */
     public void registerCommandsForGuild(Guild guild) {
+        // Ensure commands are registered only once
         System.out.println("Registering commands for guild: " + guild.getName());
 
         // Register slash commands for the specific guild
@@ -171,10 +187,9 @@ public class BotCommands extends ListenerAdapter {
     }
 
     /**
-     * Unpacks the command data into a list of CommandData objects.
-     * This method is used to prepare commands for registration with Discord.
+     * Unpacks the command data into a list of CommandData for registration.
      *
-     * @return List of CommandData objects representing the commands.
+     * @return List of CommandData to be registered with JDA.
      */
     public static List<CommandData> unpackCommandData() {
         List<CommandData> commandData = new ArrayList<>();
@@ -198,9 +213,9 @@ public class BotCommands extends ListenerAdapter {
 
     /**
      * Handles slash command interactions.
-     * This method is called when a slash command interaction occurs.
+     * This method is called when a slash command is invoked.
      *
-     * @param event The SlashCommandInteractionEvent containing the command interaction data.
+     * @param event The SlashCommandInteractionEvent containing the command details.
      */
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
@@ -227,11 +242,10 @@ public class BotCommands extends ListenerAdapter {
     }
 
     /**
-     * Retrieves a command by its name.
-     * This method is used to fetch a command object based on its name.
+     * Fetches a command by its name.
      *
-     * @param name The name of the command to retrieve.
-     * @return The Command object associated with the given name, or null if not found.
+     * @param name The name of the command to fetch.
+     * @return The Command object if found, null otherwise.
      */
     public Command getCommandByName(String name) {
         return commandsMap.get(name);  // Fetches command by its name

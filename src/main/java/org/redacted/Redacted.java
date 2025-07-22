@@ -28,8 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Main class for the Redacted bot.
- * Initializes the bot, its components, and starts the JDA shard manager.
- * Handles configuration, database connection, and various listeners.
+ * Initializes the bot, database, and other components.
  *
  * @author Derrick Eberlein
  */
@@ -47,7 +46,7 @@ public class Redacted {
     public MusicListener musicListener;
     private final SpotifyAPI spotifyAPI;
 
-    // Thread pool for handling tasks asynchronously
+    @Getter
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10); // or CachedThreadPool
 
     /**
@@ -104,9 +103,9 @@ public class Redacted {
 
     /**
      * Main method to start the Redacted bot.
-     * Initializes the bot and starts the JDA shard manager.
+     * Initializes the bot and handles any exceptions related to login.
      *
-     * @param args command line arguments
+     * @param args command line arguments (not used)
      */
     public static void main(String[] args) {
         try {
@@ -120,8 +119,8 @@ public class Redacted {
     }
 
     /**
-     * Shuts down the bot and releases resources.
-     * This method should be called when the bot is shutting down.
+     * Shuts down the Redacted bot and its components.
+     * This method should be called when the bot is no longer needed.
      */
     public void shutdown() {
         threadPool.shutdown();

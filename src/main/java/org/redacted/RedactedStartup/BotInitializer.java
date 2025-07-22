@@ -60,6 +60,9 @@ public class BotInitializer {
      * @param bot The Redacted bot instance to pass to the listeners.
      */
     public static void registerListeners(ShardManager shardManager, Redacted bot) {
+        // Debugging output to confirm bot initialization
+        System.out.println("Initializing listeners for bot");
+
         BotCommands botCommands = new BotCommands(bot); // Create a single instance of BotCommands
 
         shardManager.addEventListener(

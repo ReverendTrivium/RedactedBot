@@ -142,9 +142,6 @@ public class BotCommands extends ListenerAdapter {
                     new Help(bot)
             );
 
-            // Register BlackList Subcomands
-
-
             // Register CategoryHelpCommand for each category
             for (Category category : Category.values()) {
                 mapCommand(new CategoryHelpCommand(bot, category));
@@ -203,10 +200,15 @@ public class BotCommands extends ListenerAdapter {
             }
             commandData.add(slashCommand);
 
+            /*
+            //Debug output to confirm command registration
             System.out.println("Registering command: " + command.name);
+
             for (SubcommandData subcommand : command.subCommands) {
+                // Debug output to confirm subcommands registration
                 System.out.println("  Subcommand: " + subcommand.getName() + " - " + subcommand.getDescription());
             }
+             */
         }
         return commandData;
     }

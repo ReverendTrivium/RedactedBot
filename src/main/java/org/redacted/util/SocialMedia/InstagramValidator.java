@@ -1,59 +1,47 @@
 package org.redacted.util.SocialMedia;
 
 import com.google.gson.*;
-import io.github.cdimascio.dotenv.Dotenv;
+import org.htmlunit.*;
+import org.htmlunit.html.HtmlPage;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
  * Validates Instagram handles by checking if the profile exists.
- * Uses ScraperAPI's Async method to scrape the page and check for availability.
+ * Uses HtmlUnit to scrape the Instagram page and check for availability.
  *
  * @author Derrick Eberlein
  */
 public class InstagramValidator {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-    private static final String API_KEY = dotenv.get("SCRAPERAPI_KEY");
-    private static final String SUBMIT_URL = "https://async.scraperapi.com/jobs";
 
     /**
-     * Uses ScraperAPI's Async method to validate whether an Instagram handle exists.
+     * Validates whether an Instagram handle exists using HtmlUnit.
      *
      * @param handle Instagram handle (without @)
-     * @return true if handle exists and page is available, false otherwise
+     * @return true if the handle exists and the page is available, false if 404, null if other failure
      */
     public static Boolean isInstagramHandleValid(String handle) {
         String targetUrl = "https://www.instagram.com/" + handle + "/";
-        String scraperUrl = "http://api.scraperapi.com?api_key=" + API_KEY + "&url=" + targetUrl;
 
-        try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(scraperUrl).openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+        try (final WebClient webClient = new WebClient(BrowserVersion.CHROME)) {
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setTimeout(5000);
 
-            int status = connection.getResponseCode();
+            HtmlPage page = webClient.getPage(targetUrl);
+            WebResponse response = page.getWebResponse();
+            int status = response.getStatusCode();
 
-            // Return null for scraper-blocked responses so fallback can handle them
-            if (status == 429 || status == 403) return null;
             if (status == 404) return false;
+            if (status == 403 || status == 429) return null;
 
-            // Read and parse the HTML content only on successful response
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                String html = reader.lines().reduce("", (a, b) -> a + b);
-                return !html.contains("Sorry, this page isn't available");
-            }
+            String content = page.asNormalizedText();
+            return !content.contains("Sorry, this page isn't available");
+
         } catch (IOException e) {
-            // Log the exception but treat it as a blocking error (null → trigger fallback)
             e.printStackTrace();
             return null;
         }

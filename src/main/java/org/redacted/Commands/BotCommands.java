@@ -19,6 +19,9 @@ import org.redacted.Commands.Greetings.FarewellCommand;
 import org.redacted.Commands.Greetings.GreetCommand;
 import org.redacted.Commands.Greetings.GreetingsCommand;
 import org.redacted.Commands.Greetings.JoinDMCommand;
+import org.redacted.Commands.Moderation.BanCommand;
+import org.redacted.Commands.Moderation.KickCommand;
+import org.redacted.Commands.Moderation.MuteCommand;
 import org.redacted.Commands.Music.*;
 import org.redacted.Commands.Suggestions.RespondCommand;
 import org.redacted.Commands.Suggestions.SuggestCommand;
@@ -34,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.redacted.util.GoogleSearch.GoogleSearchService;
+import org.redacted.util.googleSearch.GoogleSearchService;
 import org.redacted.util.embeds.EmbedUtils;
 
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -112,6 +115,9 @@ public class BotCommands extends ListenerAdapter {
                     // Staff commands
                     new roles(bot),
                     new BlacklistCommand(bot),
+                    new MuteCommand(bot),
+                    new KickCommand(bot),
+                    new BanCommand(bot),
 
                     // Economy commands
                     new EconomyCommand(bot),

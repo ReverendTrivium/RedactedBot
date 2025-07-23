@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.redacted.Commands.Command;
 import org.redacted.Redacted;
-import org.redacted.util.GoogleSearch.GoogleSearchService;
+import org.redacted.util.googleSearch.GoogleSearchService;
 
 import java.awt.*;
 import java.util.List;

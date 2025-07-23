@@ -1,4 +1,4 @@
-package org.redacted.util.GoogleCalendar;
+package org.redacted.util.googleCalendar;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.JsonFactory;

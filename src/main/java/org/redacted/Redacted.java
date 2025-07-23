@@ -15,7 +15,7 @@ import org.redacted.RedactedStartup.ShardReadyListener;
 import org.redacted.listeners.MessageSchedulerListener;
 import org.redacted.listeners.MusicListener;
 import org.redacted.util.GalleryManager;
-import org.redacted.util.GoogleCalendar.CalendarAPI;
+import org.redacted.util.googleCalendar.CalendarAPI;
 import org.redacted.util.musicPlayer.SpotifyAPI;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 

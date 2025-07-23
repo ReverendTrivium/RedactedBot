@@ -1,4 +1,4 @@
-package org.redacted.util.GoogleSearch;
+package org.redacted.util.googleSearch;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

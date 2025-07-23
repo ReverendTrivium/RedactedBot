@@ -210,4 +210,13 @@ public class GuildData {
                 .withDocumentClass(SavedEmbed.class);
     }
 
+    /**
+     * Get the collection for storing blacklisted users in a guild.
+     *
+     * @param guildId The ID of the guild.
+     * @return The MongoCollection for blacklisted users.
+     */
+    public MongoCollection<Document> getMuteCollection(long guildId) {
+        return database.getGuildCollection(guildId, "mutes");
+    }
 }

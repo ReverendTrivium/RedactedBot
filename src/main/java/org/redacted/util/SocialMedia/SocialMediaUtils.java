@@ -3,6 +3,7 @@ package org.redacted.util.SocialMedia;
 import org.htmlunit.WebClient;
 import org.htmlunit.WebRequest;
 import org.htmlunit.HttpMethod;
+import org.htmlunit.WebResponse;
 import org.htmlunit.html.HtmlPage;
 import io.github.cdimascio.dotenv.Dotenv;
 import com.google.gson.Gson;
@@ -50,7 +51,7 @@ public class SocialMediaUtils {
      * @param handle the Facebook handle to validate
      * @return true if the handle is valid, false otherwise
      */
-    public static boolean isValidFacebookHandle(String handle) {
+    public static Boolean isValidFacebookHandle(String handle) {
         String url = "https://www.facebook.com/" + handle;
         Map<String, Object> jsonResponse = new HashMap<>();
         jsonResponse.put("url", url);
@@ -60,20 +61,41 @@ public class SocialMediaUtils {
             webClient.getOptions().setJavaScriptEnabled(false);
             webClient.getOptions().setThrowExceptionOnScriptError(false);
             webClient.getOptions().setUseInsecureSSL(true);
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false); // critical
             webClient.getOptions().setTimeout(5000);
 
             WebRequest request = new WebRequest(new URL(url), HttpMethod.GET);
             request.setAdditionalHeader("User-Agent", "Mozilla/5.0");
 
             HtmlPage page = webClient.getPage(request);
+            WebResponse response = page.getWebResponse();
+            int statusCode = response.getStatusCode();
+
+            jsonResponse.put("statusCode", statusCode);
+
+            /// Handle 403 Forbidden or 429 Too Many Requests
+            if (statusCode == 403 || statusCode == 429) {
+                jsonResponse.put("status", "manual_verification_required");
+                jsonResponse.put("reason", "Blocked by Facebook (403 or 429)");
+                logJsonResponse(jsonResponse);
+                return null;
+            }
+
+            /// Handle 404 Not Found
+            if (statusCode == 404) {
+                jsonResponse.put("status", "failed");
+                jsonResponse.put("reason", "Page Not Found (404)");
+                logJsonResponse(jsonResponse);
+                return false;
+            }
+
             String title = page.getTitleText();
             String bodyText = page.asNormalizedText();
-
             jsonResponse.put("pageTitle", title);
 
             if (title.contains("Page Not Found") || bodyText.contains("This content isn't available")) {
                 jsonResponse.put("status", "failed");
-                jsonResponse.put("reason", "Page Not Found");
+                jsonResponse.put("reason", "Page Not Found or Unavailable");
                 logJsonResponse(jsonResponse);
                 return false;
             }
@@ -87,7 +109,7 @@ public class SocialMediaUtils {
             jsonResponse.put("reason", "Exception occurred");
             jsonResponse.put("exceptionMessage", e.getMessage());
             logJsonResponse(jsonResponse);
-            return false;
+            return null; // treat all exceptions as fallback triggers
         }
     }
 

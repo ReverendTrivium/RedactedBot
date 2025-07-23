@@ -8,7 +8,7 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 import org.redacted.listeners.MessageSchedulerListener;
 import org.redacted.listeners.MusicListener;
-import org.redacted.util.GoogleCalendar.CalendarSyncUtil;
+import org.redacted.util.googleCalendar.CalendarSyncUtil;
 
 /**
  * ShardReadyListener is responsible for handling the event when all shards of the bot are ready.

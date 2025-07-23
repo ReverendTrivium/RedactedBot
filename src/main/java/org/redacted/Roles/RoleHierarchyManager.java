@@ -12,15 +12,32 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * RoleHierarchyManager Class
- * Manages the role hierarchy in a Discord guild, ensuring that roles are positioned correctly
- * relative to each other and the bot's role.
+ * RoleHierarchyManager manages the role hierarchy in a Discord guild.
+ * It ensures that roles are positioned correctly based on a specified order,
+ * with the bot's role at the top of the hierarchy.
+ * It also defines various permission sets and colors for different roles.
+ * * This class is designed to be used in a Discord bot context, where roles and permissions
+ * are managed through the JDA (Java Discord API).
  *
  * @author Derrick Eberlein
  */
 public class RoleHierarchyManager {
+    /**
+     * A set containing all permissions available in Discord.
+     * This can be used to grant all permissions to a role if needed.
+     */
     public static final EnumSet<Permission> ALL_PERMISSIONS = EnumSet.allOf(Permission.class);
+
+    /**
+     * An empty set of permissions, used when no permissions are granted.
+     * This can be useful for roles that should not have any permissions.
+     */
     public static final EnumSet<Permission> NO_PERMISSIONS = EnumSet.noneOf(Permission.class);
+
+    /**
+     * Permissions granted to the Head DJ role in the guild.
+     * This set includes permissions that are typically granted to the Head DJ.
+     */
     public static final EnumSet<Permission> HEAD_DJ_PERMISSIONS = EnumSet.of(
             Permission.VIEW_CHANNEL,
             Permission.CREATE_INSTANT_INVITE,
@@ -57,32 +74,32 @@ public class RoleHierarchyManager {
     );
 
     /**
-     * Permissions for the developer role, which includes all permissions except for
-     * managing roles and channels.
+     * Permissions granted to members in the guild.
+     * This set includes permissions that are typically granted to regular members.
      */
     public static final EnumSet<Permission> MEMBER_PERMISSIONS = EnumSet.of(
-    Permission.MESSAGE_SEND,
-    Permission.MESSAGE_HISTORY,
-    Permission.VIEW_CHANNEL,
-    Permission.CREATE_INSTANT_INVITE,
-    Permission.CREATE_PUBLIC_THREADS,
-    Permission.MESSAGE_SEND_IN_THREADS,
-    Permission.MESSAGE_EMBED_LINKS,
-    Permission.MESSAGE_ATTACH_FILES,
-    Permission.MESSAGE_ADD_REACTION,
-    Permission.MESSAGE_EXT_EMOJI,
-    Permission.MESSAGE_EXT_STICKER,
-    Permission.VOICE_CONNECT,
-    Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
-    Permission.VOICE_SPEAK,
-    Permission.VOICE_USE_SOUNDBOARD,
-    Permission.VOICE_STREAM,
-    Permission.VOICE_USE_EXTERNAL_SOUNDS
+            Permission.MESSAGE_SEND,
+            Permission.MESSAGE_HISTORY,
+            Permission.VIEW_CHANNEL,
+            Permission.CREATE_INSTANT_INVITE,
+            Permission.CREATE_PUBLIC_THREADS,
+            Permission.MESSAGE_SEND_IN_THREADS,
+            Permission.MESSAGE_EMBED_LINKS,
+            Permission.MESSAGE_ATTACH_FILES,
+            Permission.MESSAGE_ADD_REACTION,
+            Permission.MESSAGE_EXT_EMOJI,
+            Permission.MESSAGE_EXT_STICKER,
+            Permission.VOICE_CONNECT,
+            Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
+            Permission.VOICE_SPEAK,
+            Permission.VOICE_USE_SOUNDBOARD,
+            Permission.VOICE_STREAM,
+            Permission.VOICE_USE_EXTERNAL_SOUNDS
     );
 
     /**
-     * Permissions for the developer role, which includes all permissions except for
-     * managing roles and channels.
+     * Permissions granted to event staff in the guild.
+     * This set includes permissions that are typically granted to event staff members.
      */
     public static final EnumSet<Permission> EVENT_STAFF_PERMISSIONS = EnumSet.of(
             Permission.VIEW_CHANNEL,
@@ -119,6 +136,9 @@ public class RoleHierarchyManager {
             Permission.VOICE_SET_STATUS
     );
 
+    /**
+     * Colors associated with different roles in the guild.
+     */
     public static final Color MEMBER_COLOR = Color.decode("#4682B4");
     public static final Color DEVELOPER_COLOR = Color.decode("#71368a");
     public static final Color ADMIN_COLOR = Color.decode("#71368a");
@@ -129,11 +149,11 @@ public class RoleHierarchyManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     /**
-     * Adjusts the role hierarchy in a guild based on the provided list of roles.
-     * The bot's role must be the top role in the hierarchy for this adjustment to take place.
+     * Adjusts the role hierarchy in the specified guild based on the provided list of roles.
+     * The bot's role must be at the top of the hierarchy for this adjustment to proceed.
      *
-     * @param guild The guild where the roles are located.
-     * @param rolesInOrder The list of roles in the desired order, starting with the top role.
+     * @param guild          The guild where the roles are located.
+     * @param rolesInOrder   The list of roles in the desired order, starting with the top role.
      */
     public void adjustRoleHierarchy(Guild guild, List<Role> rolesInOrder) {
         if (rolesInOrder == null || rolesInOrder.isEmpty()) {
@@ -153,15 +173,17 @@ public class RoleHierarchyManager {
             return;
         }
 
+        System.out.println("Role hierarchy adjustment started for guild: " + guild.getName());
         ensureRolePosition(guild, rolesInOrder.get(0), rolesInOrder, 1, botRole);
+        System.out.println("Role hierarchy adjustment finished for guild: " + guild.getName());
     }
 
     /**
-     * Checks if the bot's role is the top role in the guild's role hierarchy.
+     * Checks if the bot role is the top role in the guild's role hierarchy.
      *
-     * @param guild The guild to check.
-     * @param botRole The bot's role.
-     * @return true if the bot's role is the top role, false otherwise.
+     * @param guild    The guild where the roles are located.
+     * @param botRole  The bot's role to check.
+     * @return true if the bot role is at the top of the hierarchy, false otherwise.
      */
     private boolean isBotRoleTop(Guild guild, Role botRole) {
         List<Role> roles = guild.getRoles();
@@ -169,33 +191,32 @@ public class RoleHierarchyManager {
     }
 
     /**
-     * Ensures that the specified role is positioned correctly in the guild's role hierarchy.
-     * It moves the role to be just below the specified previous role.
+     * Ensures that the specified role is positioned just below the previous role in the hierarchy.
      *
-     * @param guild The guild where the roles are located.
-     * @param role The role to position.
-     * @param rolesInOrder The list of roles in the desired order.
-     * @param nextIndex The index of the next role to process in the list.
-     * @param previousRole The role that should be above the specified role.
+     * @param guild         The guild where the roles are located.
+     * @param role          The role to be positioned.
+     * @param rolesInOrder  The list of roles in the desired order.
+     * @param nextIndex     The index of the next role to adjust.
+     * @param previousRole  The role above which the current role should be positioned.
      */
     private void ensureRolePosition(Guild guild, Role role, List<Role> rolesInOrder, int nextIndex, Role previousRole) {
         try {
-            System.out.println("Trying to move role positions...");
+            //System.out.println("Trying to move role positions...");
             int previousRolePosition = previousRole.getPosition();
             int rolePosition = role.getPosition();
 
-            System.out.println("Role: " + role.getName() + " Position: " + rolePosition);
-            System.out.println("Previous Role: " + previousRole.getName() + " Position: " + previousRolePosition);
+            //System.out.println("Role: " + role.getName() + " Position: " + rolePosition);
+            //System.out.println("Previous Role: " + previousRole.getName() + " Position: " + previousRolePosition);
 
             List<Role> roles = guild.getRoles();
             int previousRoleAscPos = roles.size() - previousRolePosition - 1;
             int roleAscPos = roles.size() - rolePosition - 1;
 
-            System.out.println("Ascending Previous Role Position: " + previousRoleAscPos);
-            System.out.println("Ascending Role Position: " + roleAscPos);
+            //System.out.println("Ascending Previous Role Position: " + previousRoleAscPos);
+            //System.out.println("Ascending Role Position: " + roleAscPos);
 
             if (roleAscPos == previousRoleAscPos + 1) {
-                System.out.println("Role " + role.getName() + " is already below " + previousRole.getName());
+                //System.out.println("Role " + role.getName() + " is already below " + previousRole.getName());
                 scheduleNext(guild, rolesInOrder, nextIndex, role, 0);
                 return;
             }
@@ -204,17 +225,18 @@ public class RoleHierarchyManager {
                     .selectPosition(role)
                     .moveTo(previousRoleAscPos + 1)
                     .queue(success -> {
-                        System.out.println("Successfully moved role " + role.getName() + " to position just below " + previousRole.getName() + " role.");
+                        //System.out.println("Successfully moved role " + role.getName() + " to position just below " + previousRole.getName() + " role.");
                         guild.loadMembers().onSuccess(members -> {
                             Role updatedRole = guild.getRoleById(role.getId());
                             if (updatedRole != null) {
-                                System.out.println("New position for role " + updatedRole.getName() + " is " + updatedRole.getPosition());
+                                //System.out.println("New position for role " + updatedRole.getName() + " is " + updatedRole.getPosition());
                                 scheduleNext(guild, rolesInOrder, nextIndex, updatedRole, 10);
                             } else {
                                 System.out.println("Role not found in updated roles list.");
                             }
                         });
                     }, failure -> System.err.println("Failed to move role " + role.getName() + ": " + failure.getMessage()));
+            System.out.println("Successfully Moved Role Positions...");
         } catch (Exception e) {
             System.err.println("Failed to adjust role position for " + role.getName());
             e.printStackTrace();
@@ -224,11 +246,11 @@ public class RoleHierarchyManager {
     /**
      * Schedules the next role position adjustment after a delay.
      *
-     * @param guild The guild where the roles are located.
-     * @param rolesInOrder The list of roles in the desired order.
-     * @param nextIndex The index of the next role to process in the list.
-     * @param aboveRole The role that should be above the next role.
-     * @param delaySeconds The delay in seconds before processing the next role.
+     * @param guild         The guild where the roles are located.
+     * @param rolesInOrder  The list of roles in the desired order.
+     * @param nextIndex     The index of the next role to adjust.
+     * @param aboveRole     The role above which the next role should be positioned.
+     * @param delaySeconds  The delay in seconds before the next adjustment.
      */
     private void scheduleNext(Guild guild, List<Role> rolesInOrder, int nextIndex, Role aboveRole, int delaySeconds) {
         if (nextIndex < rolesInOrder.size()) {

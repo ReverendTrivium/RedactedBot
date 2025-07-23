@@ -1,4 +1,4 @@
-package org.redacted.util.GoogleCalendar;
+package org.redacted.util.googleCalendar;
 
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;

@@ -258,7 +258,7 @@ public class MusicListener extends ListenerAdapter {
                 // Otherwise load first 100 tracks from playlist
                 int total = audioPlaylist.getTracks().size();
                 if (total > 100) total = 100;
-                event.reply(":notes: | Added **"+audioPlaylist.getName()+"** with `"+total+"` songs to the queue.").queue();
+                event.getHook().editOriginal(":notes: | Added **"+audioPlaylist.getName()+"** with `"+total+"` songs to the queue.").queue();
 
                 total = music.getQueue().size();
                 for (AudioTrack track : audioPlaylist.getTracks()) {

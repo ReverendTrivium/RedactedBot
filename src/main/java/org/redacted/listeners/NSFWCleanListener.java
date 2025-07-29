@@ -37,6 +37,11 @@ public class NSFWCleanListener extends ListenerAdapter {
         channel.getGuild().getIdLong();
         GuildData guildData = GuildData.get(channel.getGuild(), bot);
 
+        // Check if the NSFW clean is toggled on for the guild
+        if (!guildData.isNSFWCleanEnabled()) {
+            return; // Feature is disabled, exit early
+        }
+
         channel.getIterableHistory().takeAsync(500).thenAccept(messages -> {
             channel.purgeMessages(messages);
 

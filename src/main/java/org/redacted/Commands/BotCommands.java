@@ -145,6 +145,8 @@ public class BotCommands extends ListenerAdapter {
                     new MessageSchedulerCommand(bot),
                     new ListScheduledMessagesCommand(bot),
                     new DeleteScheduledMessageCommand(bot),
+                    new NSFWCleanToggleCommand(bot),
+                    new GetNSFWCleanToggleCommand(bot),
                     new Help(bot)
             );
 

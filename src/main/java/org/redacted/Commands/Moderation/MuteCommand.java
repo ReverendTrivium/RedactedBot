@@ -96,7 +96,7 @@ public class MuteCommand extends Command {
         });
 
         // Send a message to the mod-log channel about the mute and who did it.
-        sendKickLog(event, target, moderator, reason); // ✅ Mute log
+        sendMuteLog(event, target, moderator, reason, formatted); // ✅ Mute log
 
         // Mute the user
         muteService.mute(target, muteRole, duration, guild);
@@ -104,15 +104,15 @@ public class MuteCommand extends Command {
     }
 
     /**
-     * Sends a log message to the mod-log channel when a member is kicked.
-     * The log includes the user kicked, the moderator who performed the action, and the reason for the kick.
+     * Sends a log message to the mod-log channel when a member is muted.
+     * The log includes the user muted, the moderator who performed the action, and the reason for the mute.
      *
      * @param event The SlashCommandInteractionEvent containing the command details.
-     * @param target The member who was kicked.
-     * @param moderator The member who performed the kick action.
-     * @param reason The reason for kicking the member.
+     * @param target The member who was Muted.
+     * @param moderator The member who performed the mute action.
+     * @param reason The reason for muting the member.
      */
-    private void sendKickLog(SlashCommandInteractionEvent event, Member target, Member moderator, String reason) {
+    private void sendMuteLog(SlashCommandInteractionEvent event, Member target, Member moderator, String reason, String time) {
         Guild guild = event.getGuild();
         if (guild == null) return;
 
@@ -130,6 +130,7 @@ public class MuteCommand extends Command {
                 .setTitle("\uD83D\uDD07 Member Muted")
                 .addField("User", target.getUser().getAsMention() + " (`" + target.getId() + "`)", false)
                 .addField("Moderator", moderator.getUser().getAsMention(), false)
+                .addField("Duration", time, false)
                 .addField("Reason", reason, false)
                 .setColor(Color.RED)
                 .setTimestamp(Instant.now());

@@ -1,17 +1,15 @@
 package org.redacted.Commands.Moderation;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Redacted;
 
 import java.awt.*;
@@ -89,14 +87,14 @@ public class BanCommand extends Command {
 
         try {
             guild.ban(target.getUser(), 0, TimeUnit.DAYS)
-                .reason(reason)
-                .queue(
-                        success -> {
-                            event.reply("✅ Banned **" + user.getAsTag() + "**.").setEphemeral(true).queue();
-                            sendBanLog(event, target, moderator, reason);
-                        },
-                        error -> event.reply("❌ Failed to ban the user: " + error.getMessage()).setEphemeral(true).queue()
-                );
+                    .reason(reason)
+                    .queue(
+                            success -> {
+                                event.reply("✅ Banned **" + user.getAsTag() + "**.").setEphemeral(true).queue();
+                                sendBanLog(event, target, moderator, reason);
+                            },
+                            error -> event.reply("❌ Failed to ban the user: " + error.getMessage()).setEphemeral(true).queue()
+                    );
         } catch (HierarchyException e) {
             event.reply("❌ I can't ban this user due to role hierarchy.").setEphemeral(true).queue();
         }
@@ -119,8 +117,8 @@ public class BanCommand extends Command {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("🔨 Member Banned")
-                .addField("User", target.getUser().getAsTag() + " (`" + target.getId() + "`)", false)
-                .addField("Moderator", moderator.getUser().getAsTag(), false)
+                .addField("User", target.getUser().getAsMention() + " (`" + target.getId() + "`)", false)
+                .addField("Moderator", moderator.getUser().getAsMention(), false)
                 .addField("Reason", reason, false)
                 .setColor(Color.RED)
                 .setTimestamp(Instant.now());
@@ -128,4 +126,3 @@ public class BanCommand extends Command {
         logChannel.sendMessageEmbeds(embed.build()).queue();
     }
 }
-

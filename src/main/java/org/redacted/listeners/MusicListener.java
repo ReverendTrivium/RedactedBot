@@ -105,7 +105,7 @@ public class MusicListener extends ListenerAdapter {
             }
             // Check if member is in the right voice channel
             if (settings.musicHandler.getPlayChannel() != channel) {
-                String text = "You are not in the same voice channel as TechnoBot!";
+                String text = "You are not in the same voice channel as Redacted!";
                 event.replyEmbeds(EmbedUtils.createError(text)).setEphemeral(true).queue();
                 return null;
             }

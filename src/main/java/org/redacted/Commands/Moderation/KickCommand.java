@@ -10,8 +10,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Redacted;
 
 import java.awt.*;
@@ -126,8 +126,8 @@ public class KickCommand extends Command {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("🚫 Member Kicked")
-                .addField("User", target.getUser().getAsTag() + " (`" + target.getId() + "`)", false)
-                .addField("Moderator", moderator.getUser().getAsTag(), false)
+                .addField("User", target.getUser().getAsMention() + " (`" + target.getId() + "`)", false)
+                .addField("Moderator", moderator.getUser().getAsMention(), false)
                 .addField("Reason", reason, false)
                 .setColor(Color.RED)
                 .setTimestamp(Instant.now());

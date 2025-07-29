@@ -70,6 +70,8 @@ public class Database {
         MongoCollection<Greetings> greetings = getGuildCollection(guildId, "greetings").withDocumentClass(Greetings.class);
         MongoCollection<Document> economy = getGuildCollection(guildId, "economy");
 
+        // Create a NSFW Clean Toggle
+        MongoCollection<Document> nsfwCleanToggle = getGuildCollection(guildId, "nsfwCleanToggle");
 
         // Create a collection for saved embeds
         MongoCollection<Document> savedEmbeds = getGuildCollection(guildId, "saved_embeds");
@@ -96,6 +98,7 @@ public class Database {
         savedEmbeds.createIndex(Indexes.descending("messageId"));
         calendarEvents.createIndex(Indexes.descending("discordEventId"));
         mutes.createIndex(Indexes.ascending("guildId", "userId"));
+        nsfwCleanToggle.createIndex(Indexes.ascending("guildId", "nsfwCleanToggle"));
 
         // Set up index for config collection if necessary
         config.createIndex(Indexes.descending("guildId"));

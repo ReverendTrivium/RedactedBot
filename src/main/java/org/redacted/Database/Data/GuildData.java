@@ -1,6 +1,7 @@
 package org.redacted.Database.Data;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import lombok.Getter;
 import lombok.Setter;
@@ -218,5 +219,29 @@ public class GuildData {
      */
     public MongoCollection<Document> getMuteCollection(long guildId) {
         return database.getGuildCollection(guildId, "mutes");
+    }
+
+    /**
+     * Checks if the NSFW clean feature is enabled for this guild.
+     *
+     * @return true if NSFW clean is enabled, false otherwise.
+     */
+    public boolean isNSFWCleanEnabled() {
+        Document doc = database.getGuildCollection(guildId, "nsfwCleanToggle").find(new Document("guildId", guildId)).first();
+        return doc != null && doc.getBoolean("nsfwCleanToggle", false);
+    }
+
+    /**
+     * Sets the NSFW clean toggle for this guild.
+     * This method updates the database to enable or disable the NSFW clean feature.
+     *
+     * @param toggle true to enable NSFW clean, false to disable it.
+     */
+    public void setNSFWCleanToggle(boolean toggle) {
+        database.getGuildCollection(guildId, "nsfwCleanToggle").updateOne(
+                new Document("guildId", guildId),
+                new Document("$set", new Document("nsfwCleanToggle", toggle)),
+                new UpdateOptions().upsert(true)
+        );
     }
 }

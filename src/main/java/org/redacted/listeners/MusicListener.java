@@ -28,6 +28,9 @@ import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.net.MalformedURLException;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,6 +41,20 @@ import java.util.concurrent.TimeUnit;
 public class MusicListener extends ListenerAdapter {
     private final Redacted bot;
     private final @NotNull AudioPlayerManager playerManager;
+
+    /** Music executor for handling music-related tasks asynchronously.
+     * Core pool size of 2, maximum pool size of 8, and a keep-alive time of 60 seconds.
+     * Function uses a linked blocking queue with a capacity of 200 tasks.
+     * Threads are named "music-exec" and are set as daemon threads.
+     */
+    public static final ExecutorService MUSIC_EXECUTOR =
+            new ThreadPoolExecutor(2, 8, 60, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(200),
+                    r -> {
+                        Thread t = new Thread(r, "music-exec");
+                        t.setDaemon(true);
+                        return t;
+                    });
 
     /**
      * Setup audio player manager.
@@ -149,67 +166,54 @@ public class MusicListener extends ListenerAdapter {
      * @param url    The track URL.
      * @param userID   The ID of the user that added this track.
      */
-    public void addTrack(SlashCommandInteractionEvent event, String url, String userID) {
-
-        // Check URL validity
-        System.out.println("Adding track: " + url);
+    // In MusicListener
+    public void addTrackAsync(SlashCommandInteractionEvent event, String url, String userID) {
+        // Basic checks
         if (url == null || url.isBlank()) {
             event.getHook().setEphemeral(true).editOriginal("Please provide a valid song name or link.").queue();
             return;
         }
 
-        // Checking if Code breaks for Debugging
         MusicHandler music = GuildData.get(event.getGuild(), bot).getMusicHandler();
         if (music == null) {
-            System.out.println("MusicHandler is null, cannot add track.");
+            System.out.println("MusicHandler is null in addTrackAsync");
             event.getHook().editOriginal("Music service is not available. Please try again later.").queue();
             return;
         }
 
-        System.out.println("Passed initial checks, proceeding to load track...");
-
-        // Check for SSRF vulnerability with whitelist
+        // Whitelist check (non-throwing)
         try {
-            boolean isWhitelisted = SecurityUtils.isUrlWhitelisted(url);
-            if(!isWhitelisted) {
-                url = "";
+            if (!SecurityUtils.isUrlWhitelisted(url)) {
+                event.getHook().setEphemeral(true).editOriginal("That URL isn’t allowed.").queue();
+                return;
             }
-        } catch(MalformedURLException ignored) {
-            System.out.println("URL is malformed: " + url);
-        }
+        } catch (MalformedURLException ignored) {}
 
-        // 🔍 Handle Spotify links
+        // Spotify handling (done on executor thread)
         if (url.startsWith("https://open.spotify.com/")) {
             String id = extractSpotifyId(url);
             try {
+                SpotifyApi api = bot.getSpotifyAPI().getSpotifyApi();
+                if (api == null) {
+                    event.getHook().editOriginal("Spotify API is not initialized.").queue();
+                    return;
+                }
+
                 if (url.contains("/track/")) {
-                    //
-                    SpotifyApi api = bot.getSpotifyAPI().getSpotifyApi();
-                    // Check if api is null
-                    if (api == null) {
-                        event.getHook().editOriginal("Spotify API is not initialized.").queue();
-                        return;
-                    }
-                    Track track = api.getTrack(id).build().execute();
-                    String ytQuery = "ytsearch:" + track.getName() + " " + track.getArtists()[0].getName();
-                    System.out.println("Spotify track resolved: " + ytQuery);
-                    url = ytQuery;
+                    Track track = api.getTrack(id).build().execute(); // OK here (off-thread)
+                    url = "ytsearch:" + track.getName() + " " + track.getArtists()[0].getName();
+                    // fall through to loadItemOrdered below
                 } else if (url.contains("/playlist/")) {
-                    Playlist playlist = bot.getSpotifyAPI().getSpotifyApi().getPlaylist(id).build().execute();
+                    Playlist playlist = api.getPlaylist(id).build().execute();
                     event.getHook().editOriginal(":notes: | Adding playlist `" + playlist.getName() + "`...").queue();
 
+                    // Add each track asynchronously but in-order per guild
                     for (PlaylistTrack item : playlist.getTracks().getItems()) {
-                        Track track = (Track) item.getTrack();
-                        String ytQuery = "ytsearch:" + track.getName() + " " + track.getArtists()[0].getName();
-                        System.out.println("Spotify playlist track: " + ytQuery);
-                        AudioTrack loadedTrack = loadTrackBlocking(ytQuery); // You can convert this to async if needed
-                        if (loadedTrack != null) {
-                            loadedTrack.setUserData(userID);
-                            music.enqueue(loadedTrack);
-                        }
+                        Track st = (Track) item.getTrack();
+                        String ytQuery = "ytsearch:" + st.getName() + " " + st.getArtists()[0].getName();
+                        enqueueQueryInOrder(event, music, ytQuery, userID, /*silent*/ true);
                     }
-
-                    event.getChannel().sendMessage(":white_check_mark: Playlist added to queue!").queue();
+                    event.getChannel().sendMessage(":white_check_mark: Playlist queued!").queue();
                     return;
                 } else {
                     event.getHook().editOriginal("Spotify link type not supported yet.").queue();
@@ -217,77 +221,80 @@ public class MusicListener extends ListenerAdapter {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                event.getHook().editOriginal("Failed to resolve Spotify track.").queue();
+                event.getHook().editOriginal("Failed to resolve Spotify link.").queue();
                 return;
             }
         }
 
-        // Debugging output
-        System.out.println("Loading track: " + url);
-        playerManager.loadItem(url, new AudioLoadResultHandler() {
+        // Normal path: URL or ytsearch
+        enqueueQueryInOrder(event, music, url, userID, /*silent*/ false);
+    }
 
-            /**
-             * Called when a track is successfully loaded.
-             *
-             * @param audioTrack The loaded audio track.
-             */
+    /** Enqueues a query in order for the specified music handler.
+     *
+     * @param event   The slash command interaction event.
+     * @param music   The music handler to enqueue the track in.
+     * @param query   The search query or URL.
+     * @param userID    The ID of the user that added this track.
+     * @param silent  If true, suppresses user feedback messages.
+     */
+    private void enqueueQueryInOrder(SlashCommandInteractionEvent event,
+                                     MusicHandler music,
+                                     String query,
+                                     String userID,
+                                     boolean silent) {
+        playerManager.loadItemOrdered(music, query, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(@NotNull AudioTrack audioTrack) {
-                System.out.println("Track loaded: " + audioTrack.getInfo().title);
                 audioTrack.setUserData(userID);
                 music.enqueue(audioTrack);
-
-                event.getHook().editOriginal(":notes: | Added **" + audioTrack.getInfo().title + "** to the queue.").queue();
+                if (!silent) {
+                    event.getHook().editOriginal(":notes: | Added **" + audioTrack.getInfo().title + "** to the queue.").queue();
+                }
             }
 
-            /**
-             * Called when a playlist is successfully loaded.
+            /** Handles when a playlist is loaded.
              *
-             * @param audioPlaylist The loaded audio playlist.
+             * @param playlist The loaded AudioPlaylist.
              */
             @Override
-            public void playlistLoaded(@NotNull AudioPlaylist audioPlaylist) {
-                // Check if the playlist is a search result
-                System.out.println("Playlist loaded: " + audioPlaylist.getName());
-                // Queue first result if YouTube search
-                if (audioPlaylist.isSearchResult()) {
-                    trackLoaded(audioPlaylist.getTracks().get(0));
+            public void playlistLoaded(@NotNull AudioPlaylist playlist) {
+                if (playlist.isSearchResult()) {
+                    trackLoaded(playlist.getTracks().get(0));
                     return;
                 }
-
-                // Otherwise load first 100 tracks from playlist
-                int total = audioPlaylist.getTracks().size();
-                if (total > 100) total = 100;
-                event.getHook().editOriginal(":notes: | Added **"+audioPlaylist.getName()+"** with `"+total+"` songs to the queue.").queue();
-
-                total = music.getQueue().size();
-                for (AudioTrack track : audioPlaylist.getTracks()) {
-                    if (total < 100) {
-                        music.enqueue(track);
-                    }
-                    total++;
+                // Queue up to 100 in-order
+                int limit = Math.min(100, playlist.getTracks().size());
+                if (!silent) {
+                    event.getHook().editOriginal(":notes: | Added **" + playlist.getName() + "** with `" + limit + "` songs to the queue.").queue();
+                }
+                int added = 0;
+                for (AudioTrack t : playlist.getTracks()) {
+                    if (added++ >= limit) break;
+                    t.setUserData(userID);
+                    music.enqueue(t);
                 }
             }
 
-            /**
-             * Called when no matches are found for the provided query.
+            /** Handles no matches found.
+             *
              */
             @Override
             public void noMatches() {
-                System.out.println("No matches found.");
-                String msg = "That is not a valid song!";
-                event.getHook().setEphemeral(true).editOriginal(msg).queue();
+                if (!silent) {
+                    event.getHook().setEphemeral(true).editOriginal("No results for that query.").queue();
+                }
             }
 
-            /**
-             * Called when loading the track fails.
+            /** Handles load failures.
              *
-             * @param e The exception that occurred during loading.
+             * @param e The FriendlyException containing error details.
              */
             @Override
             public void loadFailed(FriendlyException e) {
-                String msg = "That is not a valid link!";
-                event.getHook().setEphemeral(true).editOriginal(msg).queue();
+                if (!silent) {
+                    event.getHook().setEphemeral(true).editOriginal("Load failed: " + e.getMessage()).queue();
+                }
             }
         });
     }
@@ -302,76 +309,5 @@ public class MusicListener extends ListenerAdapter {
         String[] parts = url.split("/");
         String idPart = parts[parts.length - 1];
         return idPart.contains("?") ? idPart.split("\\?")[0] : idPart;
-    }
-
-    /**
-     * Loads a track synchronously and returns it.
-     *
-     * @param query The URL or search query for the track.
-     * @return The loaded AudioTrack, or null if loading failed.
-     */
-    private AudioTrack loadTrackBlocking(String query) {
-        final AudioTrack[] result = new AudioTrack[1];
-        final Object lock = new Object();
-
-        playerManager.loadItem(query, new AudioLoadResultHandler() {
-
-            /**
-             * Called when a track is successfully loaded.
-             *
-             * @param track The loaded audio track.
-             */
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                result[0] = track;
-                synchronized (lock) {
-                    lock.notify();
-                }
-            }
-
-            /**
-             * Called when a playlist is successfully loaded.
-             *
-             * @param playlist The loaded audio playlist.
-             */
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                result[0] = playlist.getTracks().get(0);
-                synchronized (lock) {
-                    lock.notify();
-                }
-            }
-
-            /**
-             * Called when no matches are found for the provided query.
-             */
-            @Override
-            public void noMatches() {
-                synchronized (lock) {
-                    lock.notify();
-                }
-            }
-
-            /**
-             * Called when loading the track fails.
-             *
-             * @param e The exception that occurred during loading.
-             */
-            @Override
-            public void loadFailed(FriendlyException e) {
-                e.printStackTrace();
-                synchronized (lock) {
-                    lock.notify();
-                }
-            }
-        });
-
-        synchronized (lock) {
-            try {
-                lock.wait(5000); // 5 second timeout
-            } catch (InterruptedException ignored) {}
-        }
-
-        return result[0];
     }
 }

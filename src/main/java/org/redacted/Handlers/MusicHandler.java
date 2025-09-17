@@ -16,11 +16,14 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.redacted.listeners.MusicListener;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
 import org.redacted.util.embeds.EmbedColor;
 import org.redacted.util.embeds.EmbedUtils;
 
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
 
 /**
  * Handles music for each guild with a unique queue and audio player for each.
@@ -30,14 +33,14 @@ import java.util.LinkedList;
 @Setter
 @Getter
 public class MusicHandler implements AudioSendHandler {
+    /** Thread-safe queue of music tracks in FIFO order. */
+    private final @NotNull Deque<AudioTrack> queue;
 
     /** LavaPlayer essentials. */
     public final @NotNull AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
 
-    /** Queue of music tacks in FIFO order. */
-    private final @NotNull LinkedList<AudioTrack> queue;
-
+    /** The text channel in which the bot sends music-related messages. */
     private TextChannel logChannel;
 
     /** The voice channel in which the bot is playing music. */
@@ -52,7 +55,7 @@ public class MusicHandler implements AudioSendHandler {
      */
     public MusicHandler(@NotNull AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
-        this.queue = new LinkedList<>();
+        this.queue = new ConcurrentLinkedDeque<>();
         this.isLoop = false;
         this.isSkip = false;
         TrackScheduler scheduler = new TrackScheduler(this);
@@ -67,7 +70,7 @@ public class MusicHandler implements AudioSendHandler {
     public void enqueue(AudioTrack track) {
         queue.addLast(track);
         if (audioPlayer.getPlayingTrack() == null) {
-            audioPlayer.playTrack(queue.getFirst());
+            audioPlayer.playTrack(queue.peekFirst());
         }
     }
 
@@ -115,18 +118,48 @@ public class MusicHandler implements AudioSendHandler {
      */
     public void skipTrack() {
         isSkip = true;
-        audioPlayer.getPlayingTrack().setPosition(audioPlayer.getPlayingTrack().getDuration());
+        AudioTrack playing = audioPlayer.getPlayingTrack();
+        if (playing != null) {
+            playing.setPosition(playing.getDuration());
+        }
     }
 
     /**
-     * Skips to a specified track in the queue.
+     * Skips to a specific position in the queue.
      *
-     * @param pos Position in the queue to skip to.
+     * @param pos position in the queue to skip to (1-based index).
      */
     public void skipTo(int pos) {
-        if (pos > 1) {
-            queue.subList(1, pos).clear();
+        // If pos is 1 or less, skip the current track
+        if (pos <= 1) {
+            skipTrack();
+            return;
         }
+        // If the queue is empty, nothing to do
+        if (queue.isEmpty()) {
+            return;
+        }
+
+        // Collect up to (pos-1) elements *after* the head (current track)
+        List<AudioTrack> toRemove = new ArrayList<>(pos - 1);
+        Iterator<AudioTrack> it = queue.iterator();
+
+        // Skip the head/current track
+        if (it.hasNext()) it.next();
+
+        // Collect the next (pos-1) tracks
+        int count = 0;
+        while (it.hasNext() && count < (pos - 1)) {
+            toRemove.add(it.next());
+            count++;
+        }
+
+        // Remove them from the deque
+        for (AudioTrack t : toRemove) {
+            queue.remove(t);
+        }
+
+        // Skip the current track to play the next one
         skipTrack();
     }
 
@@ -136,7 +169,10 @@ public class MusicHandler implements AudioSendHandler {
      * @param position position in current track in milliseconds.
      */
     public void seek(long position) {
-        audioPlayer.getPlayingTrack().setPosition(position);
+        AudioTrack playing = audioPlayer.getPlayingTrack();
+        if (playing != null && playing.isSeekable()) {
+            audioPlayer.getPlayingTrack().setPosition(position);
+        }
     }
 
     /**
@@ -242,16 +278,16 @@ public class MusicHandler implements AudioSendHandler {
         @Override
         public void onTrackEnd(@NotNull AudioPlayer player, @NotNull AudioTrack track, @NotNull AudioTrackEndReason endReason) {
             if (handler.isLoop() && !handler.isSkip) {
-                // Loop current track
-                handler.queue.set(0, track.makeClone());
-                player.playTrack(handler.queue.getFirst());
-            } else if (!handler.queue.isEmpty()) {
-                // Play next track in queue
-                handler.isSkip = false;
-                handler.queue.removeFirst();
-                if (endReason.mayStartNext && !handler.queue.isEmpty()) {
-                    player.playTrack(handler.queue.getFirst());
-                }
+                handler.queue.pollFirst();                  // remove old head
+                handler.queue.addFirst(track.makeClone());  // push clone
+                player.playTrack(handler.queue.peekFirst());
+                return;
+            }
+            handler.isSkip = false;
+            handler.queue.pollFirst(); // remove the finished one
+            if (endReason.mayStartNext) {
+                AudioTrack next = handler.queue.peekFirst();
+                if (next != null) player.playTrack(next);
             }
         }
 

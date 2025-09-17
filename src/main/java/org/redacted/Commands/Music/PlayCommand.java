@@ -33,7 +33,7 @@ public class PlayCommand extends Command {
         this.description = "Play a song from YouTube, or Spotify.";
         this.category = Category.MUSIC;
         this.args.add(new OptionData(OptionType.STRING, "query", "A YouTube/Spotify link or search query.")
-        .setRequired(true));
+                .setRequired(true));
     }
 
     /**
@@ -44,14 +44,23 @@ public class PlayCommand extends Command {
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
+        // Get the query argument
         String query = event.getOption("query") != null
                 ? event.getOption("query").getAsString()
                 : null;
 
+        // Initialize music handler
         MusicHandler music = bot.musicListener.getMusic(event, true);
+        if (music == null) {
+            event.replyEmbeds(EmbedUtils.createError("Music service is not available. Please try again later."))
+                    .setEphemeral(true).queue();
+            return;
+        }
 
+        // Validate input
         if (query == null || query.isBlank()) {
-            event.replyEmbeds(EmbedUtils.createError("Please provide a song name or link.")).setEphemeral(true).queue();
+            event.replyEmbeds(EmbedUtils.createError("Please provide a song name or link."))
+                    .setEphemeral(true).queue();
             return;
         }
 
@@ -60,22 +69,20 @@ public class PlayCommand extends Command {
             query = "ytsearch:" + query;
         }
 
-
-        // ✅ Defer response while LavaPlayer loads
+        // Defer quickly so we free the JDA event thread
         event.deferReply().queue();
 
         MusicListener musicListener = bot.getMusicListener();
-
-        System.out.println("MusicListener in bot: " + bot.getMusicListener());
         if (musicListener == null) {
-            event.replyEmbeds(EmbedUtils.createError("Music service is not available. Please try again later.")).setEphemeral(true).queue();
+            System.out.println("MusicListener is null in PlayCommand");
+            event.getHook().editOriginal("Music service is not available. Please try again later.").queue();
             return;
         }
-        try {
-            musicListener.addTrack(event, query, event.getUser().getId());
-        } catch (Exception e) {
-            e.printStackTrace();
-            event.getHook().setEphemeral(true).editOriginal("❌ An error occurred while loading the track.").queue();
-        }
+
+        final String q = query;
+        // Offload everything else
+        MusicListener.MUSIC_EXECUTOR.submit(() ->
+                musicListener.addTrackAsync(event, q, event.getUser().getId())
+        );
     }
 }

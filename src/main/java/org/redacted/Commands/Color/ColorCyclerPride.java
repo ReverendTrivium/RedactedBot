@@ -80,5 +80,3 @@ public class ColorCyclerPride {
         timer.scheduleAtFixedRate(task, 0, interval);
     }
 }
-
-

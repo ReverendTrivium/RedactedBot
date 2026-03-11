@@ -73,7 +73,7 @@ public class SocialMediaUtils {
 
             jsonResponse.put("statusCode", statusCode);
 
-            /// Handle 403 Forbidden or 429 Too Many Requests
+            // Handle 403 Forbidden or 429 Too Many Requests
             if (statusCode == 403 || statusCode == 429) {
                 jsonResponse.put("status", "manual_verification_required");
                 jsonResponse.put("reason", "Blocked by Facebook (403 or 429)");
@@ -81,7 +81,7 @@ public class SocialMediaUtils {
                 return null;
             }
 
-            /// Handle 404 Not Found
+            // Handle 404 Not Found
             if (statusCode == 404) {
                 jsonResponse.put("status", "failed");
                 jsonResponse.put("reason", "Page Not Found (404)");

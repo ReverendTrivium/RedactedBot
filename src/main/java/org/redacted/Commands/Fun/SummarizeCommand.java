@@ -14,7 +14,6 @@ import org.redacted.util.OpenAIClient;
 import java.awt.*;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +52,7 @@ public class SummarizeCommand extends Command {
 
         int amount; // default
         if (event.getOption("amount") != null) {
-            amount = Math.min(Math.max(1, Objects.requireNonNull(event.getOption("amount")).getAsInt()), 100); // clamp 1–100
+            amount = Math.min(Math.max(1, event.getOption("amount").getAsInt()), 100); // clamp 1–100
         } else {
             amount = 50;
         }

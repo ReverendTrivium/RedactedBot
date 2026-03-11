@@ -13,6 +13,7 @@ import org.redacted.Redacted;
 
 import java.util.Objects;
 
+
 /**
  * Command that deletes users from the blacklist.
  * This command allows staff members to remove a user from the blacklist based on their first name,

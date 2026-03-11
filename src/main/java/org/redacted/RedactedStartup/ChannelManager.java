@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.redacted.Roles.RoleHierarchyManager;
-
 import java.util.Objects;
 
 /**
@@ -134,7 +133,7 @@ public class ChannelManager {
                     Role eventStaffRole = roleManager.getOrCreateRole(guild, "Event Staff", RoleHierarchyManager.EVENT_STAFF_PERMISSIONS, RoleHierarchyManager.EVENT_STAFF_COLOR);
 
                     // Deny access to everyone
-                    Objects.requireNonNull(category).upsertPermissionOverride(guild.getPublicRole())
+                    category.upsertPermissionOverride(guild.getPublicRole())
                             .deny(Permission.VIEW_CHANNEL)
                             .queue();
 
@@ -162,4 +161,3 @@ public class ChannelManager {
         return category;
     }
 }
-

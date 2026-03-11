@@ -68,12 +68,12 @@ public class BalanceCommand extends Command {
         // Send embed message
         String currency = economyHandler.getCurrency();
         EmbedBuilder embed = new EmbedBuilder()
-            .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
-            .setDescription("Leaderboard Rank: #" + economyHandler.getRank(user.getIdLong()))
-            .addField("Cash:", currency + " " + EconomyHandler.FORMATTER.format(balance), true)
-            .addField("Bank:", currency + " " + EconomyHandler.FORMATTER.format(bank), true)
-            .addField("Total:", currency + " " + EconomyHandler.FORMATTER.format(total), true)
-            .setColor(EmbedColor.DEFAULT.color);
+                .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
+                .setDescription("Leaderboard Rank: #" + economyHandler.getRank(user.getIdLong()))
+                .addField("Cash:", currency + " " + EconomyHandler.FORMATTER.format(balance), true)
+                .addField("Bank:", currency + " " + EconomyHandler.FORMATTER.format(bank), true)
+                .addField("Total:", currency + " " + EconomyHandler.FORMATTER.format(total), true)
+                .setColor(EmbedColor.DEFAULT.color);
         event.replyEmbeds(embed.build()).queue();
     }
 }

@@ -27,10 +27,11 @@ public class BotEventListener extends ListenerAdapter {
     private final BotCommands botCommands; // Reference to the BotCommands instance
 
     /**
-     * Constructs a BotEventListener with the provided Redacted bot instance and BotCommands.
+     * BotEventListener Class
+     * Handles events related to the bot's lifecycle, such as when it is ready or joins a new guild.
+     * Initializes necessary configurations and roles for each guild.
      *
-     * @param bot the Redacted bot instance
-     * @param botCommands the BotCommands instance for command registration
+     * @author Derrick Eberlein
      */
     public BotEventListener(Redacted bot, BotCommands botCommands) {
         this.bot = bot;

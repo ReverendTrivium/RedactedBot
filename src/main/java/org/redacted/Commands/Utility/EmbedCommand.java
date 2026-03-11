@@ -10,8 +10,8 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Redacted;
@@ -20,7 +20,6 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -61,9 +60,9 @@ public class EmbedCommand extends Command {
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        TextChannel targetChannel = Objects.requireNonNull(event.getOption("channel")).getAsChannel().asTextChannel();
-        String imageUrl = event.getOption("image") != null ? Objects.requireNonNull(event.getOption("image")).getAsString() : null;
-        String thumbnailUrl = event.getOption("thumbnail") != null ? Objects.requireNonNull(event.getOption("thumbnail")).getAsString() : null;
+        TextChannel targetChannel = event.getOption("channel").getAsChannel().asTextChannel();
+        String imageUrl = event.getOption("image") != null ? event.getOption("image").getAsString() : null;
+        String thumbnailUrl = event.getOption("thumbnail") != null ? event.getOption("thumbnail").getAsString() : null;
 
         event.reply("📌 What should the **title** be? Please type it below.").setEphemeral(true).queue();
 
@@ -103,7 +102,7 @@ public class EmbedCommand extends Command {
                             SavedEmbed saved = new SavedEmbed();
                             saved.setMessageId(sentMessage.getId());
                             saved.setChannelId(targetChannel.getId());
-                            saved.setGuildId(Objects.requireNonNull(event.getGuild()).getIdLong());
+                            saved.setGuildId(event.getGuild().getIdLong());
                             saved.setTitle(title);
                             saved.setDescription(description);
                             saved.setAuthorId(event.getUser().getId());

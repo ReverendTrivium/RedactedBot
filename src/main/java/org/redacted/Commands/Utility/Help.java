@@ -244,4 +244,3 @@ public class Help extends Command {
         return cmd.permission.getName();
     }
 }
-

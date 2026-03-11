@@ -124,6 +124,13 @@ public class EmbedUtils {
         return embed;
     }
 
+    /**
+     * Quickly creates a simple embed with a title and description.
+     *
+     * @param title       the title of the embed.
+     * @param description the description of the embed.
+     * @return completed embed.
+     */
     public static MessageEmbed createEmbed(String title, String description) {
         return new EmbedBuilder()
                 .setTitle(title)

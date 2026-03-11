@@ -49,6 +49,7 @@ public class JokeCommand extends Command {
         Request request = new Request.Builder().url(url).build();
 
         client.newCall(request).enqueue(new Callback() {
+
             /**
              * Handles the failure of the API call.
              *

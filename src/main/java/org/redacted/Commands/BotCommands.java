@@ -99,7 +99,7 @@ public class BotCommands extends ListenerAdapter {
 
                     // Gamba commands
                     new BlackJackCommand(bot),
-                    new PokerCommand(bot),
+                    // new PokerCommand(bot), Currently disabled due to bugs and balance issues
 
                     // Suggestions commands
                     new RespondCommand(bot),
@@ -169,8 +169,6 @@ public class BotCommands extends ListenerAdapter {
             commandsMap.put(cmd.name, cmd);
             commands.add(cmd);
 
-            // Debug output to confirm command registration
-            //System.out.println("Command registered: " + cmd.name);
         }
     }
 
@@ -208,15 +206,6 @@ public class BotCommands extends ListenerAdapter {
             }
             commandData.add(slashCommand);
 
-            /*
-            //Debug output to confirm command registration
-            System.out.println("Registering command: " + command.name);
-
-            for (SubcommandData subcommand : command.subCommands) {
-                // Debug output to confirm subcommands registration
-                System.out.println("  Subcommand: " + subcommand.getName() + " - " + subcommand.getDescription());
-            }
-             */
         }
         return commandData;
     }

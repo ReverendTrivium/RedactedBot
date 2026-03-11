@@ -24,6 +24,7 @@ import java.util.Objects;
  * @author Derrick Eberlein
  */
 public class LeaderboardCommand extends Command {
+
     private static final int USERS_PER_PAGE = 10;
 
     /**

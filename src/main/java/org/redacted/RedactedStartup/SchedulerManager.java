@@ -41,5 +41,3 @@ public class SchedulerManager {
         return scheduler;
     }
 }
-
-

@@ -4,21 +4,18 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Redacted;
 import org.redacted.Roles.getRolesByName;
-
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -58,12 +55,12 @@ public class ReactionRoleCommand extends Command {
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
-        String emoji = Objects.requireNonNull(event.getOption("emoji")).getAsString();
-        String roleName = Objects.requireNonNull(event.getOption("role")).getAsString();
+        String messageId = event.getOption("messageid").getAsString();
+        String emoji = event.getOption("emoji").getAsString();
+        String roleName = event.getOption("role").getAsString();
 
         Guild guild = event.getGuild();
-        Role role = new getRolesByName().getRoleByName(Objects.requireNonNull(guild), roleName);
+        Role role = new getRolesByName().getRoleByName(guild, roleName);
 
         if (role == null) {
             event.reply("❌ Could not find a role named `" + roleName + "`.").setEphemeral(true).queue();

@@ -53,4 +53,3 @@ public class RoleColorChanger {
         timer.scheduleAtFixedRate(task, 0, interval);
     }
 }
-

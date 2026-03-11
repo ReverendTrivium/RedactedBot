@@ -38,6 +38,7 @@ public class BlacklistClearCommand extends Command {
         this.permission = Permission.MANAGE_SERVER;
     }
 
+
     /**
      * Executes the command when invoked.
      * It checks for an existing confirmation request and either clears the blacklist or asks for confirmation.

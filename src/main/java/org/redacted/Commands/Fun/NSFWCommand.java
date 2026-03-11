@@ -370,5 +370,4 @@ public class NSFWCommand extends Command {
             System.out.println("RedditClient lazily initialized");
         }
     }
-
 }

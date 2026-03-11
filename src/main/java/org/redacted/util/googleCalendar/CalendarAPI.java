@@ -17,6 +17,8 @@ import java.util.List;
 /**
  * Utility class for interacting with the Google Calendar API using a service account.
  * This class initializes the Calendar service and provides methods to interact with it.
+ *
+ * @author Derrick Eberlein
  */
 @Getter
 public class CalendarAPI {

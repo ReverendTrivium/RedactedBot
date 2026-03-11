@@ -13,6 +13,7 @@ import lombok.Getter;
 public class RedditPost {
 
     public static final String UPVOTE_EMOJI = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/sony/336/thumbs-up_1f44d.png";
+
     private final String title;
     private final String postLink;
     private final String url;

@@ -22,6 +22,8 @@ import org.redacted.listeners.*;
 import org.redacted.listeners.Ticket.TicketAddUserHandler;
 import org.redacted.listeners.Ticket.TicketCloseHandler;
 import org.redacted.listeners.Ticket.TicketRemoveUserHandler;
+import club.minnced.discord.jdave.interop.JDaveSessionFactory;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
 
 import java.util.Arrays;
 
@@ -42,6 +44,11 @@ public class BotInitializer {
      */
     public static ShardManager initializeBot(String token) {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
+
+        builder.setAudioModuleConfig(
+                new AudioModuleConfig()
+                        .withDaveSessionFactory(new JDaveSessionFactory())
+        );
 
         builder.setStatus(OnlineStatus.ONLINE);
         builder.setActivity(Activity.watching("Over All"));

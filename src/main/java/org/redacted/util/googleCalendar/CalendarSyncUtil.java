@@ -17,6 +17,8 @@ import java.util.List;
  * Utility class for syncing existing Discord events to Google Calendar.
  * This class iterates through all guilds and scheduled events, syncing them
  * to the configured Google Calendar.
+ *
+ * @author Derrick Eberlein
  */
 public class CalendarSyncUtil {
 
@@ -99,4 +101,3 @@ public class CalendarSyncUtil {
         System.out.println("✅ Sync complete.");
     }
 }
-

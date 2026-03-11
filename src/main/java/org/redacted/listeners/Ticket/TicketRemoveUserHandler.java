@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * TicketRemoveUserHandler Class
@@ -49,7 +48,7 @@ public class TicketRemoveUserHandler extends ListenerAdapter {
             return;
         }
 
-        Objects.requireNonNull(channel.getPermissionOverride(toRemove)).delete().queue(
+        channel.getPermissionOverride(toRemove).delete().queue(
                 success -> channel.sendMessage("✅ Removed " + toRemove.getAsMention() + " from the ticket.").queue(),
                 error -> channel.sendMessage("❌ Failed to remove user: " + error.getMessage()).queue()
         );

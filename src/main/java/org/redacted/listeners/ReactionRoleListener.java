@@ -2,9 +2,7 @@ package org.redacted.listeners;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -16,7 +14,6 @@ import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Roles.getRolesByName;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * ReactionRoleListener Class
@@ -58,7 +55,7 @@ public class ReactionRoleListener extends ListenerAdapter {
      * @param addRole True if the role should be added, false if it should be removed.
      */
     private void handleReaction(GenericMessageReactionEvent event, boolean addRole) {
-        if (Objects.requireNonNull(event.getUser()).isBot()) return;
+        if (event.getUser().isBot()) return;
 
         Guild guild = event.getGuild();
         Member member = guild.retrieveMember(event.getUser()).complete();
@@ -88,4 +85,3 @@ public class ReactionRoleListener extends ListenerAdapter {
         }
     }
 }
-

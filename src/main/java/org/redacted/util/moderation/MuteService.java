@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import org.bson.Document;
-import org.redacted.Database.Data.GuildData;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -15,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.redacted.Database.Data.GuildData;
 
 /**
  * Service for managing user mutes in a Discord guild.

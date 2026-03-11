@@ -24,7 +24,7 @@ public class NowPlayingCommand extends Command {
      */
     public NowPlayingCommand(Redacted bot) {
         super(bot);
-        this.name = "now-playing";
+        this.name = "playing";
         this.description = "Check what song is currently playing.";
         this.category = Category.MUSIC;
     }

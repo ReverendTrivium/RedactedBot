@@ -38,7 +38,15 @@ public class Suggestion {
     @BsonProperty("response_dm")
     private boolean responseDM;
 
-    /** Whether or not suggestions are anonymous */
+    /** Whether suggestions are anonymous
+     * -- GETTER --
+     *  Returns whether the suggestion board is anonymous.
+     *
+     *
+     * -- SETTER --
+     *  Sets whether suggestions are anonymous.
+     *
+     */
     @BsonProperty("is_anonymous")
     private boolean isAnonymous;
 
@@ -67,23 +75,5 @@ public class Suggestion {
         this.isAnonymous = false;
         this.messages = new ArrayList<>();
         this.authors = new ArrayList<>();
-    }
-
-    /**
-     * Returns whether the suggestion board is anonymous.
-     *
-     * @return true if suggestions are anonymous, false otherwise.
-     */
-    public boolean isAnonymous() {
-        return isAnonymous;
-    }
-
-    /**
-     * Sets whether suggestions are anonymous.
-     *
-     * @param anonymous true if suggestions should be anonymous, false otherwise.
-     */
-    public void setAnonymous(boolean anonymous) {
-        isAnonymous = anonymous;
     }
 }

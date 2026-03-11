@@ -3,19 +3,17 @@ package org.redacted.Commands.Utility;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Redacted;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -52,10 +50,10 @@ public class ListReactionRolesCommand extends Command {
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
+        String messageId = event.getOption("messageid").getAsString();
         Guild guild = event.getGuild();
 
-        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(Objects.requireNonNull(guild).getIdLong());
+        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
         SavedEmbed embed = collection.find(Filters.eq("messageId", messageId)).first();
 
         if (embed == null || embed.getEmojiRoleMap() == null || embed.getEmojiRoleMap().isEmpty()) {

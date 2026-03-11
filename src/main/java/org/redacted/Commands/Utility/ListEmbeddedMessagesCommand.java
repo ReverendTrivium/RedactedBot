@@ -3,17 +3,16 @@ package org.redacted.Commands.Utility;
 import com.mongodb.client.MongoCollection;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
+import org.redacted.Commands.Category;
 import org.redacted.Database.Data.GuildData;
 import org.redacted.Database.models.SavedEmbed;
 import org.redacted.Redacted;
 
 import java.awt.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +48,7 @@ public class ListEmbeddedMessagesCommand extends Command {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(Objects.requireNonNull(guild).getIdLong());
+        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
 
         List<SavedEmbed> embeds = collection.find().into(new java.util.ArrayList<>());
 

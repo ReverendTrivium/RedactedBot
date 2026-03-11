@@ -7,7 +7,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
 import org.redacted.Database.Data.GuildData;
@@ -98,18 +99,29 @@ public class BlackJackCommand extends Command {
         // Send embed with buttons
         int score = calculateValue(playerHand);
         MessageEmbed embed = getEmbed(user, score).build();
+
         String uuid = user.getId() + ":" + UUID.randomUUID();
-        List<Button> buttons = List.of(Button.primary("blackjack:hit:"+uuid+":"+bet, "Hit"), Button.secondary("blackjack:stand:"+uuid+":"+bet, "Stand"));
+
+        List<Button> buttons = List.of(
+                Button.primary("blackjack:hit:" + uuid + ":" + bet, "Hit"),
+                Button.secondary("blackjack:stand:" + uuid + ":" + bet, "Stand")
+        );
+
         ButtonListener.buttons.put(uuid, buttons);
-        event.replyEmbeds(embed).addActionRow(buttons).queue(interactionHook -> {
-            // Delete all game data if no response for 3 min
-            ButtonListener.disableButtons(uuid, interactionHook);
-            resetTimers.put(userID, ButtonListener.executor.schedule(() -> {
-                decks.remove(userID);
-                games.remove(userID);
-                resetTimers.remove(userID);
-            }, 3, TimeUnit.MINUTES));
-        });
+
+        event.replyEmbeds(embed)
+                .setComponents(ActionRow.of(buttons))   // ✅ JDA 6 replacement
+                .queue(interactionHook -> {
+                    // Disable buttons after 3 minutes
+                    ButtonListener.disableButtons(uuid, interactionHook);
+
+                    resetTimers.put(userID, ButtonListener.executor.schedule(() -> {
+                        decks.remove(userID);
+                        games.remove(userID);
+                        ScheduledFuture<?> t = resetTimers.remove(userID);
+                        if (t != null) t.cancel(true);
+                    }, 3, TimeUnit.MINUTES));
+                });
     }
 
     /**

@@ -345,6 +345,7 @@ public class TexasHoldemGame {
         return hasNOfAKind(hand, 2);
     }
 
+
     /**
      * Checks if the hand has N of a kind.
      *

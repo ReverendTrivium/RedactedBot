@@ -35,7 +35,12 @@ public class Database {
     public @NotNull MongoCollection<Config> config;
     public @NotNull MongoCollection<Document> redditTokenCollection;
 
-
+    /**
+     * Constructor for the Database class.
+     * Initializes the MongoDB connection and sets up the necessary collections and indexes.
+     *
+     * @param uri The MongoDB connection URI.
+     */
     public Database(String uri) {
         // Setup MongoDB database with URI.
         CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
@@ -56,12 +61,25 @@ public class Database {
         config.createIndex(guildIndex);
     }
 
-    // Method to get a guild-specific collection
+    /**
+     * Get a specific collection for a guild.
+     * This method constructs the collection name based on the guild ID and the provided collection name.
+     *
+     * @param guildId The ID of the guild for which to retrieve the collection.
+     * @param collectionName The name of the collection to retrieve (e.g., "blacklist", "scheduled_messages").
+     * @return The MongoCollection for the specified guild and collection name.
+     */
     public MongoCollection<Document> getGuildCollection(long guildId, String collectionName) {
         return database.getCollection("guild_" + guildId + "_" + collectionName);
     }
 
-    // Initialize collections for a new guild
+    /**
+     * Set up collections for a guild.
+     * This method initializes the necessary collections for a guild and creates indexes for efficient querying.
+     * It should be called when a new guild is added to ensure that all required collections are created and indexed.
+     *
+     * @param guildId The ID of the guild for which to set up collections.
+     */
     public void setupCollectionsForGuild(long guildId) {
         MongoCollection<Document> blacklist = getGuildCollection(guildId, "blacklist");
         MongoCollection<Document> scheduledMessages = getGuildCollection(guildId, "scheduled_messages");
@@ -109,27 +127,42 @@ public class Database {
     }
 
     /**
-     * Global Methods for entire bot to function
+     * Store a Reddit token (global).
+     * This method saves the Reddit token and its expiration time in the database.
+     *
+     * @param token The Reddit token to store.
+     * @param expiration The expiration time of the Reddit token.
      */
-    // Store a Reddit token (global)
     public void storeRedditToken(String token, Instant expiration) {
         Document document = new Document("token", token)
                 .append("expiration", expiration);
         redditTokenCollection.insertOne(document);
     }
 
-    // Get a Reddit token (global)
+    /**
+     * Get the Reddit token (global).
+     * This method retrieves the Reddit token from the database.
+     *
+     * @return The Document containing the Reddit token and its expiration, or null if not found.
+     */
     public Document getRedditToken() {
         return redditTokenCollection.find().first();
     }
 
-    // Clear Reddit token (global)
+    /**
+     * Clear the Reddit token (global).
+     * This method deletes all Reddit token documents from the database, effectively clearing the stored token.
+     */
     public void clearRedditToken() {
         redditTokenCollection.deleteMany(new Document());
     }
 
     /**
-     * Guild-specific methods
+     * Get the collection for Google Calendar events in a guild.
+     * This method retrieves the MongoDB collection for calendar events associated with a specific guild.
+     *
+     * @param guildId The ID of the guild for which to retrieve the calendar event collection.
+     * @return The MongoCollection for calendar events in the specified guild.
      */
     public MongoCollection<Document> getCalendarEventCollection(long guildId) {
         return getGuildCollection(guildId, "calendar_events");

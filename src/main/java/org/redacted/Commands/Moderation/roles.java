@@ -22,7 +22,7 @@ public class roles extends Command {
      *
      * @param bot The Redacted bot instance.
      */
-    public roles (Redacted bot) {
+    public roles(Redacted bot) {
         super(bot);
         this.name = "role";
         this.description = "Get all Server Roles";

@@ -21,6 +21,11 @@ public class RoleManager {
     /**
      * Default constructor for RoleManager.
      * Initializes a new instance of the RoleManager class.
+     *
+     * @param guild The guild for which the role manager is being created.
+     * @param name The name of the role to create or update.
+     * @param permissions The set of permissions to assign to the role.
+     * @param color The color to assign to the role.
      */
     public Role getOrCreateRole(Guild guild, String name, EnumSet<Permission> permissions, Color color) {
         Role role = guild.getRolesByName(name, true).stream().findFirst().orElse(null);

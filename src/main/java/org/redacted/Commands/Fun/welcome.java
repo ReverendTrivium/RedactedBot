@@ -14,6 +14,12 @@ import java.util.Objects;
  * @author Derrick Eberlein
  */
 public class welcome extends Command {
+
+    /**
+     * Constructor for the welcome command.
+     * Initializes the command with its name, description, and category.
+     * @param bot The Redacted bot instance.
+     */
     public welcome(Redacted bot) {
         super(bot);
         this.name = "welcome";

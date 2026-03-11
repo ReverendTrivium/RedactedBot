@@ -16,7 +16,7 @@ import org.redacted.util.embeds.EmbedUtils;
 import java.util.Objects;
 
 /**
- * Command that transfer cash from one user to another.
+ * Command that transfers cash from one user to another.
  *
  * @author Derrick Eberlein
  */

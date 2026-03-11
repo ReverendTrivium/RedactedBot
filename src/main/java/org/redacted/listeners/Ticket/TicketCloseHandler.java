@@ -1,10 +1,7 @@
 package org.redacted.listeners.Ticket;
 
 import com.mongodb.client.MongoCollection;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -16,8 +13,7 @@ import org.redacted.Database.models.Ticket;
 import org.redacted.Redacted;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;

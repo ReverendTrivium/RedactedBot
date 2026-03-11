@@ -10,9 +10,9 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.redacted.Database.Data.GuildData;
+import org.redacted.Database.cache.Config;
 import org.redacted.Database.cache.Economy;
 import org.redacted.util.embeds.EmbedUtils;
-import org.redacted.Database.cache.Config;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -432,8 +432,7 @@ public class EconomyHandler {
 
 
     /**
-     * Resets the currency to the default value.
-     * This will update the in-memory Config object, the database, and the EconomyHandler's currency field.
+     * Resets the currency symbol to the default emoji.
      */
     public void resetCurrency() {
         // Update in-memory Config object
@@ -448,7 +447,7 @@ public class EconomyHandler {
     }
 
     /**
-     * Enum representing different types of timeouts for economy commands.
+     * The different types of timeouts
      */
     public enum TIMEOUT_TYPE {
         WORK, CRIME, ROB

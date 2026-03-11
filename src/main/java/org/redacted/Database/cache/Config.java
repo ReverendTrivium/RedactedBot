@@ -54,7 +54,7 @@ public class Config {
     private LinkedHashMap<String, String> shop; // Maps item names to ids
 
     /**
-     * Default constructor initializes the autoRoles set and shop map.
+     * Default constructor initializes the autoRoles set.
      */
     public Config() {
         this.autoRoles = new HashSet<>();

@@ -4,6 +4,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -11,7 +13,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
@@ -23,7 +24,6 @@ import org.redacted.listeners.ButtonListener;
 import java.awt.*;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -64,26 +64,34 @@ public class EditEmbedCommand extends Command {
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        String messageId = Objects.requireNonNull(event.getOption("messageid")).getAsString();
-        String imageUrl = event.getOption("image") != null ? Objects.requireNonNull(event.getOption("image")).getAsString() : null;
-        String thumbnailUrl = event.getOption("thumbnail") != null ? Objects.requireNonNull(event.getOption("thumbnail")).getAsString() : null;
+        // ✅ Defer so event.getHook() is valid later
+        event.deferReply(true).queue();
+
+        String messageId = event.getOption("messageid").getAsString();
+        String imageUrl = event.getOption("image") != null ? event.getOption("image").getAsString() : null;
+        String thumbnailUrl = event.getOption("thumbnail") != null ? event.getOption("thumbnail").getAsString() : null;
 
         Guild guild = event.getGuild();
-        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(Objects.requireNonNull(guild).getIdLong());
+        if (guild == null) {
+            event.getHook().sendMessage("❌ This command can only be used in a server.").queue();
+            return;
+        }
+
+        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
         SavedEmbed saved = collection.find(Filters.eq("messageId", messageId)).first();
 
         if (saved == null) {
-            event.reply("❌ Embed not found for that message ID.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Embed not found for that message ID.").queue();
             return;
         }
 
         TextChannel channel = guild.getTextChannelById(saved.getChannelId());
         if (channel == null) {
-            event.reply("❌ Original channel not found.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Original channel not found.").queue();
             return;
         }
 
-        event.reply("📌 Please type the **new title** for the embed.").setEphemeral(true).queue();
+        event.getHook().sendMessage("📌 Please type the **new title** for the embed.").queue();
 
         ListenerAdapter titleListener = new ListenerAdapter() {
             @Override
@@ -94,7 +102,7 @@ public class EditEmbedCommand extends Command {
                 String newTitle = titleEvent.getMessage().getContentRaw();
                 titleEvent.getMessage().delete().queue();
 
-                bot.getShardManager().removeEventListener(this); // Remove this listener
+                bot.getShardManager().removeEventListener(this);
 
                 titleEvent.getChannel().sendMessage("✍️ Got the title. Now send the **new description**.").queue();
 
@@ -107,7 +115,7 @@ public class EditEmbedCommand extends Command {
                         String newDescription = descEvent.getMessage().getContentRaw();
                         descEvent.getMessage().delete().queue();
 
-                        bot.getShardManager().removeEventListener(this); // Remove this listener
+                        bot.getShardManager().removeEventListener(this);
 
                         String finalImageUrl = imageUrl != null ? imageUrl : saved.getImageUrl();
                         String finalThumbnailUrl = thumbnailUrl != null ? thumbnailUrl : saved.getThumbnailUrl();
@@ -125,15 +133,17 @@ public class EditEmbedCommand extends Command {
                         String embedUUID = UUID.randomUUID().toString();
                         String userId = event.getUser().getId();
 
-                        event.getHook().sendMessageEmbeds(updated.build())
-                                .addActionRow(
+                        // ✅ JDA 6: use setComponents(ActionRow.of(...)) instead of addActionRow(...)
+                        event.getHook()
+                                .sendMessageEmbeds(updated.build())
+                                .setComponents(ActionRow.of(
                                         Button.primary("editembed:confirm:" + userId + ":" + embedUUID + ":" + messageId, "✅ Confirm"),
                                         Button.danger("editembed:cancel:" + userId + ":" + embedUUID + ":" + messageId, "❌ Cancel")
-                                )
-                                .setEphemeral(true)
+                                ))
                                 .queue();
 
-                        ButtonListener.tempEmbeds.put(embedUUID, new ButtonListener.TempEmbed(updated, saved, finalImageUrl, finalThumbnailUrl));
+                        ButtonListener.tempEmbeds.put(embedUUID,
+                                new ButtonListener.TempEmbed(updated, saved, finalImageUrl, finalThumbnailUrl));
                     }
                 };
 

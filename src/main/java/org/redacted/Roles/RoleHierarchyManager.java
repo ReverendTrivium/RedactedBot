@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
  * @author Derrick Eberlein
  */
 public class RoleHierarchyManager {
+
     /**
      * A set containing all permissions available in Discord.
      * This can be used to grant all permissions to a role if needed.

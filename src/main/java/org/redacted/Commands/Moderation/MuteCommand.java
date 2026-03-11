@@ -71,7 +71,7 @@ public class MuteCommand extends Command {
 
         GuildData guildData = GuildData.get(guild, bot);
 
-        /// Instance of MuteService to handle mute logic
+        // Instance of MuteService to handle mute logic
         MuteService muteService = new MuteService(new RoleService(), guildData);
 
         Role muteRole = guild.getRolesByName("Mute", true).stream().findFirst().orElse(null);
@@ -165,4 +165,3 @@ public class MuteCommand extends Command {
         return result.length() > 0 ? result.toString() : "less than a minute";
     }
 }
-

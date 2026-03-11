@@ -28,7 +28,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Main class for the Redacted bot.
- * Initializes the bot, database, and other components.
+ * Initializes the bot, its components, and starts the JDA shard manager.
+ * Handles configuration, database connection, and various listeners.
  *
  * @author Derrick Eberlein
  */

@@ -10,9 +10,10 @@ import org.redacted.Database.Data.GuildData;
 import org.redacted.Redacted;
 
 /**
- * NSFWCleanListener Class
- * This class listens for events in NSFW channels and cleans them periodically.
- * It purges messages and sends a sticky message to inform users about the cleaning.
+ * NSFWCleanListener.java
+ * This listener handles the automatic cleaning of NSFW channels in a Discord server.
+ * It purges messages in the channel and sends a sticky message to inform users about the clean-up.
+ * The sticky message is updated or created based on whether it exists in the database.
  *
  * @author Derrick Eberlein
  */
@@ -20,18 +21,18 @@ public class NSFWCleanListener extends ListenerAdapter {
 
     /**
      * Default constructor for NSFWCleanListener.
-     * Initializes the listener without any specific setup.
+     * This constructor is used to create an instance of the listener.
      */
     public NSFWCleanListener() {
     }
 
     /**
      * Cleans the specified NSFW channel by purging messages and sending a sticky message.
-     * It retrieves the last 500 messages, purges them, and checks for an existing sticky message.
-     * If the sticky message exists, it updates it; otherwise, it sends a new sticky message.
+     * This method retrieves the last 500 messages from the channel, purges them, and checks for an existing sticky message.
+     * If a sticky message exists, it updates it; otherwise, it sends a new sticky message.
      *
-     * @param channel The NSFW TextChannel to clean.
-     * @param bot     The Redacted bot instance for database access and operations.
+     * @param channel The NSFW channel to clean.
+     * @param bot     The Redacted bot instance used for database operations.
      */
     public static void cleanChannel(TextChannel channel, Redacted bot) {
         channel.getGuild().getIdLong();
@@ -68,11 +69,11 @@ public class NSFWCleanListener extends ListenerAdapter {
     }
 
     /**
-     * Sends a sticky message to the specified NSFW channel.
-     * The sticky message informs users about the periodic cleaning of the channel.
+     * Sends a sticky message to the specified channel.
+     * This message informs users about the automatic cleaning of NSFW channels and provides a reminder to save any liked images.
      *
-     * @param channel   The NSFW TextChannel to send the sticky message to.
-     * @param guildData The GuildData instance containing the sticky messages collection.
+     * @param channel   The channel where the sticky message will be sent.
+     * @param guildData The GuildData instance containing the database collection for sticky messages.
      */
     private static void sendStickyMessage(TextChannel channel, GuildData guildData) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -98,12 +99,12 @@ public class NSFWCleanListener extends ListenerAdapter {
     }
 
     /**
-     * Updates the sticky message in the specified NSFW channel.
-     * Deletes the old sticky message and sends a new one.
+     * Updates the existing sticky message in the specified channel.
+     * This method deletes the old sticky message from the database and sends a new one.
      *
-     * @param channel          The NSFW TextChannel where the sticky message is located.
-     * @param ignoredMessage   The old sticky message to be deleted (ignored in this context).
-     * @param bot              The Redacted bot instance for database access and operations.
+     * @param channel          The channel where the sticky message will be updated.
+     * @param ignoredMessage   The old sticky message that is being replaced (not used in this method).
+     * @param bot              The Redacted bot instance used for database operations.
      */
     private static void updateStickyMessage(TextChannel channel, Message ignoredMessage, Redacted bot) {
         GuildData guildData = GuildData.get(channel.getGuild(), bot);

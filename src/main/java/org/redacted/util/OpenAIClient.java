@@ -1,12 +1,11 @@
 package org.redacted.util;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * Client for interacting with the OpenAI API to summarize Discord conversations.
@@ -63,10 +62,10 @@ public class OpenAIClient {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response + ": " + Objects.requireNonNull(response.body()).string());
+                throw new IOException("Unexpected code " + response + ": " + response.body().string());
             }
 
-            String responseBody = Objects.requireNonNull(response.body()).string();
+            String responseBody = response.body().string();
             JSONObject responseJson = new JSONObject(responseBody);
             return responseJson
                     .getJSONArray("choices")

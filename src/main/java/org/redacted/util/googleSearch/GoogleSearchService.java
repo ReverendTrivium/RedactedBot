@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
 /**
  * Service for performing Google searches using the Custom Search JSON API.
  * Requires the GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID environment variables to be set.
@@ -81,7 +80,8 @@ public class GoogleSearchService {
     }
 
     /**
-     * Represents a search result from Google Custom Search.
+     * Represents a search result from the Google Custom Search API.
+     * Contains the title, link, and snippet of the search result.
      */
     @Getter
     public static class SearchResult {
@@ -89,6 +89,13 @@ public class GoogleSearchService {
         private final String link;
         private final String snippet;
 
+        /**
+         * Constructs a SearchResult with the specified title, link, and snippet.
+         *
+         * @param title   the title of the search result
+         * @param link    the URL of the search result
+         * @param snippet a brief description of the search result
+         */
         public SearchResult(String title, String link, String snippet) {
             this.title = title;
             this.link = link;

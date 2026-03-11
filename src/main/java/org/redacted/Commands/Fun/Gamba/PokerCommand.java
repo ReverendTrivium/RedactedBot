@@ -1,16 +1,15 @@
 package org.redacted.Commands.Fun.Gamba;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.redacted.Commands.Command;
 import org.redacted.Redacted;
 import org.redacted.listeners.ButtonListener;
 
 import java.util.*;
-
-import java.util.List;
 
 /**
  * Command that allows users to play Texas Hold'em poker against the bot.
@@ -34,6 +33,7 @@ public class PokerCommand extends Command {
         this.description = "Play Texas Hold'em against the bot!";
     }
 
+
     /**
      * Executes the poker command.
      * Checks if the user is already in a game, creates a new game if not, deals the flop,
@@ -56,13 +56,11 @@ public class PokerCommand extends Command {
         TexasHoldemGame game = new TexasHoldemGame(players);
         activeGames.put(user.getId(), game);
 
-        // Deal the flop (first three community cards)
         game.dealFlop();
 
         EmbedBuilder embed = game.getGameStatus(user, false);
         String uuid = user.getId() + ":" + UUID.randomUUID();
 
-        // Buttons now include UUID for tracking
         List<Button> buttons = List.of(
                 Button.primary("poker:bet:" + uuid, "Bet"),
                 Button.danger("poker:fold:" + uuid, "Fold")
@@ -71,8 +69,8 @@ public class PokerCommand extends Command {
         ButtonListener.buttons.put(uuid, buttons);
 
         event.replyEmbeds(embed.build())
-                .addActionRow(buttons)
-                .queue(interactionHook -> ButtonListener.disableButtons(uuid, interactionHook));
+                .setComponents(ActionRow.of(buttons))          // ✅ JDA 6
+                .queue(hook -> ButtonListener.disableButtons(uuid, hook));
     }
 
     /**
@@ -84,6 +82,7 @@ public class PokerCommand extends Command {
     public static TexasHoldemGame getGame(User user) {
         return activeGames.get(user.getId());
     }
+
 
     /**
      * Ends the game for a user and removes it from the active games map.

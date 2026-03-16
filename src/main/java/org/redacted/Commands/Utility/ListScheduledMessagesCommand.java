@@ -59,6 +59,9 @@ public class ListScheduledMessagesCommand extends Command {
             return;
         }
 
+        // Defer the reply to give the bot more time to build the embeds if there are many scheduled messages
+        event.deferReply().queue();
+
         List<EmbedBuilder> embeds = new ArrayList<>();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
@@ -85,7 +88,7 @@ public class ListScheduledMessagesCommand extends Command {
         }
 
         // Use ButtonListener for pagination
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.replyEmbeds(embeds.get(0).build()), toMessageEmbeds(embeds));
+        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), toMessageEmbeds(embeds));
     }
 
     /**

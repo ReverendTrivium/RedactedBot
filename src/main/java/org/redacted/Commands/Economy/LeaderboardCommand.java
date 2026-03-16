@@ -60,6 +60,8 @@ public class LeaderboardCommand extends Command {
      * @param event The SlashCommandInteractionEvent containing the command interaction data.
      */
     private void displayLeaderboard(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
         List<Economy> leaderboard = economyHandler.getLeaderboardAsList();
 
@@ -69,12 +71,13 @@ public class LeaderboardCommand extends Command {
                     .setTitle("Economy Leaderboard")
                     .setDescription("No data to display.")
                     .setColor(EmbedColor.DEFAULT.color);
-            event.replyEmbeds(embed.build()).queue();
+
+            event.getHook().sendMessageEmbeds(embed.build()).queue();
             return;
         }
 
         // Send paginated leaderboard
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.replyEmbeds(embeds.get(0)), embeds);
+        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
     }
 
     /**

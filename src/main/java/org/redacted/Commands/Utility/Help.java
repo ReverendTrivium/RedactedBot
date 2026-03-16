@@ -65,9 +65,11 @@ public class Help extends Command {
         // Create a hashmap that groups commands by categories.
         HashMap<Category, List<Command>> categories = new LinkedHashMap<>();
         EmbedBuilder builder = new EmbedBuilder().setColor(EmbedColor.DEFAULT.color);
+
         for (Category category : Category.values()) {
             categories.put(category, new ArrayList<>());
         }
+
         for (Command cmd : BotCommands.commands) {
             if (cmd.category != null && categories.containsKey(cmd.category)) {
                 categories.get(cmd.category).add(cmd);
@@ -76,28 +78,35 @@ public class Help extends Command {
 
         OptionMapping option = event.getOption("category");
         OptionMapping option2 = event.getOption("command");
+
         if (option != null && option2 != null) {
-            event.replyEmbeds(EmbedUtils.createError("Please only give one optional argument and try again.")).queue();
+            event.replyEmbeds(
+                    EmbedUtils.createError("Please only give one optional argument and try again.")
+            ).queue();
         } else if (option != null) {
+            event.deferReply().queue();
+
             // Display category commands menu
             Category category = Category.valueOf(option.getAsString().toUpperCase());
             List<MessageEmbed> embeds = buildCategoryMenu(category, categories.get(category), event.getMember());
+
             if (embeds.isEmpty()) {
                 // No commands for this category
                 EmbedBuilder embed = new EmbedBuilder()
                         .setTitle(category.emoji + "  **%s Commands**".formatted(category.name))
                         .setDescription("Coming soon...")
                         .setColor(EmbedColor.DEFAULT.color);
-                event.replyEmbeds(embed.build()).queue();
+
+                event.getHook().sendMessageEmbeds(embed.build()).queue();
                 return;
             }
-            // Send paginated help menu
-            ReplyCallbackAction action = event.replyEmbeds(embeds.get(0));
+
             if (embeds.size() > 1) {
-                ButtonListener.sendPaginatedMenu(event.getUser().getId(), action, embeds);
+                ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
                 return;
             }
-            action.queue();
+
+            event.getHook().sendMessageEmbeds(embeds.get(0)).queue();
         } else if (option2 != null) {
             // Display command details menu
             Command cmd = BotCommands.commandsMap.get(option2.getAsString());
@@ -105,6 +114,7 @@ public class Help extends Command {
                 if (cmd.permission == null || Objects.requireNonNull(event.getMember()).hasPermission(cmd.permission)) {
                     builder.setTitle("Command: " + cmd.name);
                     builder.setDescription(cmd.description);
+
                     StringBuilder usages = new StringBuilder();
                     if (cmd.subCommands.isEmpty()) {
                         usages.append("`").append(getUsage(cmd)).append("`");
@@ -113,15 +123,21 @@ public class Help extends Command {
                             usages.append("`").append(getUsage(sub, cmd.name)).append("`\n");
                         }
                     }
+
                     builder.addField("Usage:", usages.toString(), false);
                     builder.addField("Permission:", getPermissions(cmd), false);
+
                     event.replyEmbeds(builder.build()).queue();
                 } else {
-                    event.replyEmbeds(EmbedUtils.createError("No command called \"" + option2.getAsString() + "\" found.")).setEphemeral(true).queue();
+                    event.replyEmbeds(
+                            EmbedUtils.createError("No command called \"" + option2.getAsString() + "\" found.")
+                    ).setEphemeral(true).queue();
                 }
             } else {
                 // Command specified doesn't exist.
-                event.replyEmbeds(EmbedUtils.createError("No command called \"" + option2.getAsString() + "\" found.")).queue();
+                event.replyEmbeds(
+                        EmbedUtils.createError("No command called \"" + option2.getAsString() + "\" found.")
+                ).queue();
             }
         } else {
             // Display default menu
@@ -131,6 +147,7 @@ public class Help extends Command {
                 String value = "`/" + categoryName + " help`";
                 builder.addField(category.emoji + " " + category.name, value, true);
             });
+
             event.replyEmbeds(builder.build()).queue();
         }
     }

@@ -69,10 +69,10 @@ public class ButtonListener extends ListenerAdapter {
      * Adds pagination buttons to a message action.
      *
      * @param userID the ID of the user who is accessing this menu.
-     * @param action the ReplyCallbackAction to add components to.
+     * @param hook an interaction hook pointing to the original message.
      * @param embeds the embed pages.
      */
-    public static void sendPaginatedMenu(String userID, ReplyCallbackAction action, List<MessageEmbed> embeds) {
+    public static void sendPaginatedMenu(String userID, InteractionHook hook, List<MessageEmbed> embeds) {
         String token = UUID.randomUUID().toString();
         String key = userID + ":" + token;
 
@@ -80,9 +80,9 @@ public class ButtonListener extends ListenerAdapter {
         buttons.put(key, components);
         menus.put(key, embeds);
 
-        action
-                .setComponents(ActionRow.of(components)) // JDA 6
-                .queue(hook -> {
+        hook.sendMessageEmbeds(embeds.get(0))
+                .addComponents(ActionRow.of(components))
+                .queue(message -> {
                     if (embeds.size() > 1) {
                         disableButtons(key, hook);
                     }

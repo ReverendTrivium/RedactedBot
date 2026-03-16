@@ -87,11 +87,12 @@ public class CategoryHelpCommand extends Command {
                     .setTitle(this.category.emoji + "  **%s Commands**".formatted(this.category.name))
                     .setDescription("Coming soon...")
                     .setColor(EmbedColor.DEFAULT.color);
-            event.replyEmbeds(embed.build()).queue();
+
+            event.getHook().sendMessageEmbeds(embed.build()).queue();
             return;
         }
-        // Send paginated help menu
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.replyEmbeds(embeds.get(0)), embeds);
+
+        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
     }
 
     /**

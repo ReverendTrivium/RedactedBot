@@ -60,24 +60,24 @@ public class LeaderboardCommand extends Command {
      * @param event The SlashCommandInteractionEvent containing the command interaction data.
      */
     private void displayLeaderboard(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+        event.deferReply().queue(hook -> {
+            EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
+            List<Economy> leaderboard = economyHandler.getLeaderboardAsList();
 
-        EconomyHandler economyHandler = GuildData.get(Objects.requireNonNull(event.getGuild()), bot).getEconomyHandler();
-        List<Economy> leaderboard = economyHandler.getLeaderboardAsList();
+            List<MessageEmbed> embeds = buildLeaderboardMenu(leaderboard, event, economyHandler);
+            if (embeds.isEmpty()) {
+                EmbedBuilder embed = new EmbedBuilder()
+                        .setTitle("Economy Leaderboard")
+                        .setDescription("No data to display.")
+                        .setColor(EmbedColor.DEFAULT.color);
 
-        List<MessageEmbed> embeds = buildLeaderboardMenu(leaderboard, event, economyHandler);
-        if (embeds.isEmpty()) {
-            EmbedBuilder embed = new EmbedBuilder()
-                    .setTitle("Economy Leaderboard")
-                    .setDescription("No data to display.")
-                    .setColor(EmbedColor.DEFAULT.color);
+                hook.sendMessageEmbeds(embed.build()).queue();
+                return;
+            }
 
-            event.getHook().sendMessageEmbeds(embed.build()).queue();
-            return;
-        }
-
-        // Send paginated leaderboard
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
+            // Send paginated leaderboard
+            ButtonListener.sendPaginatedMenu(event.getUser().getId(), hook, embeds);
+        });
     }
 
     /**

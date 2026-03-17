@@ -57,17 +57,25 @@ public class QueueCommand extends Command {
             event.replyEmbeds(EmbedUtils.createDefault(text)).queue();
             return;
         }
-        // Defer reply to give bot more time to build embeds if queue is large
-        event.deferReply().queue();
 
-        // Create embeds and send to channel
-        List<MessageEmbed> embeds = buildQueueEmbeds(music.getQueue(), music.getQueue().size());
-        ReplyCallbackAction action = event.replyEmbeds(embeds.get(0));
-        if (embeds.size() > 1) {
-            ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
-        } else {
-            action.queue();
-        }
+        // Defer reply to give bot more time to build embeds if queue is large
+        event.deferReply().queue(hook -> {
+            // Create embeds and send to channel
+            List<MessageEmbed> embeds = buildQueueEmbeds(music.getQueue(), music.getQueue().size());
+
+            if (embeds.isEmpty()) {
+                hook.sendMessageEmbeds(
+                        EmbedUtils.createDefault(":sound: There are no songs in the queue!")
+                ).queue();
+                return;
+            }
+
+            if (embeds.size() > 1) {
+                ButtonListener.sendPaginatedMenu(event.getUser().getId(), hook, embeds);
+            } else {
+                hook.sendMessageEmbeds(embeds.get(0)).queue();
+            }
+        });
     }
 
     /**

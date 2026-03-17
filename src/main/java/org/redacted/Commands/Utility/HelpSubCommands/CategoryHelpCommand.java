@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.redacted.Commands.BotCommands;
 import org.redacted.Commands.Category;
@@ -58,7 +59,7 @@ public class CategoryHelpCommand extends Command {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (Objects.equals(event.getSubcommandName(), "help")) {
-            displayCategoryCommands(event);
+            event.deferReply().queue(hook -> displayCategoryCommands(event, hook));
         }
     }
 
@@ -68,31 +69,31 @@ public class CategoryHelpCommand extends Command {
      *
      * @param event The SlashCommandInteractionEvent containing the command interaction data.
      */
-    private void displayCategoryCommands(SlashCommandInteractionEvent event) {
-        // Create a hashmap that groups commands by categories.
+    private void displayCategoryCommands(SlashCommandInteractionEvent event, InteractionHook hook) {
         HashMap<Category, List<Command>> categories = new HashMap<>();
         for (Category category : Category.values()) {
             categories.put(category, new ArrayList<>());
         }
+
         for (Command cmd : BotCommands.commands) {
             if (cmd.category != null && categories.containsKey(cmd.category)) {
                 categories.get(cmd.category).add(cmd);
             }
         }
 
-        // Display category commands menu
         List<MessageEmbed> embeds = buildCategoryMenu(this.category, categories.get(this.category), event);
+
         if (embeds.isEmpty()) {
             EmbedBuilder embed = new EmbedBuilder()
                     .setTitle(this.category.emoji + "  **%s Commands**".formatted(this.category.name))
                     .setDescription("Coming soon...")
                     .setColor(EmbedColor.DEFAULT.color);
 
-            event.getHook().sendMessageEmbeds(embed.build()).queue();
+            hook.sendMessageEmbeds(embed.build()).queue();
             return;
         }
 
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
+        ButtonListener.sendPaginatedMenu(event.getUser().getId(), hook, embeds);
     }
 
     /**

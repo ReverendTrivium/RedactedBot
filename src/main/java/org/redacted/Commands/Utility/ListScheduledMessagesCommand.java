@@ -60,35 +60,45 @@ public class ListScheduledMessagesCommand extends Command {
         }
 
         // Defer the reply to give the bot more time to build the embeds if there are many scheduled messages
-        event.deferReply().queue();
+        event.deferReply().queue(hook -> {
+            List<EmbedBuilder> embeds = new ArrayList<>();
 
-        List<EmbedBuilder> embeds = new ArrayList<>();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+            for (Document message : scheduledMessages) {
+                String title = message.getString("title");
+                String content = message.getString("content");
+                String channelId = message.getString("channelId");
+                String repeat = message.getString("repeat");
+                LocalDateTime time = LocalDateTime.parse(message.getString("time"));
+                String messageId = message.getObjectId("_id").toHexString();
 
-        for (Document message : scheduledMessages) {
-            String title = message.getString("title");
-            String content = message.getString("content");
-            String channelId = message.getString("channelId");
-            String repeat = message.getString("repeat");
-            LocalDateTime time = LocalDateTime.parse(message.getString("time"));
-            String messageId = message.getObjectId("_id").toHexString();  // Get the unique ID
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.setTitle("Scheduled Message");
+                embed.addField("Message ID", messageId, false);
+                embed.addField("Title", title != null ? title : "No Title", false);
+                embed.addField("Content", content, false);
+                embed.addField("Channel", "<#" + channelId + ">", false);
+                embed.addField("Scheduled Time", time.format(formatter), false);
+                embed.addField("Repeat", repeat != null ? repeat : "None", false);
+                embed.setFooter("Scheduled by: " + message.getString("userId"));
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.setTitle("Scheduled Message");
-            embed.addField("Message ID", messageId, false);  // Add the unique ID field
-            embed.addField("Title", title != null ? title : "No Title", false);
-            embed.addField("Content", content, false);
-            embed.addField("Channel", "<#" + channelId + ">", false);
-            embed.addField("Scheduled Time", time.format(formatter), false);
-            embed.addField("Repeat", repeat != null ? repeat : "None", false);
-            embed.setFooter("Scheduled by: " + message.getString("userId"));
+                embeds.add(embed);
+            }
 
-            embeds.add(embed);
-        }
+            List<MessageEmbed> messageEmbeds = toMessageEmbeds(embeds);
 
-        // Use ButtonListener for pagination
-        ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), toMessageEmbeds(embeds));
+            if (messageEmbeds.isEmpty()) {
+                hook.sendMessage("There are no scheduled messages.").queue();
+                return;
+            }
+
+            if (messageEmbeds.size() > 1) {
+                ButtonListener.sendPaginatedMenu(event.getUser().getId(), hook, messageEmbeds);
+            } else {
+                hook.sendMessageEmbeds(messageEmbeds.get(0)).queue();
+            }
+        });
     }
 
     /**

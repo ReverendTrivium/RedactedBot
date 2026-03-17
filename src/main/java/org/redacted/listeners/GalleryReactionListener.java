@@ -40,9 +40,14 @@ public class GalleryReactionListener extends ListenerAdapter {
         String componentId = event.getComponentId();
 
         if (bot.getGalleryManager().isGalleryMessage(messageId)) {
-            bot.getGalleryManager().handleReaction(event.getChannel(), messageId, componentId);
-            bot.getGalleryManager().updateButtons(event.getMessage(), bot.getGalleryManager().currentPage.get(messageId), bot.getGalleryManager().galleries.get(messageId).size());
-            event.deferEdit().queue();
+            event.deferEdit().queue(hook -> {
+                bot.getGalleryManager().handleReaction(event.getChannel(), messageId, componentId);
+                bot.getGalleryManager().updateButtons(
+                        event.getMessage(),
+                        bot.getGalleryManager().currentPage.get(messageId),
+                        bot.getGalleryManager().galleries.get(messageId).size()
+                );
+            });
         }
     }
 }

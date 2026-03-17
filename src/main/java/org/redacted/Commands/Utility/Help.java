@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.redacted.Commands.BotCommands;
 import org.redacted.Commands.Category;
 import org.redacted.Commands.Command;
@@ -83,30 +82,32 @@ public class Help extends Command {
             event.replyEmbeds(
                     EmbedUtils.createError("Please only give one optional argument and try again.")
             ).queue();
+
         } else if (option != null) {
-            event.deferReply().queue();
+            event.deferReply().queue(hook -> {
+                // Display category commands menu
+                Category category = Category.valueOf(option.getAsString().toUpperCase());
+                List<MessageEmbed> embeds = buildCategoryMenu(category, categories.get(category), event.getMember());
 
-            // Display category commands menu
-            Category category = Category.valueOf(option.getAsString().toUpperCase());
-            List<MessageEmbed> embeds = buildCategoryMenu(category, categories.get(category), event.getMember());
+                if (embeds.isEmpty()) {
+                    // No commands for this category
+                    EmbedBuilder embed = new EmbedBuilder()
+                            .setTitle(category.emoji + "  **%s Commands**".formatted(category.name))
+                            .setDescription("Coming soon...")
+                            .setColor(EmbedColor.DEFAULT.color);
 
-            if (embeds.isEmpty()) {
-                // No commands for this category
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setTitle(category.emoji + "  **%s Commands**".formatted(category.name))
-                        .setDescription("Coming soon...")
-                        .setColor(EmbedColor.DEFAULT.color);
+                    hook.sendMessageEmbeds(embed.build()).queue();
+                    return;
+                }
 
-                event.getHook().sendMessageEmbeds(embed.build()).queue();
-                return;
-            }
+                if (embeds.size() > 1) {
+                    ButtonListener.sendPaginatedMenu(event.getUser().getId(), hook, embeds);
+                    return;
+                }
 
-            if (embeds.size() > 1) {
-                ButtonListener.sendPaginatedMenu(event.getUser().getId(), event.getHook(), embeds);
-                return;
-            }
+                hook.sendMessageEmbeds(embeds.get(0)).queue();
+            });
 
-            event.getHook().sendMessageEmbeds(embeds.get(0)).queue();
         } else if (option2 != null) {
             // Display command details menu
             Command cmd = BotCommands.commandsMap.get(option2.getAsString());
@@ -139,6 +140,7 @@ public class Help extends Command {
                         EmbedUtils.createError("No command called \"" + option2.getAsString() + "\" found.")
                 ).queue();
             }
+
         } else {
             // Display default menu
             builder.setTitle("Redacted Commands");
@@ -151,7 +153,6 @@ public class Help extends Command {
             event.replyEmbeds(builder.build()).queue();
         }
     }
-
     /**
      * Builds a menu with all the commands in a specified category.
      *

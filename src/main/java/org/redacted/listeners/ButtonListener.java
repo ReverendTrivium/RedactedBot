@@ -22,7 +22,6 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.redacted.Commands.Fun.Gamba.BlackJackCommand;
 import org.redacted.Commands.Fun.Gamba.PokerCommand;
 import org.redacted.Commands.Fun.Gamba.TexasHoldemGame;
@@ -228,9 +227,9 @@ public class ButtonListener extends ListenerAdapter {
             return;
         }
 
-        String subAction = pressedArgs[1];  // prev / next / page
-        String userId    = pressedArgs[2];
-        String token     = pressedArgs[3];
+        String subAction = pressedArgs[1];
+        String userId = pressedArgs[2];
+        String token = pressedArgs[3];
         int currentPage;
 
         try {
@@ -260,7 +259,6 @@ public class ButtonListener extends ListenerAdapter {
         } else if ("prev".equals(subAction)) {
             targetPage = currentPage - 1;
         } else {
-            // page label button - ignore
             event.deferEdit().queue();
             return;
         }
@@ -273,8 +271,8 @@ public class ButtonListener extends ListenerAdapter {
         List<Button> newComponents = getPaginationButtons(userId, token, targetPage, embeds.size());
         buttons.put(key, newComponents);
 
-        event.editComponents(ActionRow.of(newComponents))
-                .setEmbeds(embeds.get(targetPage))
+        event.editMessageEmbeds(embeds.get(targetPage))
+                .setComponents(ActionRow.of(newComponents))
                 .queue();
     }
 

@@ -138,6 +138,8 @@ public class BotCommands extends ListenerAdapter {
                     new ReactionRoleCommand(bot),
                     new ListReactionRolesCommand(bot),
                     new ListEmbeddedMessagesCommand(bot),
+                    new CleanupReactionRolesCommand(bot),
+                    new DeleteReactionRoleCommand(bot),
                     new Ping(bot),
                     new Clear(bot),
                     new NSFWCleanCommand(bot),

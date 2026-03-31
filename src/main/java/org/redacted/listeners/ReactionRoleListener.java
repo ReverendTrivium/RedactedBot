@@ -3,6 +3,7 @@ package org.redacted.listeners;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -55,33 +56,92 @@ public class ReactionRoleListener extends ListenerAdapter {
      * @param addRole True if the role should be added, false if it should be removed.
      */
     private void handleReaction(GenericMessageReactionEvent event, boolean addRole) {
-        if (event.getUser().isBot()) return;
+        if (event.getUser() == null || event.getUser().isBot()) {
+            return;
+        }
 
         Guild guild = event.getGuild();
         Member member = guild.retrieveMember(event.getUser()).complete();
-        String messageId = event.getMessageId();
-        String emoji = event.getReaction().getEmoji().getName(); // works for unicode and named emoji
+        if (member == null) {
+            System.out.println("Member not found for user: " + event.getUserId());
+            return;
+        }
 
-        // Load saved embed
-        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
+        String messageId = event.getMessageId();
+        EmojiUnion reactionEmoji = event.getReaction().getEmoji();
+
+        String emojiKey = getEmojiKey(reactionEmoji);
+
+        System.out.println("Handling reaction event: " + (addRole ? "Add" : "Remove"));
+        System.out.println("Message ID: " + messageId);
+        System.out.println("Emoji key: " + emojiKey);
+
+        MongoCollection<SavedEmbed> collection =
+                GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
+
         Bson filter = Filters.eq("messageId", messageId);
         SavedEmbed saved = collection.find(filter).first();
 
-        if (saved == null || saved.getEmojiRoleMap() == null) return;
+        if (saved == null) {
+            System.out.println("No saved embed found for message ID: " + messageId);
+            return;
+        }
+
+        if (saved.getEmojiRoleMap() == null) {
+            System.out.println("Emoji role map is null for message ID: " + messageId);
+            return;
+        }
 
         Map<String, String> emojiRoleMap = saved.getEmojiRoleMap();
+        String roleName = emojiRoleMap.get(emojiKey);
 
-        // Value now assumed to be role name
-        String roleName = emojiRoleMap.get(emoji);
-        if (roleName == null) return;
+        if (roleName == null) {
+            System.out.println("No role mapping found for emoji key: " + emojiKey);
+            return;
+        }
 
         Role roleToAssign = new getRolesByName().getRoleByName(guild, roleName);
-        if (roleToAssign == null) return;
+        if (roleToAssign == null) {
+            System.out.println("Role not found: " + roleName);
+            return;
+        }
 
         if (addRole) {
-            guild.addRoleToMember(member, roleToAssign).queue();
+            System.out.println("Adding role " + roleToAssign.getName() + " to " + member.getEffectiveName());
+            guild.addRoleToMember(member, roleToAssign).queue(
+                    success -> System.out.println("Role added successfully."),
+                    error -> {
+                        System.out.println("Failed to add role:");
+                        error.printStackTrace();
+                    }
+            );
         } else {
-            guild.removeRoleFromMember(member, roleToAssign).queue();
+            System.out.println("Removing role " + roleToAssign.getName() + " from " + member.getEffectiveName());
+            guild.removeRoleFromMember(member, roleToAssign).queue(
+                    success -> System.out.println("Role removed successfully."),
+                    error -> {
+                        System.out.println("Failed to remove role:");
+                        error.printStackTrace();
+                    }
+            );
         }
+    }
+
+    /**
+     * Generates a unique key for the given emoji, distinguishing between custom and unicode emojis.
+     * For custom emojis, the key is in the format "custom:emojiId".
+     * For unicode emojis, the key is in the format "unicode:emojiName".
+     * This allows for consistent mapping of emojis to roles in the database.
+     *
+     * @param emoji The EmojiUnion object representing the emoji used in the reaction.
+     * @return A string key that uniquely identifies the emoji for role mapping purposes.
+     */
+    private String getEmojiKey(EmojiUnion emoji) {
+        if (emoji.getType() == EmojiUnion.Type.CUSTOM) {
+            return "custom:" + emoji.asCustom().getId();
+        } else {
+            return "unicode:" + emoji.getName();
+        }
+
     }
 }

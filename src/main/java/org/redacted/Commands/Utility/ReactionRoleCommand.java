@@ -56,12 +56,16 @@ public class ReactionRoleCommand extends Command {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         String messageId = event.getOption("messageid").getAsString();
-        String emoji = event.getOption("emoji").getAsString();
+        String emojiInput = event.getOption("emoji").getAsString().trim();
         String roleName = event.getOption("role").getAsString();
 
         Guild guild = event.getGuild();
-        Role role = new getRolesByName().getRoleByName(guild, roleName);
+        if (guild == null) {
+            event.reply("❌ Guild not found.").setEphemeral(true).queue();
+            return;
+        }
 
+        Role role = new getRolesByName().getRoleByName(guild, roleName);
         if (role == null) {
             event.reply("❌ Could not find a role named `" + roleName + "`.").setEphemeral(true).queue();
             return;
@@ -72,15 +76,17 @@ public class ReactionRoleCommand extends Command {
                 .getSavedEmbedsCollection(guild.getIdLong());
 
         SavedEmbed embed = collection.find(Filters.eq("messageId", messageId)).first();
-
         if (embed == null) {
             event.reply("❌ No saved embed found with that message ID.").setEphemeral(true).queue();
             return;
         }
 
+        String emojiKey = toEmojiKey(emojiInput);
+        System.out.println("Saving reaction role mapping: " + emojiKey + " -> " + role.getName());
+
         collection.updateOne(
                 Filters.eq("messageId", messageId),
-                Updates.set("emojiRoleMap." + emoji, role.getName()) // ← role name instead of ID
+                Updates.set("emojiRoleMap." + emojiKey, role.getName())
         );
 
         TextChannel channel = guild.getTextChannelById(embed.getChannelId());
@@ -90,18 +96,30 @@ public class ReactionRoleCommand extends Command {
         }
 
         channel.retrieveMessageById(messageId).queue(message -> {
-            // Determine if emoji is custom (e.g. <a:name:id> or <:name:id>)
             Emoji emojiObj;
-            if (isCustomEmojiFormat(emoji)) {
-                emojiObj = Emoji.fromFormatted(emoji);
-            } else {
-                emojiObj = Emoji.fromUnicode(emoji);
+            try {
+                if (isCustomEmojiFormat(emojiInput)) {
+                    emojiObj = Emoji.fromFormatted(emojiInput);
+                } else {
+                    emojiObj = Emoji.fromUnicode(emojiInput);
+                }
+            } catch (Exception e) {
+                event.reply("❌ Invalid emoji format.").setEphemeral(true).queue();
+                return;
             }
 
             message.addReaction(emojiObj).queue(
-                    success -> event.reply("✅ Reaction role added: " + emoji + " → " + role.getAsMention()).setEphemeral(true).queue(),
-                    failure -> event.reply("❌ Failed to add reaction. Make sure the emoji is valid and the bot has access to it.").setEphemeral(true).queue()
+                    success -> event.reply("✅ Reaction role added: " + emojiInput + " → " + role.getAsMention())
+                            .setEphemeral(true).queue(),
+                    failure -> {
+                        failure.printStackTrace();
+                        event.reply("❌ Failed to add reaction. Make sure the emoji is valid and the bot has access to it.")
+                                .setEphemeral(true).queue();
+                    }
             );
+        }, failure -> {
+            failure.printStackTrace();
+            event.reply("❌ Failed to retrieve the target message.").setEphemeral(true).queue();
         });
     }
 
@@ -113,5 +131,24 @@ public class ReactionRoleCommand extends Command {
      */
     private boolean isCustomEmojiFormat(String emoji) {
         return Pattern.matches("<a?:\\w{2,32}:\\d{17,20}>", emoji);
+    }
+
+    /**
+     * Converts the given emoji input into a standardized key format for database storage.
+     * Custom emojis are prefixed with "custom:" followed by their ID, while unicode emojis
+     * are prefixed with "unicode:" followed by the emoji itself.
+     *
+     * @param emojiInput The raw emoji input from the user.
+     * @return A standardized string key representing the emoji for database mapping.
+     */
+    private String toEmojiKey(String emojiInput) {
+        emojiInput = emojiInput.trim();
+
+        if (isCustomEmojiFormat(emojiInput)) {
+            String id = emojiInput.replaceAll("<a?:\\w{2,32}:(\\d{17,20})>", "$1");
+            return "custom:" + id;
+        }
+
+        return "unicode:" + emojiInput;
     }
 }

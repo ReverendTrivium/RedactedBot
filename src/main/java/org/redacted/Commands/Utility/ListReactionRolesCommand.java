@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -53,7 +54,14 @@ public class ListReactionRolesCommand extends Command {
         String messageId = event.getOption("messageid").getAsString();
         Guild guild = event.getGuild();
 
-        MongoCollection<SavedEmbed> collection = GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
+        if (guild == null) {
+            event.reply("❌ Guild not found.").setEphemeral(true).queue();
+            return;
+        }
+
+        MongoCollection<SavedEmbed> collection =
+                GuildData.getDatabase().getSavedEmbedsCollection(guild.getIdLong());
+
         SavedEmbed embed = collection.find(Filters.eq("messageId", messageId)).first();
 
         if (embed == null || embed.getEmojiRoleMap() == null || embed.getEmojiRoleMap().isEmpty()) {
@@ -62,14 +70,51 @@ public class ListReactionRolesCommand extends Command {
         }
 
         Map<String, String> emojiRoleMap = embed.getEmojiRoleMap();
+
         String mapped = emojiRoleMap.entrySet().stream()
                 .map(e -> {
-                    Role role = guild.getRoleById(e.getValue());
-                    String roleMention = role != null ? role.getAsMention() : "`[deleted role]`";
-                    return e.getKey() + " → " + roleMention;
+                    String roleName = e.getValue();
+                    Role role = guild.getRolesByName(roleName, true).stream().findFirst().orElse(null);
+
+                    String roleMention = role != null
+                            ? role.getAsMention()
+                            : "`" + roleName + " [missing role]`";
+
+                    return formatEmojiKey(e.getKey(), guild) + " → " + roleMention;
                 })
                 .collect(Collectors.joining("\n"));
 
-        event.reply("📝 Reaction Roles for message `" + messageId + "`:\n" + mapped).setEphemeral(true).queue();
+        event.reply("📝 Reaction Roles for message `" + messageId + "`:\n" + mapped)
+                .setEphemeral(true)
+                .queue();
+    }
+
+    /**
+     * Formats the emoji key for display.
+     * If the key is a unicode emoji, it returns the unicode character.
+     * If the key is a custom emoji, it retrieves the formatted emoji from the guild.
+     * Otherwise, it returns the key as is.
+     *
+     * @param emojiKey The raw emoji key from the database.
+     * @param guild The guild to retrieve custom emojis from.
+     * @return A formatted string representing the emoji for display.
+     */
+    private String formatEmojiKey(String emojiKey, Guild guild) {
+        if (emojiKey.startsWith("unicode:")) {
+            return emojiKey.substring("unicode:".length());
+        }
+
+        if (emojiKey.startsWith("custom:")) {
+            String emojiId = emojiKey.substring("custom:".length());
+            RichCustomEmoji customEmoji = guild.getEmojiById(emojiId);
+
+            if (customEmoji != null) {
+                return customEmoji.getFormatted();
+            }
+
+            return "`custom:" + emojiId + "`";
+        }
+
+        return emojiKey;
     }
 }

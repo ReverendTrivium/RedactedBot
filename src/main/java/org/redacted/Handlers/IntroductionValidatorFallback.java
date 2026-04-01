@@ -59,4 +59,42 @@ public class IntroductionValidatorFallback {
             pendingManualApprovals.put(msg.getIdLong(), userInfo);
         });
     }
+
+    /**
+     * Handles manual approval for users who do not provide any social media handles.
+     *
+     * @param member    Member who submitted the intro
+     * @param channel   Mod-log channel where manual approval should be sent
+     * @param firstName First name of the user for context
+     * @param lastName  Last name of the user for context (optional)
+     */
+    public static void handleNoSocialManualApproval(Member member, TextChannel channel,
+                                                    String firstName, String lastName) {
+        Role adminRole = new getRolesByName().getRoleByName(channel.getGuild(), "Admin");
+
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Manual Approval Required");
+        embed.setColor(Color.YELLOW);
+        embed.setDescription(String.format(
+                "%s **%s** stated that they do not use Instagram or Facebook.\n\n" +
+                        "Please manually review and react with ✅ to approve them.",
+                adminRole, member.getAsMention()));
+        embed.addField("Submitted Name", firstName + (lastName != null && !lastName.equalsIgnoreCase("None") ? " / " + lastName : ""), false);
+        embed.addField("Social Media", "None provided", false);
+        embed.setFooter("Manual approval required for members without social media.");
+
+        channel.sendMessageEmbeds(embed.build()).queue((Message msg) -> {
+            msg.addReaction(Emoji.fromUnicode("✅")).queue();
+
+            Map<String, String> userInfo = new HashMap<>();
+            userInfo.put("userId", String.valueOf(member.getIdLong()));
+            userInfo.put("firstName", firstName != null ? firstName : "");
+            userInfo.put("lastName", lastName != null ? lastName : "");
+            userInfo.put("instagram", "");
+            userInfo.put("facebook", "");
+            userInfo.put("manualType", "no_social");
+
+            pendingManualApprovals.put(msg.getIdLong(), userInfo);
+        });
+    }
 }

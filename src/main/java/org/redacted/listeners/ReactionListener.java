@@ -39,7 +39,10 @@ public class ReactionListener extends ListenerAdapter {
 
     /**
      * Handles message reactions, specifically looking for checkmark reactions
-     * to approve user introductions.
+     * to approve user introductions. When a checkmark reaction is added to a
+     * message that is pending manual approval, it retrieves the user information,
+     * reconstructs a dummy MessageReceivedEvent, and calls the IntroductionHandler
+     * to approve the user.
      *
      * @param event The MessageReactionAddEvent containing the reaction and context.
      */
@@ -57,8 +60,7 @@ public class ReactionListener extends ListenerAdapter {
         String firstName = userInfo.get("firstName");
         String instagramHandle = userInfo.get("instagram");
         String facebookHandle = userInfo.get("facebook");
-
-
+        String manualType = userInfo.getOrDefault("manualType", "social_handle");
 
         Guild guild = event.getGuild();
         Member member = guild.getMemberById(userId);
@@ -94,7 +96,19 @@ public class ReactionListener extends ListenerAdapter {
         String memberRoleId = memberRole.getId();
         String flagRoleId = new getRolesByName().getRoleByName(guild, "Flagged").getId();
 
-        IntroductionHandler handler = new IntroductionHandler(bot, guild, introductionChannelId, staffChannelId, memberRoleId, flagRoleId);
-        handler.approveUser(dummyEvent, member, memberRole, firstName, instagramHandle, facebookHandle);
+        IntroductionHandler handler = new IntroductionHandler(
+                bot,
+                guild,
+                introductionChannelId,
+                staffChannelId,
+                memberRoleId,
+                flagRoleId
+        );
+
+        if ("no_social".equals(manualType)) {
+            handler.approveUser(dummyEvent, member, memberRole, firstName, null, null);
+        } else {
+            handler.approveUser(dummyEvent, member, memberRole, firstName, instagramHandle, facebookHandle);
+        }
     }
 }

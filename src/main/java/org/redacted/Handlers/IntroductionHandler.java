@@ -163,6 +163,7 @@ public class IntroductionHandler {
 
         // Reset the flag for each message
         boolean socialfound = false;
+        boolean noSocialProvided = false;
 
         String firstName = null;
         String lastName = null;
@@ -179,18 +180,50 @@ public class IntroductionHandler {
 
         // Parse the message lines
         for (String line : lines) {
-            if (line.toLowerCase().startsWith("name")) {
-                String name = line.contains(":") ? line.substring(line.indexOf(":") + 1).trim() : line.contains("-") ? line.substring(line.indexOf("-") + 1).trim() : "";
+            String lowerLine = line.toLowerCase();
+
+            // Check for name line
+            if (lowerLine.startsWith("name")) {
+                String name = line.contains(":") ? line.substring(line.indexOf(":") + 1).trim()
+                        : line.contains("-") ? line.substring(line.indexOf("-") + 1).trim() : "";
+
                 String[] nameParts = name.split("/");
-                firstName = nameParts[0].trim(); // Use only the first part before the slash
+                firstName = nameParts[0].trim();
                 lastName = nameParts.length > 1 ? nameParts[1].trim() : "None";
-            } else if ((line.toLowerCase().startsWith("instagram") || line.toLowerCase().startsWith("insta") || line.toLowerCase().startsWith("ig") || line.toLowerCase().startsWith("ig tag:")) && !socialfound) {
-                instagramHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0]; // Only take the first part before a space
+            } else if (!socialfound && (
+                    lowerLine.contains("don't use") ||
+                            lowerLine.contains("dont use") ||
+                            lowerLine.contains("don’t use") ||
+                            lowerLine.contains("do not use") ||
+                            lowerLine.contains("no insta") ||
+                            lowerLine.contains("no instagram") ||
+                            lowerLine.contains("no fb") ||
+                            lowerLine.contains("no facebook") ||
+                            lowerLine.contains("no social") ||
+                            lowerLine.contains("none")
+            )) {
+                // User has explicitly stated they do not use social media or have no social media to provide
+                socialfound = true;
+                noSocialProvided = true;
+                socialMediaPlatform = "none";
+                socialMediaHandle = null;
+
+            } else if ((lowerLine.startsWith("instagram") || lowerLine.startsWith("insta")
+                    || lowerLine.startsWith("ig") || lowerLine.startsWith("ig tag:")) && !socialfound) {
+
+                if (!line.contains(":")) continue; // prevent bad parsing
+
+                instagramHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0];
+
                 socialMediaPlatform = "instagram";
                 socialMediaHandle = instagramHandle;
                 socialfound = true;
-            } else if ((line.toLowerCase().contains("facebook") || line.toLowerCase().contains("fb")) && !socialfound) {
-                facebookHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0]; // Only take the first part before a space
+            } else if ((lowerLine.contains("facebook") || lowerLine.contains("fb")) && !socialfound) {
+
+                if (!line.contains(":")) continue;
+
+                facebookHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0];
+
                 socialMediaPlatform = "facebook";
                 socialMediaHandle = facebookHandle;
                 socialfound = true;
@@ -199,6 +232,16 @@ public class IntroductionHandler {
 
         if (firstName == null || firstName.isEmpty()) {
             sendDM(member, "Your introduction is incorrect, please include a name.");
+            return;
+        }
+
+        if (noSocialProvided) {
+            IntroductionValidatorFallback.handleNoSocialManualApproval(
+                    member,
+                    staffChannel,
+                    firstName,
+                    lastName
+            );
             return;
         }
 
@@ -311,19 +354,38 @@ public class IntroductionHandler {
         System.out.println("Facebook handle: " + facebookHandle);
 
         // Set the nickname based on the first name and social media handles
-        String nickname = firstName;
-        if (instagramHandle != null) {
-            nickname = String.format("%s | @%s", firstName, instagramHandle);
-        } else if (facebookHandle != null) {
-            nickname = String.format("%s | @%s", firstName, facebookHandle);
+        String nickname;
+
+        if ((instagramHandle == null || instagramHandle.isBlank()) &&
+                (facebookHandle == null || facebookHandle.isBlank())) {
+
+            // Set nickname to just first name if no social media provided
+            nickname = firstName;
+
+        } else {
+            // Prefer Instagram handle for nickname if available, otherwise use Facebook handle
+            String handle = instagramHandle != null && !instagramHandle.isBlank()
+                    ? instagramHandle
+                    : facebookHandle;
+
+            nickname = firstName + " | @" + handle;
         }
 
+        // Fallback to effective name if nickname is null/blank for any reason
+        if (nickname == null || nickname.isBlank()) {
+            nickname = member.getEffectiveName();
+        }
+
+        // Ensure nickname does not exceed Discord's 32 character limit
         if (nickname.length() > 32) {
-            nickname = firstName;
+            nickname = firstName != null && !firstName.isBlank()
+                    ? firstName
+                    : member.getEffectiveName();
         }
 
         event.getGuild().modifyNickname(member, nickname).queue();
         event.getGuild().addRoleToMember(member, memberRole).queue();
+
         userIntroMessages.put(event.getMessage().getId(), member.getId());
         saveUserIntroMessage(event.getMessage().getId(), member.getId());
 

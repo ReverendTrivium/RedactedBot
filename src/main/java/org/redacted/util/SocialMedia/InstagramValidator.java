@@ -27,6 +27,7 @@ public class InstagramValidator {
 
         try (final WebClient webClient = new WebClient(BrowserVersion.CHROME)) {
             webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            webClient.getOptions().setThrowExceptionOnScriptError(false);
             webClient.getOptions().setCssEnabled(false);
             webClient.getOptions().setJavaScriptEnabled(false);
             webClient.getOptions().setTimeout(5000);
@@ -37,9 +38,30 @@ public class InstagramValidator {
 
             if (status == 404) return false;
             if (status == 403 || status == 429) return null;
+            if (status != 200) return null;
 
-            String content = page.asNormalizedText();
-            return !content.contains("Sorry, this page isn't available");
+            String title = page.getTitleText();
+            String content = page.asNormalizedText().toLowerCase();
+            String html = page.asXml().toLowerCase();
+
+            // definite invalid
+            if (title.contains("page not found")
+                    || content.contains("sorry, this page isn't available")
+                    || content.contains("page isn't available")
+                    || html.contains("\"error_type\":\"not_found\"")
+                    || html.contains("\"username\":\"" + handle.toLowerCase() + "\"") == false) {
+                return false;
+            }
+
+            // likely login/interstitial/challenge page -> do manual review instead of auto-approve
+            if (content.contains("log in")
+                    || content.contains("sign up")
+                    || content.contains("instagram")
+                    && !html.contains("\"username\":\"" + handle.toLowerCase() + "\"")) {
+                return null;
+            }
+
+            return true;
 
         } catch (IOException e) {
             e.printStackTrace();

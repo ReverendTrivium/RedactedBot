@@ -143,6 +143,97 @@ public class IntroductionHandler {
         userIntroMessagesCollection.deleteOne(Filters.eq("messageId", messageId));
     }
 
+    private String extractFieldValue(String line) {
+        if (line == null) return "";
+
+        int colonIndex = line.indexOf(':');
+        int dashIndex = line.indexOf('-');
+
+        if (colonIndex >= 0) {
+            return line.substring(colonIndex + 1).trim();
+        }
+
+        if (dashIndex >= 0) {
+            return line.substring(dashIndex + 1).trim();
+        }
+
+        return "";
+    }
+
+    /**
+     * Checks if the provided value indicates that the user has no social media or does not want to provide it.
+     * This method looks for common phrases that users might use to indicate they do not have social media or do not want to share it.
+     *
+     * @param value The input string to check.
+     * @return true if the value indicates no social media, false otherwise.
+     */
+    private boolean isNoSocialValue(String value) {
+        if (value == null) return false;
+
+        String v = value.trim().toLowerCase();
+        return v.contains("don't use")
+                || v.contains("dont use")
+                || v.contains("don’t use")
+                || v.contains("do not use")
+                || v.equals("none")
+                || v.contains("no social")
+                || v.contains("no insta")
+                || v.contains("no instagram")
+                || v.contains("no fb")
+                || v.contains("no facebook")
+                || v.contains("n/a")
+                || v.contains("na");
+    }
+
+    /**
+     * Normalizes a social media handle by extracting the relevant part from a raw input string.
+     * This method handles various input formats, such as full URLs, handles with leading '@',
+     * and removes any extraneous characters or query parameters.
+     *
+     * @param raw The raw input string containing the social media handle.
+     * @return The normalized social media handle, or null if the input is invalid or empty.
+     */
+    private String normalizeHandle(String raw) {
+        if (raw == null) return null;
+
+        String handle = raw.trim();
+
+        if (handle.isEmpty()) return null;
+
+        // If a full URL is pasted, pull the last path segment
+        handle = handle.replace("\\", "/");
+
+        if (handle.contains("instagram.com/")) {
+            handle = handle.substring(handle.indexOf("instagram.com/") + "instagram.com/".length());
+        } else if (handle.contains("facebook.com/")) {
+            handle = handle.substring(handle.indexOf("facebook.com/") + "facebook.com/".length());
+        }
+
+        // Remove query strings / fragments
+        int qIndex = handle.indexOf('?');
+        if (qIndex >= 0) handle = handle.substring(0, qIndex);
+
+        int hashIndex = handle.indexOf('#');
+        if (hashIndex >= 0) handle = handle.substring(0, hashIndex);
+
+        // Remove leading @
+        while (handle.startsWith("@")) {
+            handle = handle.substring(1).trim();
+        }
+
+        // Remove trailing slash
+        while (handle.endsWith("/")) {
+            handle = handle.substring(0, handle.length() - 1).trim();
+        }
+
+        // If user typed extra words after the handle, keep first token
+        if (handle.contains(" ")) {
+            handle = handle.split("\\s+")[0].trim();
+        }
+
+        return handle.isBlank() ? null : handle;
+    }
+
     /**
      * Handles the introduction message received event.
      * It processes the introduction, checks for blacklisted names or social media handles,
@@ -173,60 +264,96 @@ public class IntroductionHandler {
         String socialMediaHandle = null;
 
         String[] lines = message.getContentRaw().split("\n");
-        if (lines.length < 2) {
+        if (lines.length < 1) {
             sendDM(member, "Your introduction is incorrect, please include all required fields.");
             return;
         }
 
-        // Parse the message lines
         for (String line : lines) {
-            String lowerLine = line.toLowerCase();
+            if (line == null || line.isBlank()) continue;
 
-            // Check for name line
+            String lowerLine = line.toLowerCase().trim();
+            String value = extractFieldValue(line);
+
+            // Name can appear anywhere
             if (lowerLine.startsWith("name")) {
-                String name = line.contains(":") ? line.substring(line.indexOf(":") + 1).trim()
-                        : line.contains("-") ? line.substring(line.indexOf("-") + 1).trim() : "";
-
-                String[] nameParts = name.split("/");
-                firstName = nameParts[0].trim();
+                String[] nameParts = value.split("/");
+                firstName = nameParts.length > 0 ? nameParts[0].trim() : null;
                 lastName = nameParts.length > 1 ? nameParts[1].trim() : "None";
-            } else if (!socialfound && (
-                    lowerLine.contains("don't use") ||
-                            lowerLine.contains("dont use") ||
-                            lowerLine.contains("don’t use") ||
-                            lowerLine.contains("do not use") ||
-                            lowerLine.contains("no insta") ||
-                            lowerLine.contains("no instagram") ||
-                            lowerLine.contains("no fb") ||
-                            lowerLine.contains("no facebook") ||
-                            lowerLine.contains("no social") ||
-                            lowerLine.contains("none")
-            )) {
-                // User has explicitly stated they do not use social media or have no social media to provide
+                continue;
+            }
+
+            // Generic "social media:" line
+            if (lowerLine.startsWith("social media") || lowerLine.startsWith("socialmedia")) {
+                if (isNoSocialValue(value)) {
+                    socialfound = true;
+                    noSocialProvided = true;
+                    socialMediaPlatform = "none";
+                    socialMediaHandle = null;
+                    continue;
+                }
+
+                String normalized = normalizeHandle(value);
+                if (normalized != null) {
+                    // Default generic social media field to Instagram first
+                    instagramHandle = normalized;
+                    socialMediaPlatform = "instagram";
+                    socialMediaHandle = normalized;
+                    socialfound = true;
+                }
+                continue;
+            }
+
+            // Instagram / Insta / IG lines
+            if (lowerLine.startsWith("instagram")
+                    || lowerLine.startsWith("insta")
+                    || lowerLine.startsWith("ig")
+                    || lowerLine.startsWith("ig tag")) {
+
+                if (isNoSocialValue(value)) {
+                    socialfound = true;
+                    noSocialProvided = true;
+                    socialMediaPlatform = "none";
+                    socialMediaHandle = null;
+                    continue;
+                }
+
+                String normalized = normalizeHandle(value);
+                if (normalized != null) {
+                    instagramHandle = normalized;
+                    socialMediaPlatform = "instagram";
+                    socialMediaHandle = normalized;
+                    socialfound = true;
+                }
+                continue;
+            }
+
+            // Facebook / FB lines
+            if (lowerLine.startsWith("facebook") || lowerLine.startsWith("fb")) {
+                if (isNoSocialValue(value)) {
+                    socialfound = true;
+                    noSocialProvided = true;
+                    socialMediaPlatform = "none";
+                    socialMediaHandle = null;
+                    continue;
+                }
+
+                String normalized = normalizeHandle(value);
+                if (normalized != null) {
+                    facebookHandle = normalized;
+                    socialMediaPlatform = "facebook";
+                    socialMediaHandle = normalized;
+                    socialfound = true;
+                }
+                continue;
+            }
+
+            // Fallback: if a line anywhere says they do not use social media, honor it
+            if (!socialfound && isNoSocialValue(lowerLine)) {
                 socialfound = true;
                 noSocialProvided = true;
                 socialMediaPlatform = "none";
                 socialMediaHandle = null;
-
-            } else if ((lowerLine.startsWith("instagram") || lowerLine.startsWith("insta")
-                    || lowerLine.startsWith("ig") || lowerLine.startsWith("ig tag:")) && !socialfound) {
-
-                if (!line.contains(":")) continue; // prevent bad parsing
-
-                instagramHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0];
-
-                socialMediaPlatform = "instagram";
-                socialMediaHandle = instagramHandle;
-                socialfound = true;
-            } else if ((lowerLine.contains("facebook") || lowerLine.contains("fb")) && !socialfound) {
-
-                if (!line.contains(":")) continue;
-
-                facebookHandle = line.substring(line.indexOf(":") + 1).trim().split(" ")[0];
-
-                socialMediaPlatform = "facebook";
-                socialMediaHandle = facebookHandle;
-                socialfound = true;
             }
         }
 
@@ -283,7 +410,7 @@ public class IntroductionHandler {
 
                     if (Boolean.FALSE.equals(result)) {
                         isFlagged = true;
-                        reason = "invalid Instagram handle";
+                        reason = "invalid Facebook handle";
                     } else if (result == null) {
                         IntroductionValidatorFallback.handleManualFallback(facebookHandle, member, staffChannel, firstName, null, facebookHandle);
                         // Return early so no nickname/role assignment is attempted
